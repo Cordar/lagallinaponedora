@@ -11,8 +11,8 @@ interface RadioGroupProps {
 
 const RadioGroup = ({ title, buttons, register, error }: RadioGroupProps) => {
   return (
-    <div className="flex flex-col justify-center gap-3">
-      <div className="flex items-baseline justify-between gap-3">
+    <div className="flex flex-col justify-center gap-4">
+      <div className="flex items-baseline justify-between gap-4">
         <h2 className="text-xl font-semibold">{title}</h2>
         {error && <ErrorMessage message={error} />}
       </div>

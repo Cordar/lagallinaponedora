@@ -9,3 +9,87 @@ datasource db {
     provider = "postgresql"
     url      = env("DATABASE_URL")
 }
+
+enum ProductCategory {
+    COMBO
+    DISH
+    DRINK
+    DESSERT
+}
+
+model Product {
+    id                 Int                 @id @default(autoincrement())
+    name               String
+    price              Int
+    imageSrc           String?
+    category           ProductCategory
+    choiceGroups       ChoiceGroup[]
+    customizedProducts CustomizedProduct[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model CustomizedProduct {
+    id      Int      @id @default(autoincrement())
+    amount  Int
+    choices Choice[]
+    orders  Order[]
+
+    Product   Product? @relation(fields: [productId], references: [id])
+    productId Int?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model ChoiceGroup {
+    id       Int       @id @default(autoincrement())
+    title    String
+    products Product[]
+    choices  Choice[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Choice {
+    id                 Int                 @id @default(autoincrement())
+    label              String
+    customizedProducts CustomizedProduct[]
+
+    ChoiceGroup   ChoiceGroup? @relation(fields: [choiceGroupId], references: [id])
+    choiceGroupId Int?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+enum OrderStatus {
+    STARTED
+    PAID
+    COOKED
+}
+
+model Order {
+    id                 Int                 @id @default(autoincrement())
+    orderStatus        OrderStatus         @default(STARTED)
+    customizedProducts CustomizedProduct[]
+
+    Customer   Customer? @relation(fields: [customerId], references: [id])
+    customerId Int?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Customer {
+    id        Int     @id @default(autoincrement())
+    sessionId String
+    email     String?
+    name      String?
+    orders    Order[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}

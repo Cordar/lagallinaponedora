@@ -6,7 +6,7 @@
 
 /** @type {import("next").NextConfig} */
 const config = {
-  reactStrictMode: true,
+  reactStrictMode: false,
 
   /**
    * If you have the "experimental: { appDir: true }" setting enabled, then you
@@ -17,6 +17,16 @@ const config = {
   i18n: {
     locales: ["es"],
     defaultLocale: "es",
+  },
+
+  // TODO remove this and host the images somewhere, then only add that domain
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
   },
 };
 export default config;
