@@ -1,9 +1,29 @@
 import { type NextPage } from "next";
 import Head from "next/head";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import Button from "~/components/Button";
+import RadioGroup from "~/components/RadioGroup";
+
+interface Inputs {
+  dish: string;
+}
 
 const Home: NextPage = () => {
   // XXX example of how to use a query
   // const hello = api.example.hello.useQuery({ text: "from tRPC" });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isDirty, isValid },
+  } = useForm<Inputs>();
+
+  const onFormSubmit: SubmitHandler<Inputs> = ({ dish }) => {
+    console.log(dish);
+    return;
+  };
+
+  const getFormError = (name: keyof Inputs) => errors[name] && errors[name]?.message;
 
   return (
     <>
@@ -13,7 +33,24 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex min-h-screen flex-col items-center justify-center"></main>
+      <main className="flex min-h-screen flex-col bg-slate-100 p-5">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex grow flex-col gap-4">
+          <RadioGroup
+            title="Elige tu plato"
+            buttons={[
+              { label: "Tortilla", id: "1" },
+              { label: "Arróz", id: "2" },
+              { label: "Ramen", id: "3" },
+            ]}
+            register={register("dish", { required: { value: true, message: "Obligatorio" } })}
+            error={getFormError("dish")}
+          />
+
+          <div className="absolute left-5 bottom-5 right-5">
+            <Button isDisabled={!isDirty || !isValid} label="Pedir 2 por 25 €" />
+          </div>
+        </form>
+      </main>
     </>
   );
 };
