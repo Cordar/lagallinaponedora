@@ -18,5 +18,15 @@ const config = {
     locales: ["es"],
     defaultLocale: "es",
   },
+
+  // TODO remove this and host the images somewhere, then only add that domain
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
+  },
 };
 export default config;

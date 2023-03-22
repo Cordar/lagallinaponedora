@@ -7,7 +7,7 @@ export interface ButtonProps extends DetailedHTMLProps<ButtonHTMLAttributes<HTML
   isDisabled?: boolean;
 }
 
-const Button = ({ label, isLoading, isDisabled, ...rest }: ButtonProps) => {
+const Button = ({ label, className, isLoading, isDisabled, ...rest }: ButtonProps) => {
   const loadingClasses = "disabled:text-white disabled:bg-green-600";
   const disabledClasses = "disabled:text-black disabled:bg-slate-300";
 
@@ -18,12 +18,16 @@ const Button = ({ label, isLoading, isDisabled, ...rest }: ButtonProps) => {
       type="submit"
       disabled={isDisabled || isLoading}
       {...rest}
-      className={`relative flex w-full items-center justify-center rounded-full bg-green-600 px-4 py-3 text-white ${extraClasses}`}
+      className={`${
+        className ? className : ""
+      } flex items-center justify-center rounded-full bg-green-600 px-4 py-3 text-white ${extraClasses}`}
     >
       {isLoading && <Loading className="absolute" color="text-white" />}
 
       {label && (
-        <p className={`${isLoading ? "opacity-0" : ""} whitespace-nowrap text-lg font-medium tracking-wide`}>{label}</p>
+        <p className={`${isLoading ? "opacity-0" : ""} whitespace-nowrap text-lg font-medium tracking-wider`}>
+          {label}
+        </p>
       )}
     </button>
   );
