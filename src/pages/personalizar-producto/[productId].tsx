@@ -8,6 +8,7 @@ import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import RadioGroup from "~/components/RadioGroup";
 import { api } from "~/utils/api";
+import { Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
 
 type FormData = Record<string, string>;
@@ -15,7 +16,7 @@ type FormData = Record<string, string>;
 const CustomizeProduct: NextPage = () => {
   const Layout = getLayout("La Gallina Ponedora | Personalizar producto", "Personaliza este producto a tu gusto.");
 
-  const { query } = useRouter();
+  const { query, push } = useRouter();
   const { productId } = query;
 
   const {
@@ -36,8 +37,10 @@ const CustomizeProduct: NextPage = () => {
     formState: { errors },
   } = useForm<FormData>();
 
-  const onFormSubmit: SubmitHandler<FormData> = (data) => {
+  const onFormSubmit: SubmitHandler<FormData> = async (data) => {
     console.log(data); // TODO use this data
+
+    await push(Route.HOME);
   };
 
   const getFormError = (name: keyof FormData) => errors[name] && errors[name]?.message;
