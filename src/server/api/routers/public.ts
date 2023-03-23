@@ -20,4 +20,13 @@ export const publicRouter = createTRPCRouter({
 
       return product;
     }),
+
+  getOrCreateCustomer: publicProcedure.input(z.object({ sessionId: z.string() })).query(async ({ ctx, input }) => {
+    return await ctx.prisma.customer.upsert({
+      where: { sessionId: input.sessionId },
+      create: { sessionId: input.sessionId },
+      update: {},
+      include: { orders: true },
+    });
+  }),
 });

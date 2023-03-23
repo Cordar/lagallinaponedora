@@ -1,4 +1,4 @@
-import { type NextPage } from "next";
+import { type GetServerSideProps, type NextPage } from "next";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -7,13 +7,22 @@ import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import RadioGroup from "~/components/RadioGroup";
+import useUserSession from "~/hooks/useUser";
 import { api } from "~/utils/api";
-import { Route } from "~/utils/constant";
+import { Cookie, ONE_DAY, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
+import { type PageProps } from "../_app";
+
+// eslint-disable-next-line @typescript-eslint/require-await
+export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+  const sessionCookie = req.cookies[Cookie.SESSION];
+  const props: PageProps = { sessionId: sessionCookie ?? null };
+  return { props };
+};
 
 type FormData = Record<string, string>;
 
-const CustomizeProduct: NextPage = () => {
+const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
   const Layout = getLayout("La Gallina Ponedora | Personalizar producto", "Personaliza este producto a tu gusto.");
 
   const { query, push } = useRouter();
@@ -26,8 +35,10 @@ const CustomizeProduct: NextPage = () => {
     error,
   } = api.public.getProductWithChoiceGroups.useQuery(
     { productId: parseInt(productId as string) },
-    { enabled: !!productId }
+    { enabled: !!productId, staleTime: ONE_DAY }
   );
+
+  const { user, isLoadingUser, isErrorUser } = useUserSession(sessionId);
 
   const {
     register,
@@ -38,7 +49,8 @@ const CustomizeProduct: NextPage = () => {
   } = useForm<FormData>();
 
   const onFormSubmit: SubmitHandler<FormData> = async (data) => {
-    console.log(data); // TODO use this data
+    console.log(data); // TODO use this data and the user to update the order
+    console.log(user);
 
     await push(Route.HOME);
   };
@@ -60,8 +72,9 @@ const CustomizeProduct: NextPage = () => {
     setAllInputsFilled(isFilled);
   }, [getValues, product, watchAllFields]);
 
-  if (isLoading) return Layout(<Loading />);
+  if (isLoading || isLoadingUser) return Layout(<Loading />);
   else if (isError || !product.choiceGroups) return Layout(<ErrorMessage message={error?.message} />);
+  else if (isErrorUser) return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
 
   const { name, price, imageSrc } = product;
 

@@ -1,11 +1,14 @@
 import { ProductCategory } from "@prisma/client";
-import { type NextPage } from "next";
+import { type GetServerSideProps, type NextPage } from "next";
 import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import Product from "~/components/Product";
+import useUserSession from "~/hooks/useUser";
 import { api } from "~/utils/api";
+import { Cookie, ONE_DAY } from "~/utils/constant";
 import { default as getLayout } from "~/utils/getLayout";
+import { type PageProps } from "./_app";
 
 const ProductCategoryMap: Record<ProductCategory, string> = {
   COMBO: "Combos",
@@ -14,13 +17,29 @@ const ProductCategoryMap: Record<ProductCategory, string> = {
   DRINK: "Bebidas",
 };
 
-const Home: NextPage = () => {
+// eslint-disable-next-line @typescript-eslint/require-await
+export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+  const sessionCookie = req.cookies[Cookie.SESSION];
+  const props: PageProps = { sessionId: sessionCookie ?? null };
+  return { props };
+};
+
+const Home: NextPage<PageProps> = ({ sessionId }) => {
   const Layout = getLayout("La Gallina Ponedora | Productos", "Haz un pedido de los productos presentados.");
 
-  const { data: products, isLoading, isError, error } = api.public.getProducts.useQuery();
+  const { user, isLoadingUser, isErrorUser } = useUserSession(sessionId);
+  const {
+    data: products,
+    isLoading,
+    isError,
+    error,
+  } = api.public.getProducts.useQuery(undefined, { staleTime: ONE_DAY });
 
-  if (isLoading) return Layout(<Loading />);
+  console.log(user);
+
+  if (isLoading || isLoadingUser) return Layout(<Loading />);
   else if (isError || !products) return Layout(<ErrorMessage message={error.message} />);
+  else if (isErrorUser) return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
 
   return Layout(
     <>
