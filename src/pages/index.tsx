@@ -1,12 +1,14 @@
 import { ProductCategory } from "@prisma/client";
-import { type NextPage } from "next";
-import Head from "next/head";
-import { type ReactElement } from "react";
+import { type GetServerSideProps, type NextPage } from "next";
 import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import Product from "~/components/Product";
+import useUserSession from "~/hooks/useUser";
 import { api } from "~/utils/api";
+import { Cookie, ONE_DAY } from "~/utils/constant";
+import { default as getLayout } from "~/utils/getLayout";
+import { type PageProps } from "./_app";
 
 const ProductCategoryMap: Record<ProductCategory, string> = {
   COMBO: "Combos",
@@ -15,26 +17,31 @@ const ProductCategoryMap: Record<ProductCategory, string> = {
   DRINK: "Bebidas",
 };
 
-const Home: NextPage = () => {
-  const { data: products, isLoading, isError, error } = api.public.getProducts.useQuery();
+// eslint-disable-next-line @typescript-eslint/require-await
+export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+  const sessionCookie = req.cookies[Cookie.SESSION];
+  const props: PageProps = { sessionId: sessionCookie ?? null };
+  return { props };
+};
 
-  // TODO Separate into a layuot component that recieves the title and description and returns a function that given a children returns the layout
-  const container = (children: ReactElement) => (
-    <>
-      <Head>
-        <title>La Gallina Ponedora | Productos</title>
-        <meta name="description" content="Haz un pedido de los productos presentados." />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+const Home: NextPage<PageProps> = ({ sessionId }) => {
+  const Layout = getLayout("La Gallina Ponedora | Productos", "Haz un pedido de los productos presentados.");
 
-      <main className="relative flex min-h-screen flex-col gap-6 bg-slate-200 p-5">{children}</main>
-    </>
-  );
+  const { user, isLoadingUser, isErrorUser } = useUserSession(sessionId);
+  const {
+    data: products,
+    isLoading,
+    isError,
+    error,
+  } = api.public.getProducts.useQuery(undefined, { staleTime: ONE_DAY });
 
-  if (isLoading) return container(<Loading />);
-  else if (isError || !products) return container(<ErrorMessage message={error.message} />);
+  console.log(user);
 
-  return container(
+  if (isLoading || isLoadingUser) return Layout(<Loading />);
+  else if (isError || !products) return Layout(<ErrorMessage message={error.message} />);
+  else if (isErrorUser) return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
+
+  return Layout(
     <>
       <h1 className="text-ellipsis text-2xl font-bold tracking-wide">La Gallina Ponedora</h1>
 

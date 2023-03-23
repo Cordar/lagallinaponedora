@@ -85,7 +85,7 @@ model Order {
 
 model Customer {
     id        Int     @id @default(autoincrement())
-    sessionId String
+    sessionId String  @unique
     email     String?
     name      String?
     orders    Order[]

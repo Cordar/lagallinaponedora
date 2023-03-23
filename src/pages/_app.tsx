@@ -1,10 +1,19 @@
-import { type AppType } from "next/app";
+import type { NextComponentType, NextPageContext } from "next";
 
 import { api } from "~/utils/api";
 
 import "~/styles/globals.css";
 
-const MyApp: AppType = ({ Component, pageProps }) => {
+export interface PageProps {
+  sessionId: string | null;
+}
+
+interface MyAppProps {
+  Component: NextComponentType<NextPageContext, any, any>;
+  pageProps: PageProps;
+}
+
+const MyApp = ({ Component, pageProps }: MyAppProps) => {
   return <Component {...pageProps} />;
 };
 

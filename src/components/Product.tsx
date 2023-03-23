@@ -1,6 +1,7 @@
 import { Product } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
+import { Route } from "~/utils/constant";
 
 export interface ProductProps {
   product: Product;
@@ -11,7 +12,7 @@ const Product = ({ product }: ProductProps) => {
 
   return (
     <Link
-      href={`/personalizar-producto/${id}`}
+      href={`${Route.CUSTOMIZE_PRODUCT}${id}`}
       className={`relative flex max-w-full gap-3 rounded-lg bg-white shadow-sm ${imageSrc ? "p-2" : "p-4 py-5"}`}
     >
       {imageSrc && (
