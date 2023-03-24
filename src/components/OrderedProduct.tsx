@@ -4,8 +4,8 @@ import useProducts from "~/hooks/api/query/useProducts";
 
 export interface OrderedProductProps {
   customizedProduct: CustomizedProduct & { choices: Choice[] };
-  onAddProduct: (choices: Choice[]) => void;
-  onRemoveProduct: (choices: Choice[]) => void;
+  onAddProduct: (productId: number, choices: Choice[]) => void;
+  onRemoveProduct: (productId: number, choices: Choice[]) => void;
   showPrice?: boolean;
 }
 
@@ -40,7 +40,8 @@ const OrderedProduct = ({ customizedProduct, onAddProduct, onRemoveProduct, show
 
         <div className="flex grow items-center justify-center gap-3">
           <button
-            onClick={() => onRemoveProduct(choices)}
+            type="button"
+            onClick={() => onRemoveProduct(productId, choices)}
             className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white"
           >
             <RiSubtractLine className="h-6 w-6" />
@@ -49,7 +50,8 @@ const OrderedProduct = ({ customizedProduct, onAddProduct, onRemoveProduct, show
           <p className="w-5 min-w-fit text-center text-base font-medium tracking-wide">{amount}</p>
 
           <button
-            onClick={() => onAddProduct(choices)}
+            type="button"
+            onClick={() => onAddProduct(productId, choices)}
             className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white"
           >
             <RiAddLine className="h-6 w-6" />

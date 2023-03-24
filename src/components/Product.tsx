@@ -19,14 +19,14 @@ const Product = ({ product, orderProducts, orderId, sessionId }: ProductProps) =
 
   const { mutateAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } = useAddOrRemoveProductToOrder();
 
-  const handleAddProduct = (choices: Choice[]) => {
+  const handleAddProduct = (productId: number, choices: Choice[]) => {
     if (!orderId || !sessionId) return;
-    mutateAddOrRemoveProductToOrder({ productId: id, orderId, sessionId, choices });
+    mutateAddOrRemoveProductToOrder({ productId, orderId, sessionId, choices });
   };
 
-  const handleRemoveProduct = (choices: Choice[]) => {
+  const handleRemoveProduct = (productId: number, choices: Choice[]) => {
     if (!orderId || !sessionId) return;
-    mutateAddOrRemoveProductToOrder({ remove: true, productId: id, orderId, sessionId, choices });
+    mutateAddOrRemoveProductToOrder({ remove: true, productId, orderId, sessionId, choices });
   };
 
   const linkOrButton = (children: ReactElement) =>
@@ -39,7 +39,7 @@ const Product = ({ product, orderProducts, orderId, sessionId }: ProductProps) =
       </Link>
     ) : (
       <button
-        onClick={() => handleAddProduct([])}
+        onClick={() => handleAddProduct(product.id, [])}
         className={`relative flex max-w-full gap-3 ${imageSrc ? "" : "py-3"}`}
       >
         {children}

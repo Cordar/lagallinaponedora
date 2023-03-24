@@ -66,7 +66,7 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
           {[ProductCategory.COMBO, ProductCategory.DISH, ProductCategory.DESSERT, ProductCategory.DRINK].map(
             (category) => (
               <div key={category} className="flex max-w-full flex-col gap-2">
-                <h2 className="text-ellipsis text-lg font-semibold tracking-wide">{ProductCategoryMap[category]}</h2>
+                <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{ProductCategoryMap[category]}</h3>
 
                 {products &&
                   products

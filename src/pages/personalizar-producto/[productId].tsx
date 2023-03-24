@@ -28,9 +28,9 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 type FormData = Record<string, string>;
 
 const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
+  const { query, push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Personalizar producto", "Personaliza este producto a tu gusto.");
 
-  const { query, push } = useRouter();
   const productId = query.productId ? parseInt(query.productId as string) : undefined;
 
   const { products } = useProducts();
