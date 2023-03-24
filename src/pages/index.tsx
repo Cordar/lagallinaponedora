@@ -4,9 +4,10 @@ import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import Product from "~/components/Product";
-import useUserSession from "~/hooks/useUser";
-import { api } from "~/utils/api";
-import { Cookie, ONE_DAY } from "~/utils/constant";
+import useCurrentOrder from "~/hooks/api/query/useCurrentOrder";
+import useProducts from "~/hooks/api/query/useProducts";
+import useUser from "~/hooks/api/query/useUser";
+import { Cookie } from "~/utils/constant";
 import { default as getLayout } from "~/utils/getLayout";
 import { type PageProps } from "./_app";
 
@@ -27,19 +28,17 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 const Home: NextPage<PageProps> = ({ sessionId }) => {
   const Layout = getLayout("La Gallina Ponedora | Productos", "Haz un pedido de los productos presentados.");
 
-  const { user, isLoadingUser, isErrorUser } = useUserSession(sessionId);
-  const {
-    data: products,
-    isLoading,
-    isError,
-    error,
-  } = api.public.getProducts.useQuery(undefined, { staleTime: ONE_DAY });
+  const { user, isErrorUser } = useUser(sessionId);
+  const { products, isLoadingProducts, isErrorProducts } = useProducts();
+  const { order, isErrorOrder } = useCurrentOrder(user?.sessionId);
 
-  console.log(user);
+  // TODO use this order to paint the currently selected products
+  console.log(order);
 
-  if (isLoading || isLoadingUser) return Layout(<Loading />);
-  else if (isError || !products) return Layout(<ErrorMessage message={error.message} />);
-  else if (isErrorUser) return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
+  if (isLoadingProducts) return Layout(<Loading />);
+
+  if (isErrorProducts || isErrorUser || isErrorOrder)
+    return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
 
   return Layout(
     <>
@@ -51,11 +50,10 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
             <div key={category} className="flex max-w-full flex-col gap-2">
               <h2 className="text-ellipsis text-xl font-semibold tracking-wide">{ProductCategoryMap[category]}</h2>
 
-              {products
-                .filter((product) => product.category === category)
-                .map((product) => (
-                  <Product key={product.id} product={product} />
-                ))}
+              {products &&
+                products
+                  .filter((product) => product.category === category)
+                  .map((product) => <Product key={product.id} product={product} />)}
             </div>
           )
         )}

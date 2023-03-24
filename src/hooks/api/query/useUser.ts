@@ -2,9 +2,9 @@ import { useEffect, useRef } from "react";
 import uuid from "react-uuid";
 import { api } from "~/utils/api";
 import { Cookie, ONE_DAY, ONE_YEAR } from "~/utils/constant";
-import useCookies from "./useCookies";
+import useCookies from "../../useCookies";
 
-const useUserSession = (previousSessionId: string | null) => {
+const useUser = (previousSessionId: string | null) => {
   const { setCookie } = useCookies();
 
   const sessionId = useRef(previousSessionId ?? uuid());
@@ -22,4 +22,4 @@ const useUserSession = (previousSessionId: string | null) => {
   return { user, isLoadingUser, isErrorUser };
 };
 
-export default useUserSession;
+export default useUser;

@@ -7,9 +7,11 @@ import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import RadioGroup from "~/components/RadioGroup";
-import useUserSession from "~/hooks/useUser";
-import { api } from "~/utils/api";
-import { Cookie, ONE_DAY, Route } from "~/utils/constant";
+import useAddOrRemoveProductToOrder from "~/hooks/api/mutation/useAddOrRemoveProductToOrder";
+import useCurrentOrder from "~/hooks/api/query/useCurrentOrder";
+import useProduct from "~/hooks/api/query/useProduct";
+import useUserSession from "~/hooks/api/query/useUser";
+import { Cookie, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
 import { type PageProps } from "../_app";
 
@@ -25,20 +27,17 @@ type FormData = Record<string, string>;
 const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
   const Layout = getLayout("La Gallina Ponedora | Personalizar producto", "Personaliza este producto a tu gusto.");
 
+  const returnHome = () => push(Route.HOME);
+
   const { query, push } = useRouter();
-  const { productId } = query;
+  const productId = query.productId ? parseInt(query.productId as string) : undefined;
 
-  const {
-    data: product,
-    isLoading,
-    isError,
-    error,
-  } = api.public.getProductWithChoiceGroups.useQuery(
-    { productId: parseInt(productId as string) },
-    { enabled: !!productId, staleTime: ONE_DAY }
-  );
-
+  const { product, isLoadingProduct, isErrorProduct } = useProduct(productId);
   const { user, isLoadingUser, isErrorUser } = useUserSession(sessionId);
+  const { order, isErrorOrder } = useCurrentOrder(user?.sessionId);
+
+  const { mutateAddOrRemoveProductToOrder, isLoadingAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } =
+    useAddOrRemoveProductToOrder(returnHome);
 
   const {
     register,
@@ -47,13 +46,6 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
     getValues,
     formState: { errors },
   } = useForm<FormData>();
-
-  const onFormSubmit: SubmitHandler<FormData> = async (data) => {
-    console.log(data); // TODO use this data and the user to update the order
-    console.log(user);
-
-    await push(Route.HOME);
-  };
 
   const getFormError = (name: keyof FormData) => errors[name] && errors[name]?.message;
 
@@ -72,9 +64,21 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
     setAllInputsFilled(isFilled);
   }, [getValues, product, watchAllFields]);
 
-  if (isLoading || isLoadingUser) return Layout(<Loading />);
-  else if (isError || !product.choiceGroups) return Layout(<ErrorMessage message={error?.message} />);
-  else if (isErrorUser) return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
+  if (isLoadingProduct || isLoadingUser) return Layout(<Loading />);
+  else if (isErrorProduct || isErrorUser || isErrorOrder || !product?.choiceGroups)
+    return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
+
+  const onFormSubmit: SubmitHandler<FormData> = (data) => {
+    if (!order || !user) return;
+    const choicesIds = new Set(Object.values(data).map((choice) => parseInt(choice)));
+    const choices = product.choiceGroups.flatMap(({ choices, id }) =>
+      choices
+        .filter((choice) => choicesIds.has(choice.id))
+        .map((choice) => ({ id: choice.id, label: choice.label, choiceGroupId: id }))
+    );
+
+    mutateAddOrRemoveProductToOrder({ sessionId: user.sessionId, orderId: order.id, productId: product.id, choices });
+  };
 
   const { name, price, imageSrc } = product;
 
@@ -90,10 +94,13 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
             height="512"
           />
         )}
+
         <div className="relative flex w-full gap-2">
           <h3 className="grow text-lg font-semibold tracking-wide">{name}</h3>
           <p className="min-w-fit text-lg font-semibold tracking-wide">{price} €</p>
         </div>
+
+        {isErrorAddOrRemoveProductToOrder && <ErrorMessage message="No se ha podido añadir el producto." />}
       </div>
 
       <div className="mb-28 flex flex-col gap-8">
@@ -113,7 +120,7 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
 
       <Button
         isDisabled={!allInputsFilled}
-        isLoading={isLoading}
+        isLoading={isLoadingAddOrRemoveProductToOrder}
         label="Añadir"
         className="fixed left-5 right-5 bottom-5 w-[unset]"
       />

@@ -54,9 +54,10 @@ export const publicRouter = createTRPCRouter({
   addorRemoveItemToOrder: publicProcedure
     .input(
       z.object({
+        sessionId: z.string(),
         orderId: z.number(),
         productId: z.number(),
-        choices: z.set(z.number()),
+        choices: z.array(z.object({ id: z.number(), label: z.string(), choiceGroupId: z.number() })),
         remove: z.boolean().default(false),
       })
     )
@@ -75,23 +76,20 @@ export const publicRouter = createTRPCRouter({
       if (!product) throw new Error(`Hubo un error al ${input.remove ? "quitar" : "añadir"} el producto.`);
 
       // Try to find a CustomizedProduct in the order with exactly the same choices
-      const existingCustomizedProduct = order.customizedProducts.find((customizedProduct) => {
-        const choices = customizedProduct.choices.map((choice) => choice.id);
-        return (
+      const existingCustomizedProduct = order.customizedProducts.find(
+        (customizedProduct) =>
           customizedProduct.productId === product.id &&
-          choices.length === input.choices.size &&
-          choices.every((choice) => input.choices.has(choice))
-        );
-      });
+          customizedProduct.choices.length === input.choices.length &&
+          customizedProduct.choices.every((choice) => input.choices.some((inputChoice) => inputChoice.id === choice.id))
+      );
 
       // Remove from order if it exists
       if (existingCustomizedProduct && input.remove) {
         await ctx.prisma.customizedProduct.delete({ where: { id: existingCustomizedProduct.id } });
-        return;
       }
 
       // Increase the amount if it exists
-      if (existingCustomizedProduct) {
+      else if (existingCustomizedProduct) {
         await ctx.prisma.customizedProduct.update({
           where: { id: existingCustomizedProduct.id },
           data: { amount: existingCustomizedProduct.amount + 1 },
@@ -103,7 +101,7 @@ export const publicRouter = createTRPCRouter({
         await ctx.prisma.customizedProduct.create({
           data: {
             productId: product.id,
-            choices: { connect: [...input.choices].map((choiceId) => ({ id: choiceId })) },
+            choices: { connect: [...input.choices].map((choice) => ({ id: choice.id })) },
             orders: { connect: { id: order.id } },
           },
         });
