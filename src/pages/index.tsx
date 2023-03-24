@@ -37,35 +37,52 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
   if (isErrorProducts || isErrorUser || isErrorOrder)
     return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
 
+  const buttonInfo = order?.customizedProducts.reduce(
+    ({ totalPrice, totalNumberOfItems }, { amount, productId }) => ({
+      totalNumberOfItems: totalNumberOfItems + amount,
+      totalPrice: totalPrice + amount * (products?.find(({ id }) => id === productId)?.price ?? 0),
+    }),
+    { totalPrice: 0, totalNumberOfItems: 0 }
+  );
+
   return Layout(
     <>
-      <h1 className="text-ellipsis text-2xl font-bold tracking-wide">La Gallina Ponedora</h1>
-
-      <div className="mb-28 flex flex-col gap-6">
-        {[ProductCategory.COMBO, ProductCategory.DISH, ProductCategory.DESSERT, ProductCategory.DRINK].map(
-          (category) => (
-            <div key={category} className="flex max-w-full flex-col gap-2">
-              <h2 className="text-ellipsis text-xl font-semibold tracking-wide">{ProductCategoryMap[category]}</h2>
-
-              {products &&
-                products
-                  .filter((product) => product.category === category)
-                  .map((product) => (
-                    <Product
-                      key={product.id}
-                      product={product}
-                      orderProducts={order?.customizedProducts.filter(({ productId }) => productId === product.id)}
-                      sessionId={user?.sessionId}
-                      orderId={order?.id}
-                    />
-                  ))}
-            </div>
-          )
-        )}
+      <div className="relative flex flex-col items-center gap-5 bg-gradient-to-b from-lgp-gradient-orange-dark to-lgp-gradient-orange-light px-5 py-10">
+        <h1 className="text-ellipsis text-xl font-bold tracking-wide">La Gallina Ponedora</h1>
       </div>
 
-      {/* TODO make this button do something */}
-      <Button label="Pide 2 por 24 €" className="fixed left-5 right-5 bottom-5 w-[unset]" />
+      <div className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
+        <div className="mb-20 flex flex-col gap-6">
+          {[ProductCategory.COMBO, ProductCategory.DISH, ProductCategory.DESSERT, ProductCategory.DRINK].map(
+            (category) => (
+              <div key={category} className="flex max-w-full flex-col gap-2">
+                <h2 className="text-ellipsis text-lg font-semibold tracking-wide">{ProductCategoryMap[category]}</h2>
+
+                {products &&
+                  products
+                    .filter((product) => product.category === category)
+                    .map((product) => (
+                      <Product
+                        key={product.id}
+                        product={product}
+                        orderProducts={order?.customizedProducts.filter(({ productId }) => productId === product.id)}
+                        sessionId={user?.sessionId}
+                        orderId={order?.id}
+                      />
+                    ))}
+              </div>
+            )
+          )}
+        </div>
+
+        {/* TODO make this button do something */}
+        {order && buttonInfo && order.customizedProducts.length > 0 && (
+          <Button
+            label={`Pide ${buttonInfo.totalNumberOfItems} por ${buttonInfo.totalPrice} €`}
+            className="fixed left-5 right-5 bottom-5 w-[unset]"
+          />
+        )}
+      </div>
     </>
   );
 };

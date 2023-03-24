@@ -1,7 +1,11 @@
+import { useIsMutating } from "@tanstack/react-query";
+import { getQueryKey } from "@trpc/react-query";
 import { api } from "~/utils/api";
 
 const useAddOrRemoveProductToOrder = () => {
   const apiContext = api.useContext();
+
+  const mutations = useIsMutating(getQueryKey(api.public.addorRemoveItemToOrder));
 
   const {
     mutate: mutateAddOrRemoveProductToOrder,
@@ -71,7 +75,7 @@ const useAddOrRemoveProductToOrder = () => {
       apiContext.public.getCurrentOrder.setData({ sessionId }, context?.previousOrder);
     },
     onSettled: async () => {
-      await apiContext.public.getCurrentOrder.invalidate();
+      if (mutations <= 1) await apiContext.public.getCurrentOrder.invalidate();
     },
   });
 

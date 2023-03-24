@@ -5,6 +5,7 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 export const publicRouter = createTRPCRouter({
   getProducts: publicProcedure.query(async ({ ctx }) => {
     return await ctx.prisma.product.findMany({
+      include: { choiceGroups: true },
       orderBy: { id: "asc" },
     });
   }),

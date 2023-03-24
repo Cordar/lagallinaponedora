@@ -1,8 +1,10 @@
 import { type GetServerSideProps, type NextPage } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
+import { RiArrowLeftLine } from "react-icons/ri";
 import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
@@ -86,52 +88,58 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
   const { name, price, imageSrc } = productInfo;
 
   return Layout(
-    <form onSubmit={handleSubmit(onFormSubmit)} className="relative flex w-full grow flex-col gap-8">
-      <div className="relative flex w-full flex-col gap-2">
-        {imageSrc && (
-          <Image
-            src={imageSrc}
-            alt={`Fotografía del producto: ${name}`}
-            className="w-fill h-40 rounded-md object-cover"
-            width="512"
-            height="512"
-          />
-        )}
+    <div className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
+      <Link href={Route.HOME} className="w-fit">
+        <RiArrowLeftLine className="h-8 w-8" />
+      </Link>
 
-        <div className="relative flex w-full gap-2">
-          <h3 className="grow text-lg font-semibold tracking-wide">{name}</h3>
-          <p className="min-w-fit text-lg font-semibold tracking-wide">{price} €</p>
+      <form onSubmit={handleSubmit(onFormSubmit)} className="relative flex w-full grow flex-col gap-8">
+        <div className="relative flex w-full flex-col gap-2">
+          {imageSrc && (
+            <Image
+              src={imageSrc}
+              alt={`Fotografía del producto: ${name}`}
+              className="w-fill h-40 rounded-md object-cover"
+              width="512"
+              height="512"
+            />
+          )}
+
+          <div className="relative flex w-full gap-2 rounded-md bg-lgp-gradient-orange-light py-2 px-4">
+            <h3 className="grow text-lg font-semibold tracking-wide">{name}</h3>
+            <p className="min-w-fit text-lg font-semibold tracking-wide">{price} €</p>
+          </div>
+
+          {isErrorAddOrRemoveProductToOrder && <ErrorMessage message="No se ha podido añadir el producto." />}
         </div>
 
-        {isErrorAddOrRemoveProductToOrder && <ErrorMessage message="No se ha podido añadir el producto." />}
-      </div>
+        <div className="mb-20 flex flex-col gap-5">
+          {product ? (
+            product.choiceGroups.map(({ id, title, choices }) => (
+              <RadioGroup
+                key={id}
+                title={title}
+                buttons={choices.map(({ id, label }) => ({
+                  id: id.toString(),
+                  label,
+                }))}
+                register={register(id.toString())}
+                error={getFormError(id.toString())}
+              />
+            ))
+          ) : (
+            <Loading />
+          )}
+        </div>
 
-      <div className="mb-28 flex flex-col gap-8">
-        {product ? (
-          product.choiceGroups.map(({ id, title, choices }) => (
-            <RadioGroup
-              key={id}
-              title={title}
-              buttons={choices.map(({ id, label }) => ({
-                id: id.toString(),
-                label,
-              }))}
-              register={register(id.toString())}
-              error={getFormError(id.toString())}
-            />
-          ))
-        ) : (
-          <Loading />
-        )}
-      </div>
-
-      <Button
-        isDisabled={!allInputsFilled}
-        isLoading={isLoadingAddOrRemoveProductToOrder}
-        label="Añadir"
-        className="fixed left-5 right-5 bottom-5 w-[unset]"
-      />
-    </form>
+        <Button
+          isDisabled={!allInputsFilled}
+          isLoading={isLoadingAddOrRemoveProductToOrder}
+          label="Añadir"
+          className="fixed left-5 right-5 bottom-5 w-[unset]"
+        />
+      </form>
+    </div>
   );
 };
 
