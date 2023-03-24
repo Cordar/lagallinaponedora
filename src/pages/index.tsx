@@ -35,7 +35,11 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
   if (isLoadingProducts) return Layout(<Loading />);
 
   if (isErrorProducts || isErrorUser || isErrorOrder)
-    return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
+    return Layout(
+      <div className="flex h-full w-full items-center justify-center">
+        <ErrorMessage message="No se ha podido cargar la página" />
+      </div>
+    );
 
   const buttonInfo = order?.customizedProducts.reduce(
     ({ totalPrice, totalNumberOfItems }, { amount, productId }) => ({
@@ -79,7 +83,7 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
         {order && buttonInfo && order.customizedProducts.length > 0 && (
           <Button
             label={`Pide ${buttonInfo.totalNumberOfItems} por ${buttonInfo.totalPrice} €`}
-            className="fixed left-5 right-5 bottom-5 w-[unset]"
+            className="fixed left-5 right-5 bottom-5 m-auto w-[unset] max-w-md"
           />
         )}
       </div>

@@ -99,7 +99,7 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
             <Image
               src={imageSrc}
               alt={`Fotografía del producto: ${name}`}
-              className="w-fill h-40 rounded-md object-cover"
+              className="w-fill m-auto h-40 rounded-md object-cover"
               width="512"
               height="512"
             />
