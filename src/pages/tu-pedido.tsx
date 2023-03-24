@@ -144,7 +144,7 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
       <Button
         isDisabled={!isDirty}
         isLoading={false} // TODO use the mutation isLoading
-        label="Añadir"
+        label="Pagar"
         className="fixed left-5 right-5 bottom-5 w-[unset]"
       />
     </form>
