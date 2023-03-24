@@ -1,6 +1,6 @@
 import { api } from "~/utils/api";
 
-const useAddOrRemoveProductToOrder = (onSuccess: () => any) => {
+const useAddOrRemoveProductToOrder = () => {
   const apiContext = api.useContext();
 
   const {
@@ -63,9 +63,6 @@ const useAddOrRemoveProductToOrder = (onSuccess: () => any) => {
     },
     onSettled: async () => {
       await apiContext.public.getCurrentOrder.invalidate();
-    },
-    onSuccess: () => {
-      onSuccess();
     },
   });
 

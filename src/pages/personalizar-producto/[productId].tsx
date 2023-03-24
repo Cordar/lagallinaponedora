@@ -27,8 +27,6 @@ type FormData = Record<string, string>;
 const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
   const Layout = getLayout("La Gallina Ponedora | Personalizar producto", "Personaliza este producto a tu gusto.");
 
-  const returnHome = () => push(Route.HOME);
-
   const { query, push } = useRouter();
   const productId = query.productId ? parseInt(query.productId as string) : undefined;
 
@@ -37,7 +35,7 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
   const { order, isErrorOrder } = useCurrentOrder(user?.sessionId);
 
   const { mutateAddOrRemoveProductToOrder, isLoadingAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } =
-    useAddOrRemoveProductToOrder(returnHome);
+    useAddOrRemoveProductToOrder();
 
   const {
     register,
@@ -68,7 +66,7 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
   else if (isErrorProduct || isErrorUser || isErrorOrder || !product?.choiceGroups)
     return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
 
-  const onFormSubmit: SubmitHandler<FormData> = (data) => {
+  const onFormSubmit: SubmitHandler<FormData> = async (data) => {
     if (!order || !user) return;
     const choicesIds = new Set(Object.values(data).map((choice) => parseInt(choice)));
     const choices = product.choiceGroups.flatMap(({ choices, id }) =>
@@ -78,6 +76,7 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
     );
 
     mutateAddOrRemoveProductToOrder({ sessionId: user.sessionId, orderId: order.id, productId: product.id, choices });
+    await push(Route.HOME);
   };
 
   const { name, price, imageSrc } = product;
