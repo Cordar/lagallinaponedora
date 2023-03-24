@@ -1,5 +1,6 @@
 import { ProductCategory } from "@prisma/client";
 import { type GetServerSideProps, type NextPage } from "next";
+import { useRouter } from "next/router";
 import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
@@ -7,7 +8,7 @@ import Product from "~/components/Product";
 import useCurrentOrder from "~/hooks/api/query/useCurrentOrder";
 import useProducts from "~/hooks/api/query/useProducts";
 import useUser from "~/hooks/api/query/useUser";
-import { Cookie } from "~/utils/constant";
+import { Cookie, Route } from "~/utils/constant";
 import { default as getLayout } from "~/utils/getLayout";
 import { type PageProps } from "./_app";
 
@@ -26,6 +27,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 };
 
 const Home: NextPage<PageProps> = ({ sessionId }) => {
+  const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Productos", "Haz un pedido de los productos presentados.");
 
   const { user, isErrorUser } = useUser(sessionId);
@@ -48,6 +50,10 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
     }),
     { totalPrice: 0, totalNumberOfItems: 0 }
   );
+
+  const onOrder = async () => {
+    await push(Route.CHECKOUT);
+  };
 
   return Layout(
     <>
@@ -79,9 +85,9 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
           )}
         </div>
 
-        {/* TODO make this button do something */}
         {order && buttonInfo && order.customizedProducts.length > 0 && (
           <Button
+            onClick={onOrder}
             label={`Pide ${buttonInfo.totalNumberOfItems} por ${buttonInfo.totalPrice} €`}
             className="fixed left-5 right-5 bottom-5 m-auto w-[unset] max-w-md"
           />

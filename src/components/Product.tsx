@@ -2,10 +2,10 @@ import { Product, type Choice, type ChoiceGroup, type CustomizedProduct } from "
 import Image from "next/image";
 import Link from "next/link";
 import { type ReactElement } from "react";
-import { RiAddLine, RiSubtractLine } from "react-icons/ri";
 import useAddOrRemoveProductToOrder from "~/hooks/api/mutation/useAddOrRemoveProductToOrder";
 import { Route } from "~/utils/constant";
 import ErrorMessage from "./ErrorMessage";
+import OrderedProduct from "./OrderedProduct";
 
 export interface ProductProps {
   product: Product & { choiceGroups: ChoiceGroup[] };
@@ -67,32 +67,13 @@ const Product = ({ product, orderProducts, orderId, sessionId }: ProductProps) =
       )}
 
       {orderProducts &&
-        orderProducts.map(({ id, amount, choices }) => (
-          <div key={id} className="flex items-center gap-3 rounded-lg border border-opacity-10 bg-slate-100 p-2">
-            <div className="flex grow flex-col gap-1">
-              <p className="text-sm font-medium tracking-wide">{name}</p>
-
-              <p className="text-xs font-normal tracking-wide">
-                {choices.map(({ label }, i) => `${i === 0 ? "" : ", "}${label}`)}
-              </p>
-            </div>
-
-            <button
-              onClick={() => handleRemoveProduct(choices)}
-              className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white"
-            >
-              <RiSubtractLine className="h-6 w-6" />
-            </button>
-
-            <p className="w-5 min-w-fit text-center text-base font-medium tracking-wide">{amount}</p>
-
-            <button
-              onClick={() => handleAddProduct(choices)}
-              className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white"
-            >
-              <RiAddLine className="h-6 w-6" />
-            </button>
-          </div>
+        orderProducts.map((customizedProduct) => (
+          <OrderedProduct
+            key={customizedProduct.id}
+            customizedProduct={customizedProduct}
+            onAddProduct={handleAddProduct}
+            onRemoveProduct={handleRemoveProduct}
+          />
         ))}
 
       {isErrorAddOrRemoveProductToOrder && <ErrorMessage message="Hubo un error al modificar el pedido." />}

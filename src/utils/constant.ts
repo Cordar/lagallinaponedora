@@ -1,6 +1,7 @@
 export enum Route {
   HOME = "/",
   CUSTOMIZE_PRODUCT = "/personalizar-producto/",
+  CHECKOUT = "/tu-pedido/",
 }
 
 export enum Cookie {
