@@ -83,8 +83,16 @@ export const publicRouter = createTRPCRouter({
           customizedProduct.choices.every((choice) => input.choices.some((inputChoice) => inputChoice.id === choice.id))
       );
 
-      // Remove from order if it exists
-      if (existingCustomizedProduct && input.remove) {
+      // Increase the amount if it exists and there is more than 1
+      if (existingCustomizedProduct && input.remove && existingCustomizedProduct.amount > 1) {
+        await ctx.prisma.customizedProduct.update({
+          where: { id: existingCustomizedProduct.id },
+          data: { amount: existingCustomizedProduct.amount - 1 },
+        });
+      }
+
+      // Delete if it exists and there is only 1
+      else if (existingCustomizedProduct && input.remove) {
         await ctx.prisma.customizedProduct.delete({ where: { id: existingCustomizedProduct.id } });
       }
 

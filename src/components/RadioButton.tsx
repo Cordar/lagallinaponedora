@@ -10,7 +10,7 @@ const RadioButton = ({ id, label, register }: RadioButtonProps) => {
   return (
     <label htmlFor={id} className="flex flex-row gap-4">
       <input id={id} value={id} type="radio" className="peer hidden" {...register} />
-      <div className="h-6 w-6 rounded-full border-2 border-green-900 border-opacity-30 bg-white peer-checked:bg-green-500" />
+      <div className="h-6 w-6 rounded-full border-2 border-green-900 border-opacity-30 bg-white peer-checked:bg-green-600" />
       <p className="text-base">{label}</p>
     </label>
   );

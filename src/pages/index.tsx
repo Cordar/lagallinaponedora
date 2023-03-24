@@ -32,9 +32,6 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
   const { order, isErrorOrder } = useCurrentOrder(user?.sessionId);
 
-  // TODO use this order to paint the currently selected products
-  console.log(order);
-
   if (isLoadingProducts) return Layout(<Loading />);
 
   if (isErrorProducts || isErrorUser || isErrorOrder)
@@ -53,12 +50,21 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
               {products &&
                 products
                   .filter((product) => product.category === category)
-                  .map((product) => <Product key={product.id} product={product} />)}
+                  .map((product) => (
+                    <Product
+                      key={product.id}
+                      product={product}
+                      orderProducts={order?.customizedProducts.filter(({ productId }) => productId === product.id)}
+                      sessionId={user?.sessionId}
+                      orderId={order?.id}
+                    />
+                  ))}
             </div>
           )
         )}
       </div>
 
+      {/* TODO make this button do something */}
       <Button label="Pide 2 por 24 €" className="fixed left-5 right-5 bottom-5 w-[unset]" />
     </>
   );

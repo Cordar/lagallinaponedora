@@ -10,6 +10,7 @@ import RadioGroup from "~/components/RadioGroup";
 import useAddOrRemoveProductToOrder from "~/hooks/api/mutation/useAddOrRemoveProductToOrder";
 import useCurrentOrder from "~/hooks/api/query/useCurrentOrder";
 import useProduct from "~/hooks/api/query/useProduct";
+import useProducts from "~/hooks/api/query/useProducts";
 import useUserSession from "~/hooks/api/query/useUser";
 import { Cookie, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
@@ -30,7 +31,8 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
   const { query, push } = useRouter();
   const productId = query.productId ? parseInt(query.productId as string) : undefined;
 
-  const { product, isLoadingProduct, isErrorProduct } = useProduct(productId);
+  const { products } = useProducts();
+  const { product, isErrorProduct } = useProduct(productId);
   const { user, isLoadingUser, isErrorUser } = useUserSession(sessionId);
   const { order, isErrorOrder } = useCurrentOrder(user?.sessionId);
 
@@ -62,12 +64,14 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
     setAllInputsFilled(isFilled);
   }, [getValues, product, watchAllFields]);
 
-  if (isLoadingProduct || isLoadingUser) return Layout(<Loading />);
-  else if (isErrorProduct || isErrorUser || isErrorOrder || !product?.choiceGroups)
+  const productInfo = products?.find((product) => product.id === productId);
+
+  if (isLoadingUser || !productInfo) return Layout(<Loading />);
+  else if (isErrorProduct || isErrorUser || isErrorOrder)
     return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
 
   const onFormSubmit: SubmitHandler<FormData> = async (data) => {
-    if (!order || !user) return;
+    if (!order || !user || !product) return;
     const choicesIds = new Set(Object.values(data).map((choice) => parseInt(choice)));
     const choices = product.choiceGroups.flatMap(({ choices, id }) =>
       choices
@@ -79,7 +83,7 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
     await push(Route.HOME);
   };
 
-  const { name, price, imageSrc } = product;
+  const { name, price, imageSrc } = productInfo;
 
   return Layout(
     <form onSubmit={handleSubmit(onFormSubmit)} className="relative flex w-full grow flex-col gap-8">
@@ -103,18 +107,22 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
       </div>
 
       <div className="mb-28 flex flex-col gap-8">
-        {product.choiceGroups.map(({ id, title, choices }) => (
-          <RadioGroup
-            key={id}
-            title={title}
-            buttons={choices.map(({ id, label }) => ({
-              id: id.toString(),
-              label,
-            }))}
-            register={register(id.toString())}
-            error={getFormError(id.toString())}
-          />
-        ))}
+        {product ? (
+          product.choiceGroups.map(({ id, title, choices }) => (
+            <RadioGroup
+              key={id}
+              title={title}
+              buttons={choices.map(({ id, label }) => ({
+                id: id.toString(),
+                label,
+              }))}
+              register={register(id.toString())}
+              error={getFormError(id.toString())}
+            />
+          ))
+        ) : (
+          <Loading />
+        )}
       </div>
 
       <Button

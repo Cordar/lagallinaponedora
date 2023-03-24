@@ -33,8 +33,17 @@ const useAddOrRemoveProductToOrder = () => {
             customizedProduct.choices.every((choice) => choices.some((inputChoice) => inputChoice.id === choice.id))
         );
 
-      // Remove from order if it exists
-      if (existingCustomizedProduct && remove) {
+      // Increase the amount if it exists and there is more than 1
+      if (existingCustomizedProduct && remove && existingCustomizedProduct.amount > 1) {
+        newOrder.customizedProducts = newOrder.customizedProducts.map((customizedProduct) => {
+          if (customizedProduct.id === existingCustomizedProduct.id)
+            return { ...customizedProduct, amount: customizedProduct.amount - 1 };
+          return customizedProduct;
+        });
+      }
+
+      // Delete if it exists and there is only 1
+      else if (existingCustomizedProduct && remove) {
         newOrder.customizedProducts = newOrder.customizedProducts.filter(
           (customizedProduct) => customizedProduct.id !== existingCustomizedProduct.id
         );
