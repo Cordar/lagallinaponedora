@@ -4,9 +4,10 @@ import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import Product from "~/components/Product";
-import useUserSession from "~/hooks/useUser";
-import { api } from "~/utils/api";
-import { Cookie, ONE_DAY } from "~/utils/constant";
+import useCurrentOrder from "~/hooks/api/query/useCurrentOrder";
+import useProducts from "~/hooks/api/query/useProducts";
+import useUser from "~/hooks/api/query/useUser";
+import { Cookie } from "~/utils/constant";
 import { default as getLayout } from "~/utils/getLayout";
 import { type PageProps } from "./_app";
 
@@ -27,41 +28,61 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 const Home: NextPage<PageProps> = ({ sessionId }) => {
   const Layout = getLayout("La Gallina Ponedora | Productos", "Haz un pedido de los productos presentados.");
 
-  const { user, isLoadingUser, isErrorUser } = useUserSession(sessionId);
-  const {
-    data: products,
-    isLoading,
-    isError,
-    error,
-  } = api.public.getProducts.useQuery(undefined, { staleTime: ONE_DAY });
+  const { user, isErrorUser } = useUser(sessionId);
+  const { products, isLoadingProducts, isErrorProducts } = useProducts();
+  const { order, isErrorOrder } = useCurrentOrder(user?.sessionId);
 
-  console.log(user);
+  if (isLoadingProducts) return Layout(<Loading />);
 
-  if (isLoading || isLoadingUser) return Layout(<Loading />);
-  else if (isError || !products) return Layout(<ErrorMessage message={error.message} />);
-  else if (isErrorUser) return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
+  if (isErrorProducts || isErrorUser || isErrorOrder)
+    return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
+
+  const buttonInfo = order?.customizedProducts.reduce(
+    ({ totalPrice, totalNumberOfItems }, { amount, productId }) => ({
+      totalNumberOfItems: totalNumberOfItems + amount,
+      totalPrice: totalPrice + amount * (products?.find(({ id }) => id === productId)?.price ?? 0),
+    }),
+    { totalPrice: 0, totalNumberOfItems: 0 }
+  );
 
   return Layout(
     <>
-      <h1 className="text-ellipsis text-2xl font-bold tracking-wide">La Gallina Ponedora</h1>
-
-      <div className="mb-28 flex flex-col gap-6">
-        {[ProductCategory.COMBO, ProductCategory.DISH, ProductCategory.DESSERT, ProductCategory.DRINK].map(
-          (category) => (
-            <div key={category} className="flex max-w-full flex-col gap-2">
-              <h2 className="text-ellipsis text-xl font-semibold tracking-wide">{ProductCategoryMap[category]}</h2>
-
-              {products
-                .filter((product) => product.category === category)
-                .map((product) => (
-                  <Product key={product.id} product={product} />
-                ))}
-            </div>
-          )
-        )}
+      <div className="relative flex flex-col items-center gap-5 bg-gradient-to-b from-lgp-gradient-orange-dark to-lgp-gradient-orange-light px-5 py-10">
+        <h1 className="text-ellipsis text-xl font-bold tracking-wide">La Gallina Ponedora</h1>
       </div>
 
-      <Button label="Pide 2 por 24 €" className="fixed left-5 right-5 bottom-5 w-[unset]" />
+      <div className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
+        <div className="mb-20 flex flex-col gap-6">
+          {[ProductCategory.COMBO, ProductCategory.DISH, ProductCategory.DESSERT, ProductCategory.DRINK].map(
+            (category) => (
+              <div key={category} className="flex max-w-full flex-col gap-2">
+                <h2 className="text-ellipsis text-lg font-semibold tracking-wide">{ProductCategoryMap[category]}</h2>
+
+                {products &&
+                  products
+                    .filter((product) => product.category === category)
+                    .map((product) => (
+                      <Product
+                        key={product.id}
+                        product={product}
+                        orderProducts={order?.customizedProducts.filter(({ productId }) => productId === product.id)}
+                        sessionId={user?.sessionId}
+                        orderId={order?.id}
+                      />
+                    ))}
+              </div>
+            )
+          )}
+        </div>
+
+        {/* TODO make this button do something */}
+        {order && buttonInfo && order.customizedProducts.length > 0 && (
+          <Button
+            label={`Pide ${buttonInfo.totalNumberOfItems} por ${buttonInfo.totalPrice} €`}
+            className="fixed left-5 right-5 bottom-5 w-[unset]"
+          />
+        )}
+      </div>
     </>
   );
 };

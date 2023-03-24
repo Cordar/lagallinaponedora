@@ -11,8 +11,6 @@ CREATE TABLE "Product" (
     "price" INTEGER NOT NULL,
     "imageSrc" TEXT,
     "category" "ProductCategory" NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
 );
@@ -20,10 +18,8 @@ CREATE TABLE "Product" (
 -- CreateTable
 CREATE TABLE "CustomizedProduct" (
     "id" SERIAL NOT NULL,
-    "amount" INTEGER NOT NULL,
-    "productId" INTEGER,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "amount" INTEGER NOT NULL DEFAULT 1,
+    "productId" INTEGER NOT NULL,
 
     CONSTRAINT "CustomizedProduct_pkey" PRIMARY KEY ("id")
 );
@@ -32,8 +28,6 @@ CREATE TABLE "CustomizedProduct" (
 CREATE TABLE "ChoiceGroup" (
     "id" SERIAL NOT NULL,
     "title" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "ChoiceGroup_pkey" PRIMARY KEY ("id")
 );
@@ -42,9 +36,7 @@ CREATE TABLE "ChoiceGroup" (
 CREATE TABLE "Choice" (
     "id" SERIAL NOT NULL,
     "label" TEXT NOT NULL,
-    "choiceGroupId" INTEGER,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "choiceGroupId" INTEGER NOT NULL,
 
     CONSTRAINT "Choice_pkey" PRIMARY KEY ("id")
 );
@@ -52,8 +44,8 @@ CREATE TABLE "Choice" (
 -- CreateTable
 CREATE TABLE "Order" (
     "id" SERIAL NOT NULL,
-    "orderStatus" "OrderStatus" NOT NULL DEFAULT 'STARTED',
-    "customerId" INTEGER,
+    "status" "OrderStatus" NOT NULL DEFAULT 'STARTED',
+    "customerId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -91,6 +83,9 @@ CREATE TABLE "_ChoiceToCustomizedProduct" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Customer_sessionId_key" ON "Customer"("sessionId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "_CustomizedProductToOrder_AB_unique" ON "_CustomizedProductToOrder"("A", "B");
 
 -- CreateIndex
@@ -109,13 +104,13 @@ CREATE UNIQUE INDEX "_ChoiceToCustomizedProduct_AB_unique" ON "_ChoiceToCustomiz
 CREATE INDEX "_ChoiceToCustomizedProduct_B_index" ON "_ChoiceToCustomizedProduct"("B");
 
 -- AddForeignKey
-ALTER TABLE "CustomizedProduct" ADD CONSTRAINT "CustomizedProduct_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "CustomizedProduct" ADD CONSTRAINT "CustomizedProduct_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Choice" ADD CONSTRAINT "Choice_choiceGroupId_fkey" FOREIGN KEY ("choiceGroupId") REFERENCES "ChoiceGroup"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Choice" ADD CONSTRAINT "Choice_choiceGroupId_fkey" FOREIGN KEY ("choiceGroupId") REFERENCES "ChoiceGroup"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Order" ADD CONSTRAINT "Order_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Order" ADD CONSTRAINT "Order_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_CustomizedProductToOrder" ADD CONSTRAINT "_CustomizedProductToOrder_A_fkey" FOREIGN KEY ("A") REFERENCES "CustomizedProduct"("id") ON DELETE CASCADE ON UPDATE CASCADE;

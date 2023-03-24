@@ -25,22 +25,16 @@ model Product {
     category           ProductCategory
     choiceGroups       ChoiceGroup[]
     customizedProducts CustomizedProduct[]
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
 }
 
 model CustomizedProduct {
     id      Int      @id @default(autoincrement())
-    amount  Int
+    amount  Int      @default(1)
     choices Choice[]
     orders  Order[]
 
-    Product   Product? @relation(fields: [productId], references: [id])
-    productId Int?
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    Product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+    productId Int
 }
 
 model ChoiceGroup {
@@ -48,9 +42,6 @@ model ChoiceGroup {
     title    String
     products Product[]
     choices  Choice[]
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
 }
 
 model Choice {
@@ -58,11 +49,8 @@ model Choice {
     label              String
     customizedProducts CustomizedProduct[]
 
-    ChoiceGroup   ChoiceGroup? @relation(fields: [choiceGroupId], references: [id])
-    choiceGroupId Int?
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    ChoiceGroup   ChoiceGroup @relation(fields: [choiceGroupId], references: [id], onDelete: Cascade)
+    choiceGroupId Int
 }
 
 enum OrderStatus {
@@ -73,11 +61,11 @@ enum OrderStatus {
 
 model Order {
     id                 Int                 @id @default(autoincrement())
-    orderStatus        OrderStatus         @default(STARTED)
+    status             OrderStatus         @default(STARTED)
     customizedProducts CustomizedProduct[]
 
-    Customer   Customer? @relation(fields: [customerId], references: [id])
-    customerId Int?
+    Customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    customerId Int
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
