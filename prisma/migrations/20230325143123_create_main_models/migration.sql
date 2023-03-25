@@ -2,7 +2,7 @@
 CREATE TYPE "ProductCategory" AS ENUM ('COMBO', 'DISH', 'DRINK', 'DESSERT');
 
 -- CreateEnum
-CREATE TYPE "OrderStatus" AS ENUM ('STARTED', 'PAID', 'COOKED');
+CREATE TYPE "OrderStatus" AS ENUM ('STARTED', 'PAID', 'COOKED', 'DELIVERED');
 
 -- CreateTable
 CREATE TABLE "Product" (
@@ -11,6 +11,7 @@ CREATE TABLE "Product" (
     "price" INTEGER NOT NULL,
     "imageSrc" TEXT,
     "category" "ProductCategory" NOT NULL,
+    "cookingTimeInMinutes" INTEGER NOT NULL,
 
     CONSTRAINT "Product_pkey" PRIMARY KEY ("id")
 );

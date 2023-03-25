@@ -30,6 +30,10 @@ const Home: NextPage<PageProps> = () => {
   const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Productos", "Haz un pedido de los productos presentados.");
 
+  // HACK uncomment this to populate the database
+  // const { populateDatabase } = usePopulateDatabase();
+  // useEffect(() => populateDatabase, [populateDatabase]);
+
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
   const { user, isErrorUser } = useUser();
   const { startedOrder, isErrorStartedOrder } = useStartedOrder(user?.sessionId);
