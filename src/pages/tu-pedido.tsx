@@ -1,6 +1,7 @@
 import { type Choice } from "@prisma/client";
-import { type GetServerSideProps, type NextPage } from "next";
+import { type GetStaticProps, type NextPage } from "next";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { RiArrowLeftLine } from "react-icons/ri";
@@ -11,18 +12,18 @@ import Loading from "~/components/Loading";
 import OrderedProduct from "~/components/OrderedProduct";
 import useAddOrRemoveProductToOrder from "~/hooks/api/mutation/useAddOrRemoveProductToOrder";
 import useUpdateCustomerInfo from "~/hooks/api/mutation/useUpdateCustomerInfo";
-import useCurrentOrder from "~/hooks/api/query/useCurrentOrder";
 import useProducts from "~/hooks/api/query/useProducts";
+import useStartedOrder from "~/hooks/api/query/useStartedOrder";
 import useUser from "~/hooks/api/query/useUser";
-import { Cookie, EMAIL_REGEX, Route } from "~/utils/constant";
+import { EMAIL_REGEX, ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
+import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
 import { type PageProps } from "./_app";
 
-// eslint-disable-next-line @typescript-eslint/require-await
-export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const sessionCookie = req.cookies[Cookie.SESSION];
-  const props: PageProps = { sessionId: sessionCookie ?? null };
-  return { props };
+export const getStaticProps: GetStaticProps = async () => {
+  const ssg = getTrpcSSGHelpers();
+  await ssg.public.getProducts.prefetch();
+  return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
 };
 
 interface Inputs {
@@ -30,27 +31,36 @@ interface Inputs {
   name: string;
 }
 
-const Home: NextPage<PageProps> = ({ sessionId }) => {
+const Home: NextPage<PageProps> = () => {
+  const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
 
-  const { user, isErrorUser } = useUser(sessionId);
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
-  const { order, isLoadingOrder, isErrorOrder } = useCurrentOrder(user?.sessionId);
+  const { user, isErrorUser } = useUser();
+  const { startedOrder, isLoadingStartedOrder, isErrorStartedOrder } = useStartedOrder(user?.sessionId);
 
   const { mutateUpdateCustomerInfo, isLoadingUpdateCustomerInfo, isErrorUpdateCustomerInfo } = useUpdateCustomerInfo();
+  const { mutateAddOrRemoveProductToOrder, isLoadingAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } =
+    useAddOrRemoveProductToOrder();
 
-  // TODO redirect to home if there are no products in the order
-
-  const { mutateAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } = useAddOrRemoveProductToOrder();
+  useEffect(() => {
+    if (startedOrder && startedOrder.customizedProducts.length <= 0) void push(Route.HOME);
+  }, [startedOrder, push]);
 
   const handleAddProduct = (productId: number, choices: Choice[]) => {
-    if (!order || !sessionId) return;
-    mutateAddOrRemoveProductToOrder({ productId, orderId: order.id, sessionId, choices });
+    if (!startedOrder || !user?.sessionId) return;
+    mutateAddOrRemoveProductToOrder({ productId, orderId: startedOrder.id, sessionId: user.sessionId, choices });
   };
 
   const handleRemoveProduct = (productId: number, choices: Choice[]) => {
-    if (!order || !sessionId) return;
-    mutateAddOrRemoveProductToOrder({ remove: true, productId, orderId: order.id, sessionId, choices });
+    if (!startedOrder || !user?.sessionId) return;
+    mutateAddOrRemoveProductToOrder({
+      remove: true,
+      productId,
+      orderId: startedOrder.id,
+      sessionId: user.sessionId,
+      choices,
+    });
   };
 
   const {
@@ -72,9 +82,9 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
 
   const [updateData, setUpdateData] = useState(false);
 
-  if (isLoadingProducts || isLoadingOrder) return Layout(<Loading />);
+  if (isLoadingProducts || isLoadingStartedOrder) return Layout(<Loading />);
 
-  if (isErrorProducts || isErrorUser || isErrorOrder)
+  if (isErrorProducts || isErrorUser || isErrorStartedOrder)
     return Layout(
       <div className="flex h-full w-full items-center justify-center">
         <ErrorMessage message="No se ha podido cargar la página" />
@@ -82,14 +92,15 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
     );
 
   const onFormSubmit: SubmitHandler<Inputs> = ({ email, name }) => {
-    if (sessionId && email && name) {
-      mutateUpdateCustomerInfo({ sessionId, email, name });
+    if (user?.sessionId && email && name && startedOrder) {
+      mutateUpdateCustomerInfo({ sessionId: user.sessionId, email, name });
 
-      // TODO redirect to payment
+      // TODO Redirect to payment here
+      void push(`${Route.ORDER_STATUS}${startedOrder.id}`);
     }
   };
 
-  const totalPrice = order?.customizedProducts.reduce(
+  const totalPrice = startedOrder?.customizedProducts.reduce(
     (prev, { amount, productId }) => prev + amount * (products?.find(({ id }) => id === productId)?.price ?? 0),
     0
   );
@@ -105,17 +116,18 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
         </Link>
       </div>
 
-      {order?.customizedProducts && (
+      {startedOrder?.customizedProducts && (
         <div className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
           <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Tu pedido</h3>
 
-          {order.customizedProducts
+          {startedOrder.customizedProducts
             .sort((a, b) => b.id - a.id)
             .map((customizedProduct) => (
               <OrderedProduct
                 key={customizedProduct.id}
                 customizedProduct={customizedProduct}
                 onAddProduct={handleAddProduct}
+                disableButtons={isLoadingAddOrRemoveProductToOrder}
                 onRemoveProduct={handleRemoveProduct}
               />
             ))}
@@ -166,12 +178,12 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
           </>
         ) : (
           <>
-            <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{`Bienvenido de nuevo ${user.name}`}</h3>
+            <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{`¡Bienvenido de nuevo ${user.name}!`}</h3>
 
-            <p className="text-sm font-medium tracking-wide">{`Tu email: ${user.email}`}</p>
+            <p className="text-sm font-medium tracking-wide">{user.email}</p>
 
             <small className="text-slate-400">
-              Te avisaremos por email cuando tu pedido esté listo y te llamaremos por tu nombre
+              Te avisaremos por email cuando tu pedido esté listo y te llamaremos por tu nombre.
             </small>
 
             <button

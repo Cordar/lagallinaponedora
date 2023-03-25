@@ -17,7 +17,8 @@ export interface ProductProps {
 const Product = ({ product, orderProducts, orderId, sessionId }: ProductProps) => {
   const { id, name, price, imageSrc, choiceGroups } = product;
 
-  const { mutateAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } = useAddOrRemoveProductToOrder();
+  const { mutateAddOrRemoveProductToOrder, isLoadingAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } =
+    useAddOrRemoveProductToOrder();
 
   const handleAddProduct = (productId: number, choices: Choice[]) => {
     if (!orderId || !sessionId) return;
@@ -72,6 +73,7 @@ const Product = ({ product, orderProducts, orderId, sessionId }: ProductProps) =
             key={customizedProduct.id}
             customizedProduct={customizedProduct}
             onAddProduct={handleAddProduct}
+            disableButtons={isLoadingAddOrRemoveProductToOrder}
             onRemoveProduct={handleRemoveProduct}
           />
         ))}

@@ -13,8 +13,8 @@ const useAddOrRemoveProductToOrder = () => {
     isError: isErrorAddOrRemoveProductToOrder,
   } = api.public.addorRemoveItemToOrder.useMutation({
     onMutate: async ({ sessionId, productId, choices, remove }) => {
-      await apiContext.public.getCurrentOrder.cancel();
-      const previousOrder = apiContext.public.getCurrentOrder.getData({ sessionId });
+      await apiContext.public.getStartedOrder.cancel();
+      const previousOrder = apiContext.public.getStartedOrder.getData({ sessionId });
 
       if (!previousOrder) return { previousOrder };
 
@@ -67,15 +67,15 @@ const useAddOrRemoveProductToOrder = () => {
         newOrder.customizedProducts.push({ id: -Math.round(Math.random() * 100000000), productId, amount: 1, choices });
       }
 
-      apiContext.public.getCurrentOrder.setData({ sessionId }, newOrder);
+      apiContext.public.getStartedOrder.setData({ sessionId }, newOrder);
 
       return { previousOrder };
     },
     onError: (err, { sessionId }, context) => {
-      apiContext.public.getCurrentOrder.setData({ sessionId }, context?.previousOrder);
+      apiContext.public.getStartedOrder.setData({ sessionId }, context?.previousOrder);
     },
-    onSettled: async () => {
-      if (mutations <= 1) await apiContext.public.getCurrentOrder.invalidate();
+    onSettled: () => {
+      if (mutations <= 1) void apiContext.public.getStartedOrder.invalidate();
     },
   });
 

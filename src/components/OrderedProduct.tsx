@@ -4,12 +4,19 @@ import useProducts from "~/hooks/api/query/useProducts";
 
 export interface OrderedProductProps {
   customizedProduct: CustomizedProduct & { choices: Choice[] };
-  onAddProduct: (productId: number, choices: Choice[]) => void;
-  onRemoveProduct: (productId: number, choices: Choice[]) => void;
+  onAddProduct?: (productId: number, choices: Choice[]) => void;
+  onRemoveProduct?: (productId: number, choices: Choice[]) => void;
+  disableButtons?: boolean;
   showPrice?: boolean;
 }
 
-const OrderedProduct = ({ customizedProduct, onAddProduct, onRemoveProduct, showPrice }: OrderedProductProps) => {
+const OrderedProduct = ({
+  customizedProduct,
+  onAddProduct,
+  onRemoveProduct,
+  disableButtons,
+  showPrice,
+}: OrderedProductProps) => {
   const { id, amount, choices, productId } = customizedProduct;
 
   const { products } = useProducts();
@@ -26,9 +33,11 @@ const OrderedProduct = ({ customizedProduct, onAddProduct, onRemoveProduct, show
       <div className="flex grow flex-col gap-1">
         <p className="text-sm font-medium tracking-wide">{product?.name ?? ""}</p>
 
-        <p className="text-xs font-normal tracking-wide">
-          {choices.map(({ label }, i) => `${i === 0 ? "" : ", "}${label}`)}
-        </p>
+        {choices.length > 0 && (
+          <p className="text-xs font-normal tracking-wide">
+            {choices.map(({ label }, i) => `${i === 0 ? "" : ", "}${label}`)}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col items-end gap-3">
@@ -38,25 +47,29 @@ const OrderedProduct = ({ customizedProduct, onAddProduct, onRemoveProduct, show
           </p>
         )}
 
-        <div className="flex grow items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={() => onRemoveProduct(productId, choices)}
-            className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white"
-          >
-            <RiSubtractLine className="h-6 w-6" />
-          </button>
+        {onRemoveProduct && onAddProduct && (
+          <div className="flex grow items-center justify-center gap-3">
+            <button
+              type="button"
+              disabled={disableButtons}
+              onClick={() => onRemoveProduct(productId, choices)}
+              className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white disabled:opacity-70"
+            >
+              <RiSubtractLine className="h-6 w-6" />
+            </button>
 
-          <p className="w-5 min-w-fit text-center text-base font-medium tracking-wide">{amount}</p>
+            <p className="w-5 min-w-fit text-center text-base font-medium tracking-wide">{amount}</p>
 
-          <button
-            type="button"
-            onClick={() => onAddProduct(productId, choices)}
-            className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white"
-          >
-            <RiAddLine className="h-6 w-6" />
-          </button>
-        </div>
+            <button
+              type="button"
+              disabled={disableButtons}
+              onClick={() => onAddProduct(productId, choices)}
+              className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white disabled:opacity-70"
+            >
+              <RiAddLine className="h-6 w-6" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
