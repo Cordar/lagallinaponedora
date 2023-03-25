@@ -45,7 +45,7 @@ export const publicRouter = createTRPCRouter({
     }
   }),
 
-  getCurrentOrder: publicProcedure.input(z.object({ sessionId: z.string() })).query(async ({ ctx, input }) => {
+  getStartedOrder: publicProcedure.input(z.object({ sessionId: z.string() })).query(async ({ ctx, input }) => {
     try {
       const customer = await ctx.prisma.customer.findUnique({
         where: { sessionId: input.sessionId },
@@ -66,6 +66,25 @@ export const publicRouter = createTRPCRouter({
       return order;
     } catch (error) {
       new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener tu pedido actual." });
+    }
+  }),
+
+  getPaidOrders: publicProcedure.input(z.object({ sessionId: z.string() })).query(async ({ ctx, input }) => {
+    try {
+      const customer = await ctx.prisma.customer.findUnique({
+        where: { sessionId: input.sessionId },
+        include: {
+          orders: {
+            include: { customizedProducts: { include: { choices: true } } },
+            orderBy: { updatedAt: "asc" },
+          },
+        },
+      });
+      if (!customer) throw new Error();
+
+      return customer.orders.filter((order) => order.status === OrderStatus.PAID);
+    } catch (error) {
+      new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener tus pedidos." });
     }
   }),
 
@@ -140,6 +159,20 @@ export const publicRouter = createTRPCRouter({
         });
       }
     }),
+
+  updateOrderToPaid: publicProcedure.input(z.object({ orderId: z.number() })).mutation(async ({ ctx, input }) => {
+    try {
+      await ctx.prisma.order.update({
+        where: { id: input.orderId },
+        data: { status: OrderStatus.PAID },
+      });
+    } catch (error) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: `Hubo un error al actualizar el pedido.`,
+      });
+    }
+  }),
 
   updateCustomerInfo: publicProcedure
     .input(z.object({ sessionId: z.string(), name: z.string(), email: z.string().email() }))

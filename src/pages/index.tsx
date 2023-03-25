@@ -1,15 +1,16 @@
 import { ProductCategory } from "@prisma/client";
-import { type NextPage } from "next";
+import { type GetStaticProps, type NextPage } from "next";
 import { useRouter } from "next/router";
 import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import Product from "~/components/Product";
-import useCurrentOrder from "~/hooks/api/query/useCurrentOrder";
 import useProducts from "~/hooks/api/query/useProducts";
+import useStartedOrder from "~/hooks/api/query/useStartedOrder";
 import useUser from "~/hooks/api/query/useUser";
-import { Route } from "~/utils/constant";
+import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import { default as getLayout } from "~/utils/getLayout";
+import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
 import { type PageProps } from "./_app";
 
 const ProductCategoryMap: Record<ProductCategory, string> = {
@@ -19,12 +20,11 @@ const ProductCategoryMap: Record<ProductCategory, string> = {
   DRINK: "Bebidas",
 };
 
-// eslint-disable-next-line @typescript-eslint/require-await
-// export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-//   const sessionCookie = req.cookies[Cookie.SESSION];
-//   const props: PageProps = { sessionId: sessionCookie ?? null };
-//   return { props };
-// };
+export const getStaticProps: GetStaticProps = async () => {
+  const ssg = getTrpcSSGHelpers();
+  await ssg.public.getProducts.prefetch();
+  return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
+};
 
 const Home: NextPage<PageProps> = () => {
   const { push } = useRouter();
@@ -32,18 +32,18 @@ const Home: NextPage<PageProps> = () => {
 
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
   const { user, isErrorUser } = useUser();
-  const { order, isErrorOrder } = useCurrentOrder(user?.sessionId);
+  const { startedOrder, isErrorStartedOrder } = useStartedOrder(user?.sessionId);
 
   if (isLoadingProducts) return Layout(<Loading />);
 
-  if (isErrorProducts || isErrorUser || isErrorOrder)
+  if (isErrorProducts || isErrorUser || isErrorStartedOrder)
     return Layout(
       <div className="flex h-full w-full items-center justify-center">
         <ErrorMessage message="No se ha podido cargar la página" />
       </div>
     );
 
-  const buttonInfo = order?.customizedProducts.reduce(
+  const buttonInfo = startedOrder?.customizedProducts.reduce(
     ({ totalPrice, totalNumberOfItems }, { amount, productId }) => ({
       totalNumberOfItems: totalNumberOfItems + amount,
       totalPrice: totalPrice + amount * (products?.find(({ id }) => id === productId)?.price ?? 0),
@@ -75,9 +75,11 @@ const Home: NextPage<PageProps> = () => {
                       <Product
                         key={product.id}
                         product={product}
-                        orderProducts={order?.customizedProducts.filter(({ productId }) => productId === product.id)}
+                        orderProducts={startedOrder?.customizedProducts.filter(
+                          ({ productId }) => productId === product.id
+                        )}
                         sessionId={user?.sessionId}
-                        orderId={order?.id}
+                        orderId={startedOrder?.id}
                       />
                     ))}
               </div>
@@ -85,7 +87,7 @@ const Home: NextPage<PageProps> = () => {
           )}
         </div>
 
-        {order && buttonInfo && order.customizedProducts.length > 0 && (
+        {startedOrder && buttonInfo && startedOrder.customizedProducts.length > 0 && (
           <Button
             onClick={onOrder}
             label={`Pide ${buttonInfo.totalNumberOfItems} por ${buttonInfo.totalPrice} €`}

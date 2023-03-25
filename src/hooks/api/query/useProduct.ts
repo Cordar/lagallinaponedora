@@ -1,5 +1,5 @@
 import { api } from "~/utils/api";
-import { ONE_DAY } from "~/utils/constant";
+import { ONE_DAY_MS } from "~/utils/constant";
 
 const useProduct = (productId?: number) => {
   const {
@@ -8,7 +8,7 @@ const useProduct = (productId?: number) => {
     isError: isErrorProduct,
   } = api.public.getProductWithChoiceGroups.useQuery(
     { productId: productId ?? -1 },
-    { enabled: !!productId, staleTime: ONE_DAY }
+    { enabled: !!productId, staleTime: ONE_DAY_MS }
   );
 
   return { product, isLoadingProduct, isErrorProduct };

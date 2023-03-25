@@ -1,4 +1,4 @@
-import { type NextPage } from "next";
+import { type GetStaticProps, type NextPage } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -10,20 +10,29 @@ import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import RadioGroup from "~/components/RadioGroup";
 import useAddOrRemoveProductToOrder from "~/hooks/api/mutation/useAddOrRemoveProductToOrder";
-import useCurrentOrder from "~/hooks/api/query/useCurrentOrder";
 import useProduct from "~/hooks/api/query/useProduct";
 import useProducts from "~/hooks/api/query/useProducts";
+import useStartedOrder from "~/hooks/api/query/useStartedOrder";
 import { default as useUser } from "~/hooks/api/query/useUser";
-import { Route } from "~/utils/constant";
+import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
+import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
 import { type PageProps } from "../_app";
 
-// eslint-disable-next-line @typescript-eslint/require-await
-// export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-//   const sessionCookie = req.cookies[Cookie.SESSION];
-//   const props: PageProps = { sessionId: sessionCookie ?? null };
-//   return { props };
-// };
+export const getStaticPaths = async () => {
+  const ssg = getTrpcSSGHelpers();
+  const products = await ssg.public.getProducts.fetch();
+  const paths = products?.map((product) => ({ params: { productId: product.id.toString() } })) ?? [];
+  return { paths, fallback: false };
+};
+
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const ssg = getTrpcSSGHelpers();
+  await ssg.public.getProducts.prefetch();
+  if (params?.productId)
+    await ssg.public.getProductWithChoiceGroups.prefetch({ productId: parseInt(params.productId as string) });
+  return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
+};
 
 type FormData = Record<string, string>;
 
@@ -36,7 +45,7 @@ const CustomizeProduct: NextPage<PageProps> = () => {
   const { products } = useProducts();
   const { product, isErrorProduct } = useProduct(productId);
   const { user, isLoadingUser, isErrorUser } = useUser();
-  const { order, isErrorOrder } = useCurrentOrder(user?.sessionId);
+  const { startedOrder, isErrorStartedOrder } = useStartedOrder(user?.sessionId);
 
   const { mutateAddOrRemoveProductToOrder, isLoadingAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } =
     useAddOrRemoveProductToOrder();
@@ -68,12 +77,12 @@ const CustomizeProduct: NextPage<PageProps> = () => {
 
   const productInfo = products?.find((product) => product.id === productId);
 
-  if (isLoadingUser || !productInfo) return Layout(<Loading />);
-  else if (isErrorProduct || isErrorUser || isErrorOrder)
+  if (!productInfo) return Layout(<Loading />);
+  else if (isErrorProduct || isErrorUser || isErrorStartedOrder)
     return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
 
   const onFormSubmit: SubmitHandler<FormData> = (data) => {
-    if (!order || !user || !product) return;
+    if (!startedOrder || !user || !product) return;
     const choicesIds = new Set(Object.values(data).map((choice) => parseInt(choice)));
     const choices = product.choiceGroups.flatMap(({ choices, id }) =>
       choices
@@ -81,7 +90,12 @@ const CustomizeProduct: NextPage<PageProps> = () => {
         .map((choice) => ({ id: choice.id, label: choice.label, choiceGroupId: id }))
     );
 
-    mutateAddOrRemoveProductToOrder({ sessionId: user.sessionId, orderId: order.id, productId: product.id, choices });
+    mutateAddOrRemoveProductToOrder({
+      sessionId: user.sessionId,
+      orderId: startedOrder.id,
+      productId: product.id,
+      choices,
+    });
     void push(Route.HOME);
   };
 
@@ -133,7 +147,7 @@ const CustomizeProduct: NextPage<PageProps> = () => {
         </div>
 
         <Button
-          isDisabled={!allInputsFilled}
+          isDisabled={!allInputsFilled || isLoadingUser}
           isLoading={isLoadingAddOrRemoveProductToOrder}
           label="Añadir"
           className="fixed left-5 right-5 bottom-5 w-[unset]"
