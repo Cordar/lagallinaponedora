@@ -1,7 +1,6 @@
 import { type Choice } from "@prisma/client";
 import { type GetServerSideProps, type NextPage } from "next";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { RiArrowLeftLine } from "react-icons/ri";
@@ -32,7 +31,6 @@ interface Inputs {
 }
 
 const Home: NextPage<PageProps> = ({ sessionId }) => {
-  const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
 
   const { user, isErrorUser } = useUser(sessionId);
