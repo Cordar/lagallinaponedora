@@ -8,6 +8,7 @@ import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import OrderedProduct from "~/components/OrderedProduct";
 import useUpdateOrderToPaid from "~/hooks/api/mutation/useUpdateOrderToPaid";
+import useCookedOrders from "~/hooks/api/query/useCookedOrders";
 import usePaidOrders from "~/hooks/api/query/usePaidOrders";
 import useUser from "~/hooks/api/query/useUser";
 import { Route } from "~/utils/constant";
@@ -21,9 +22,11 @@ const Home: NextPage<PageProps> = () => {
   const orderId = query.orderId ? parseInt(query.orderId as string) : undefined;
 
   const { user, isErrorUser } = useUser();
+  const { cookedOrders, isLoadingCookedOrders, isErrorCookedOrders } = useCookedOrders(user?.sessionId, true);
   const { paidOrders, isLoadingPaidOrders, isErrorPaidOrders } = usePaidOrders(user?.sessionId, true);
 
-  const { mutateUpdateOrderToPaid, isErrorUpdateOrderToPaid } = useUpdateOrderToPaid();
+  // TODO handle error state
+  const { mutateUpdateOrderToPaid } = useUpdateOrderToPaid();
 
   const updatedToPaid = useRef(false);
   useEffect(() => {
@@ -34,9 +37,9 @@ const Home: NextPage<PageProps> = () => {
     }
   }, [mutateUpdateOrderToPaid, orderId, paidOrders, user]);
 
-  if (isLoadingPaidOrders) return Layout(<Loading />);
+  if (isLoadingPaidOrders || isLoadingCookedOrders) return Layout(<Loading />);
 
-  if (isErrorUser || isErrorPaidOrders)
+  if (isErrorUser || isErrorPaidOrders || isErrorCookedOrders)
     return Layout(
       <div className="flex h-full w-full items-center justify-center">
         <ErrorMessage message="No se ha podido cargar la página" />
@@ -50,6 +53,51 @@ const Home: NextPage<PageProps> = () => {
           <RiArrowLeftLine className="h-8 w-8" />
         </Link>
       </div>
+
+      {cookedOrders?.map(
+        (order, i) =>
+          order.customizedProducts && (
+            <div key={order.id} className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
+              <div key={order.id} className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
+                {i == 0 && (
+                  <>
+                    <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">
+                      Tu pedido está listo
+                    </h3>
+
+                    <div className="flex w-full justify-center">
+                      <Image
+                        src="/waiting.gif"
+                        className="h-24 w-24 mix-blend-darken"
+                        alt="animación de una olla cocinando"
+                        width={256}
+                        height={256}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {i !== 0 && (
+                  <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">
+                    En la cola de cocina
+                  </h3>
+                )}
+
+                {order.customizedProducts
+                  .sort((a, b) => b.id - a.id)
+                  .map((customizedProduct) => (
+                    <OrderedProduct key={customizedProduct.id} customizedProduct={customizedProduct} />
+                  ))}
+
+                {i == 0 && (
+                  <p className="text-ellipsis text-xs tracking-wide text-slate-600">
+                    Acércate al foodtruck y muestra esta pantalla
+                  </p>
+                )}
+              </div>
+            </div>
+          )
+      )}
 
       {paidOrders?.map(
         (order, i) =>

@@ -88,6 +88,25 @@ export const publicRouter = createTRPCRouter({
     }
   }),
 
+  getCookedOrders: publicProcedure.input(z.object({ sessionId: z.string() })).query(async ({ ctx, input }) => {
+    try {
+      const customer = await ctx.prisma.customer.findUnique({
+        where: { sessionId: input.sessionId },
+        include: {
+          orders: {
+            include: { customizedProducts: { include: { choices: true } } },
+            orderBy: { updatedAt: "asc" },
+          },
+        },
+      });
+      if (!customer) throw new Error();
+
+      return customer.orders.filter((order) => order.status === OrderStatus.COOKED);
+    } catch (error) {
+      new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener tus pedidos." });
+    }
+  }),
+
   addorRemoveItemToOrder: publicProcedure
     .input(
       z.object({
@@ -162,8 +181,8 @@ export const publicRouter = createTRPCRouter({
 
   updateOrderToPaid: publicProcedure.input(z.object({ orderId: z.number() })).mutation(async ({ ctx, input }) => {
     try {
-      await ctx.prisma.order.update({
-        where: { id: input.orderId },
+      await ctx.prisma.order.updateMany({
+        where: { id: input.orderId, status: OrderStatus.STARTED },
         data: { status: OrderStatus.PAID },
       });
     } catch (error) {
