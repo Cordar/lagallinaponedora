@@ -11,7 +11,7 @@ const getLayout = (metaTitle: string, metaDescription: string) => {
           <link rel="icon" href="/favicon.ico" />
         </Head>
 
-        <main className="relative flex min-h-screen flex-col">{children}</main>
+        <main className="relative m-auto flex h-full min-h-screen max-w-5xl flex-col">{children}</main>
       </>
     );
   };

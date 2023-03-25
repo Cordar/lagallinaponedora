@@ -28,9 +28,9 @@ export const getServerSideProps: GetServerSideProps = async ({ req }) => {
 type FormData = Record<string, string>;
 
 const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
+  const { query, push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Personalizar producto", "Personaliza este producto a tu gusto.");
 
-  const { query, push } = useRouter();
   const productId = query.productId ? parseInt(query.productId as string) : undefined;
 
   const { products } = useProducts();
@@ -99,7 +99,7 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
             <Image
               src={imageSrc}
               alt={`Fotografía del producto: ${name}`}
-              className="w-fill h-40 rounded-md object-cover"
+              className="w-fill m-auto h-40 rounded-md object-cover"
               width="512"
               height="512"
             />

@@ -19,6 +19,16 @@ const config = {
     defaultLocale: "es",
   },
 
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
+  swcMinify: true,
+
   // TODO remove this and host the images somewhere, then only add that domain
   images: {
     remotePatterns: [

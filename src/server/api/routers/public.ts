@@ -116,4 +116,19 @@ export const publicRouter = createTRPCRouter({
         });
       }
     }),
+
+  updateCustomerInfo: publicProcedure
+    .input(z.object({ sessionId: z.string(), name: z.string(), email: z.string().email() }))
+    .mutation(async ({ ctx, input }) => {
+      const customer = await ctx.prisma.customer.findUnique({
+        where: { sessionId: input.sessionId },
+      });
+
+      if (!customer) throw new Error(`Hubo un error al guardar tus datos.`);
+
+      await ctx.prisma.customer.update({
+        where: { id: customer.id },
+        data: { name: input.name, email: input.email },
+      });
+    }),
 });
