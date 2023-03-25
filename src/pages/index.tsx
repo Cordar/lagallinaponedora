@@ -1,5 +1,5 @@
 import { ProductCategory } from "@prisma/client";
-import { type GetServerSideProps, type NextPage } from "next";
+import { type NextPage } from "next";
 import { useRouter } from "next/router";
 import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
@@ -8,7 +8,7 @@ import Product from "~/components/Product";
 import useCurrentOrder from "~/hooks/api/query/useCurrentOrder";
 import useProducts from "~/hooks/api/query/useProducts";
 import useUser from "~/hooks/api/query/useUser";
-import { Cookie, Route } from "~/utils/constant";
+import { Route } from "~/utils/constant";
 import { default as getLayout } from "~/utils/getLayout";
 import { type PageProps } from "./_app";
 
@@ -20,18 +20,18 @@ const ProductCategoryMap: Record<ProductCategory, string> = {
 };
 
 // eslint-disable-next-line @typescript-eslint/require-await
-export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const sessionCookie = req.cookies[Cookie.SESSION];
-  const props: PageProps = { sessionId: sessionCookie ?? null };
-  return { props };
-};
+// export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+//   const sessionCookie = req.cookies[Cookie.SESSION];
+//   const props: PageProps = { sessionId: sessionCookie ?? null };
+//   return { props };
+// };
 
-const Home: NextPage<PageProps> = ({ sessionId }) => {
+const Home: NextPage<PageProps> = () => {
   const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Productos", "Haz un pedido de los productos presentados.");
 
-  const { user, isErrorUser } = useUser(sessionId);
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
+  const { user, isErrorUser } = useUser();
   const { order, isErrorOrder } = useCurrentOrder(user?.sessionId);
 
   if (isLoadingProducts) return Layout(<Loading />);

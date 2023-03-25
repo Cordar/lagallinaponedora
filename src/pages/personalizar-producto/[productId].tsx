@@ -1,4 +1,4 @@
-import { type GetServerSideProps, type NextPage } from "next";
+import { type NextPage } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -13,21 +13,21 @@ import useAddOrRemoveProductToOrder from "~/hooks/api/mutation/useAddOrRemovePro
 import useCurrentOrder from "~/hooks/api/query/useCurrentOrder";
 import useProduct from "~/hooks/api/query/useProduct";
 import useProducts from "~/hooks/api/query/useProducts";
-import useUserSession from "~/hooks/api/query/useUser";
-import { Cookie, Route } from "~/utils/constant";
+import { default as useUser } from "~/hooks/api/query/useUser";
+import { Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
 import { type PageProps } from "../_app";
 
 // eslint-disable-next-line @typescript-eslint/require-await
-export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const sessionCookie = req.cookies[Cookie.SESSION];
-  const props: PageProps = { sessionId: sessionCookie ?? null };
-  return { props };
-};
+// export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+//   const sessionCookie = req.cookies[Cookie.SESSION];
+//   const props: PageProps = { sessionId: sessionCookie ?? null };
+//   return { props };
+// };
 
 type FormData = Record<string, string>;
 
-const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
+const CustomizeProduct: NextPage<PageProps> = () => {
   const { query, push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Personalizar producto", "Personaliza este producto a tu gusto.");
 
@@ -35,7 +35,7 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
 
   const { products } = useProducts();
   const { product, isErrorProduct } = useProduct(productId);
-  const { user, isLoadingUser, isErrorUser } = useUserSession(sessionId);
+  const { user, isLoadingUser, isErrorUser } = useUser();
   const { order, isErrorOrder } = useCurrentOrder(user?.sessionId);
 
   const { mutateAddOrRemoveProductToOrder, isLoadingAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } =
