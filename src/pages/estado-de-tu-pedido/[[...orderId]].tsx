@@ -1,12 +1,13 @@
 import { type NextPage } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useRef } from "react";
 import { RiArrowLeftLine, RiErrorWarningLine } from "react-icons/ri";
+import CookedOrder from "~/components/CookedOrder";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
-import OrderedProduct from "~/components/OrderedProduct";
+import OrderNumber from "~/components/OrderNumber";
+import PaidOrder from "~/components/PaidOrder";
 import useUpdateOrderToPaid from "~/hooks/api/mutation/useUpdateOrderToPaid";
 import useCookedOrders from "~/hooks/api/query/useCookedOrders";
 import usePaidOrders from "~/hooks/api/query/usePaidOrders";
@@ -15,7 +16,7 @@ import { Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
 import { type PageProps } from "../_app";
 
-const Home: NextPage<PageProps> = () => {
+const OrderStatus: NextPage<PageProps> = () => {
   const { query } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
 
@@ -36,21 +37,12 @@ const Home: NextPage<PageProps> = () => {
     }
   }, [mutateUpdateOrderToPaid, orderId, paidOrders, user]);
 
-  if (isLoadingPaidOrders || isLoadingCookedOrders) return Layout(<Loading />);
-
   if (isErrorUser || isErrorPaidOrders || isErrorCookedOrders)
     return Layout(
       <div className="flex h-full w-full items-center justify-center">
         <ErrorMessage message="No se ha podido cargar la página" />
       </div>
     );
-
-  const orderNumber = (orderId: number) => (
-    <div>
-      <h3 className="text-ellipsis text-center text-6xl font-semibold tracking-wide">{orderId}</h3>
-      <p className="text-ellipsis text-center text-xs tracking-wide text-slate-600">Número de tu pedido</p>
-    </div>
-  );
 
   return Layout(
     <div className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
@@ -72,105 +64,22 @@ const Home: NextPage<PageProps> = () => {
             Por favor, ve al food truck y muestra esto para que podamos empezar a preparar tu pedido.
           </p>
 
-          {orderId && orderNumber(orderId)}
+          {orderId && <OrderNumber orderId={orderId} />}
         </div>
       )}
 
       {cookedOrders?.map(
         (order, i) =>
-          order.customizedProducts && (
-            <div key={order.id} className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
-              <div key={order.id} className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
-                {i == 0 && (
-                  <>
-                    <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">
-                      ¡Tu pedido está listo!
-                    </h3>
-
-                    <div className="flex w-full justify-center">
-                      <Image
-                        src="/waiting.gif"
-                        className="h-24 w-24 mix-blend-darken"
-                        alt="animación de una olla cocinando"
-                        width={256}
-                        height={256}
-                      />
-                    </div>
-                  </>
-                )}
-
-                {i !== 0 && (
-                  <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">
-                    ¡Este pedido también te espera!
-                  </h3>
-                )}
-
-                {order.customizedProducts
-                  .sort((a, b) => b.id - a.id)
-                  .map((customizedProduct) => (
-                    <OrderedProduct key={customizedProduct.id} customizedProduct={customizedProduct} />
-                  ))}
-
-                <p className="text-ellipsis text-xs tracking-wide text-slate-600">
-                  Acércate al food truck y muestra esta pantalla
-                </p>
-
-                {orderNumber(order.id)}
-              </div>
-            </div>
-          )
+          order.customizedProducts.length > 0 && <CookedOrder key={order.id} order={order} first={i === 0} />
       )}
 
       {paidOrders?.map(
-        (order, i) =>
-          order?.customizedProducts && (
-            <div key={order.id} className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
-              {i == 0 && (
-                <>
-                  <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">
-                    Preparando tu pedido
-                  </h3>
-
-                  <div className="flex w-full justify-center">
-                    <Image
-                      src="/cooking.gif"
-                      className="h-24 w-24 mix-blend-darken"
-                      alt="animación de una olla cocinando"
-                      width={256}
-                      height={256}
-                    />
-                  </div>
-                </>
-              )}
-
-              {i !== 0 && (
-                <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">En la cola de cocina</h3>
-              )}
-
-              <div className="mb-5 flex w-full flex-col items-center justify-center">
-                {/* TODO add an estimated time to each product and calculate this when getting the paid orders */}
-                <h2 className="text-ellipsis text-xl font-semibold tracking-wide">30 min</h2>
-                <p className="text-ellipsis text-xs tracking-wide text-slate-600">Tiempo de espera aproximado</p>
-              </div>
-
-              {order.customizedProducts
-                .sort((a, b) => b.id - a.id)
-                .map((customizedProduct) => (
-                  <OrderedProduct key={customizedProduct.id} customizedProduct={customizedProduct} />
-                ))}
-
-              {i == 0 && (
-                <p className="text-ellipsis text-xs tracking-wide text-slate-600">
-                  Te avisaremos por email cuando tu pedido esté listo y te llamaremos por tu nombre.
-                </p>
-              )}
-            </div>
-          )
+        (order, i) => order.customizedProducts.length > 0 && <PaidOrder key={order.id} order={order} first={i === 0} />
       )}
 
-      <div className="flex flex-col justify-center gap-4 rounded-lg "></div>
+      {(isLoadingCookedOrders || isLoadingPaidOrders) && <Loading />}
     </div>
   );
 };
 
-export default Home;
+export default OrderStatus;

@@ -18,13 +18,14 @@ enum ProductCategory {
 }
 
 model Product {
-    id                 Int                 @id @default(autoincrement())
-    name               String
-    price              Int
-    imageSrc           String?
-    category           ProductCategory
-    choiceGroups       ChoiceGroup[]
-    customizedProducts CustomizedProduct[]
+    id                   Int                 @id @default(autoincrement())
+    name                 String
+    price                Int
+    imageSrc             String?
+    category             ProductCategory
+    choiceGroups         ChoiceGroup[]
+    customizedProducts   CustomizedProduct[]
+    cookingTimeInMinutes Int
 }
 
 model CustomizedProduct {

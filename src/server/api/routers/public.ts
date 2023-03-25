@@ -88,6 +88,40 @@ export const publicRouter = createTRPCRouter({
     }
   }),
 
+  getEstimatedWaitingTime: publicProcedure.input(z.object({ orderId: z.number() })).query(async ({ ctx, input }) => {
+    try {
+      const [order, paidOrders] = await Promise.all([
+        ctx.prisma.order.findUnique({
+          where: { id: input.orderId },
+          include: { customizedProducts: { include: { Product: true } } },
+        }),
+        ctx.prisma.order.findMany({
+          where: { status: OrderStatus.PAID, NOT: { id: input.orderId } },
+          include: { customizedProducts: { include: { Product: true } } },
+        }),
+      ]);
+
+      if (!order) throw new Error();
+
+      let totalCookingTime = 0;
+
+      order.customizedProducts.forEach((customizedProduct) => {
+        totalCookingTime += customizedProduct.Product.cookingTimeInMinutes;
+      });
+
+      paidOrders.forEach((paidOrder) => {
+        if (paidOrder.updatedAt < order.updatedAt)
+          paidOrder.customizedProducts.forEach((customizedProduct) => {
+            totalCookingTime += customizedProduct.Product.cookingTimeInMinutes;
+          });
+      });
+
+      return totalCookingTime;
+    } catch (error) {
+      new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener el tiempo de espera." });
+    }
+  }),
+
   getCookedOrders: publicProcedure.input(z.object({ sessionId: z.string() })).query(async ({ ctx, input }) => {
     try {
       const customer = await ctx.prisma.customer.findUnique({

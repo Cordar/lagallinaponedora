@@ -31,7 +31,7 @@ interface Inputs {
   name: string;
 }
 
-const Home: NextPage<PageProps> = () => {
+const YourOrder: NextPage<PageProps> = () => {
   const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
 
@@ -207,4 +207,4 @@ const Home: NextPage<PageProps> = () => {
   );
 };
 
-export default Home;
+export default YourOrder;

@@ -6,13 +6,15 @@ const useCookedOrders = (sessionId?: string, autoRefresh?: boolean) => {
 
   const {
     data: cookedOrders,
-    isLoading: isLoadingCookedOrders,
+    isLoading,
+    isFetching,
     isError: isErrorCookedOrders,
   } = api.public.getCookedOrders.useQuery(
     { sessionId: sessionId ?? "" },
     { staleTime: ONE_DAY_MS, enabled: !!sessionId, ...extraSettings }
   );
 
+  const isLoadingCookedOrders = isLoading || isFetching;
   return { cookedOrders, isLoadingCookedOrders, isErrorCookedOrders };
 };
 

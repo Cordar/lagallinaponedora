@@ -6,13 +6,15 @@ const usePaidOrders = (sessionId?: string, autoRefresh?: boolean) => {
 
   const {
     data: paidOrders,
-    isLoading: isLoadingPaidOrders,
+    isLoading,
+    isFetching,
     isError: isErrorPaidOrders,
   } = api.public.getPaidOrders.useQuery(
     { sessionId: sessionId ?? "" },
     { staleTime: ONE_DAY_MS, enabled: !!sessionId, ...extraSettings }
   );
 
+  const isLoadingPaidOrders = isLoading || isFetching;
   return { paidOrders, isLoadingPaidOrders, isErrorPaidOrders };
 };
 

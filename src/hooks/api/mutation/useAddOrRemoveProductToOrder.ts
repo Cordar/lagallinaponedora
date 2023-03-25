@@ -67,6 +67,8 @@ const useAddOrRemoveProductToOrder = () => {
         newOrder.customizedProducts.push({ id: -Math.round(Math.random() * 100000000), productId, amount: 1, choices });
       }
 
+      // TODO add here and in the router that after adding, check if we should join two custioized products with the same productid and add the amounts
+
       apiContext.public.getStartedOrder.setData({ sessionId }, newOrder);
 
       return { previousOrder };
