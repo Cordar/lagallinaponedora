@@ -10,6 +10,7 @@ const useUpdateOrderToPaid = () => {
   } = api.public.updateOrderToPaid.useMutation({
     onSettled: () => {
       void apiContext.public.getPaidOrders.invalidate();
+      void apiContext.public.getStartedOrder.refetch();
     },
   });
 

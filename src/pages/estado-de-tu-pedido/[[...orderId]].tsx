@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useRef } from "react";
-import { RiArrowLeftLine } from "react-icons/ri";
+import { RiArrowLeftLine, RiErrorWarningLine } from "react-icons/ri";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import OrderedProduct from "~/components/OrderedProduct";
@@ -25,8 +25,7 @@ const Home: NextPage<PageProps> = () => {
   const { cookedOrders, isLoadingCookedOrders, isErrorCookedOrders } = useCookedOrders(user?.sessionId, true);
   const { paidOrders, isLoadingPaidOrders, isErrorPaidOrders } = usePaidOrders(user?.sessionId, true);
 
-  // TODO handle error state
-  const { mutateUpdateOrderToPaid } = useUpdateOrderToPaid();
+  const { mutateUpdateOrderToPaid, isErrorUpdateOrderToPaid } = useUpdateOrderToPaid();
 
   const updatedToPaid = useRef(false);
   useEffect(() => {
@@ -46,6 +45,13 @@ const Home: NextPage<PageProps> = () => {
       </div>
     );
 
+  const orderNumber = (orderId: number) => (
+    <div>
+      <h3 className="text-ellipsis text-center text-6xl font-semibold tracking-wide">{orderId}</h3>
+      <p className="text-ellipsis text-center text-xs tracking-wide text-slate-600">Número de tu pedido</p>
+    </div>
+  );
+
   return Layout(
     <div className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
       <div className="flex w-full items-center gap-3">
@@ -53,6 +59,22 @@ const Home: NextPage<PageProps> = () => {
           <RiArrowLeftLine className="h-8 w-8" />
         </Link>
       </div>
+
+      {isErrorUpdateOrderToPaid && (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg bg-slate-50 p-4">
+          <RiErrorWarningLine className="h-16 w-16 text-red-600" />
+
+          <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">
+            Ha habido un problema al registrar su pedido
+          </h3>
+
+          <p className="text-ellipsis text-xs tracking-wide text-slate-600">
+            Por favor, ve al food truck y muestra esto para que podamos empezar a preparar tu pedido.
+          </p>
+
+          {orderId && orderNumber(orderId)}
+        </div>
+      )}
 
       {cookedOrders?.map(
         (order, i) =>
@@ -62,7 +84,7 @@ const Home: NextPage<PageProps> = () => {
                 {i == 0 && (
                   <>
                     <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">
-                      Tu pedido está listo
+                      ¡Tu pedido está listo!
                     </h3>
 
                     <div className="flex w-full justify-center">
@@ -79,7 +101,7 @@ const Home: NextPage<PageProps> = () => {
 
                 {i !== 0 && (
                   <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">
-                    En la cola de cocina
+                    ¡Este pedido también te espera!
                   </h3>
                 )}
 
@@ -89,11 +111,11 @@ const Home: NextPage<PageProps> = () => {
                     <OrderedProduct key={customizedProduct.id} customizedProduct={customizedProduct} />
                   ))}
 
-                {i == 0 && (
-                  <p className="text-ellipsis text-xs tracking-wide text-slate-600">
-                    Acércate al foodtruck y muestra esta pantalla
-                  </p>
-                )}
+                <p className="text-ellipsis text-xs tracking-wide text-slate-600">
+                  Acércate al food truck y muestra esta pantalla
+                </p>
+
+                {orderNumber(order.id)}
               </div>
             </div>
           )
@@ -127,7 +149,7 @@ const Home: NextPage<PageProps> = () => {
 
               <div className="mb-5 flex w-full flex-col items-center justify-center">
                 {/* TODO add an estimated time to each product and calculate this when getting the paid orders */}
-                <h2 className="text-ellipsis text-2xl font-semibold tracking-wide">30 min</h2>
+                <h2 className="text-ellipsis text-xl font-semibold tracking-wide">30 min</h2>
                 <p className="text-ellipsis text-xs tracking-wide text-slate-600">Tiempo de espera aproximado</p>
               </div>
 
