@@ -72,7 +72,7 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
   else if (isErrorProduct || isErrorUser || isErrorOrder)
     return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
 
-  const onFormSubmit: SubmitHandler<FormData> = async (data) => {
+  const onFormSubmit: SubmitHandler<FormData> = (data) => {
     if (!order || !user || !product) return;
     const choicesIds = new Set(Object.values(data).map((choice) => parseInt(choice)));
     const choices = product.choiceGroups.flatMap(({ choices, id }) =>
@@ -82,7 +82,7 @@ const CustomizeProduct: NextPage<PageProps> = ({ sessionId }) => {
     );
 
     mutateAddOrRemoveProductToOrder({ sessionId: user.sessionId, orderId: order.id, productId: product.id, choices });
-    await push(Route.HOME);
+    void push(Route.HOME);
   };
 
   const { name, price, imageSrc } = productInfo;

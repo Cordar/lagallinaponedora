@@ -74,8 +74,8 @@ const useAddOrRemoveProductToOrder = () => {
     onError: (err, { sessionId }, context) => {
       apiContext.public.getCurrentOrder.setData({ sessionId }, context?.previousOrder);
     },
-    onSettled: async () => {
-      if (mutations <= 1) await apiContext.public.getCurrentOrder.invalidate();
+    onSettled: () => {
+      if (mutations <= 1) void apiContext.public.getCurrentOrder.invalidate();
     },
   });
 

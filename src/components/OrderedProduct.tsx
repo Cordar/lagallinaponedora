@@ -6,10 +6,17 @@ export interface OrderedProductProps {
   customizedProduct: CustomizedProduct & { choices: Choice[] };
   onAddProduct: (productId: number, choices: Choice[]) => void;
   onRemoveProduct: (productId: number, choices: Choice[]) => void;
+  disableButtons?: boolean;
   showPrice?: boolean;
 }
 
-const OrderedProduct = ({ customizedProduct, onAddProduct, onRemoveProduct, showPrice }: OrderedProductProps) => {
+const OrderedProduct = ({
+  customizedProduct,
+  onAddProduct,
+  onRemoveProduct,
+  disableButtons,
+  showPrice,
+}: OrderedProductProps) => {
   const { id, amount, choices, productId } = customizedProduct;
 
   const { products } = useProducts();
@@ -41,8 +48,9 @@ const OrderedProduct = ({ customizedProduct, onAddProduct, onRemoveProduct, show
         <div className="flex grow items-center justify-center gap-3">
           <button
             type="button"
+            disabled={disableButtons}
             onClick={() => onRemoveProduct(productId, choices)}
-            className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white"
+            className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white disabled:opacity-70"
           >
             <RiSubtractLine className="h-6 w-6" />
           </button>
@@ -51,8 +59,9 @@ const OrderedProduct = ({ customizedProduct, onAddProduct, onRemoveProduct, show
 
           <button
             type="button"
+            disabled={disableButtons}
             onClick={() => onAddProduct(productId, choices)}
-            className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white"
+            className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white disabled:opacity-70"
           >
             <RiAddLine className="h-6 w-6" />
           </button>

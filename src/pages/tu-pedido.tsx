@@ -1,6 +1,7 @@
 import { type Choice } from "@prisma/client";
 import { type GetServerSideProps, type NextPage } from "next";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { RiArrowLeftLine } from "react-icons/ri";
@@ -31,6 +32,7 @@ interface Inputs {
 }
 
 const Home: NextPage<PageProps> = ({ sessionId }) => {
+  const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
 
   const { user, isErrorUser } = useUser(sessionId);
@@ -39,9 +41,12 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
 
   const { mutateUpdateCustomerInfo, isLoadingUpdateCustomerInfo, isErrorUpdateCustomerInfo } = useUpdateCustomerInfo();
 
-  // TODO redirect to home if there are no products in the order
+  useEffect(() => {
+    if (order && order.customizedProducts.length <= 0) void push(Route.HOME);
+  }, [order, push]);
 
-  const { mutateAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } = useAddOrRemoveProductToOrder();
+  const { mutateAddOrRemoveProductToOrder, isLoadingAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } =
+    useAddOrRemoveProductToOrder();
 
   const handleAddProduct = (productId: number, choices: Choice[]) => {
     if (!order || !sessionId) return;
@@ -116,6 +121,7 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
                 key={customizedProduct.id}
                 customizedProduct={customizedProduct}
                 onAddProduct={handleAddProduct}
+                disableButtons={isLoadingAddOrRemoveProductToOrder}
                 onRemoveProduct={handleRemoveProduct}
               />
             ))}

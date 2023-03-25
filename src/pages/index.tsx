@@ -51,8 +51,8 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
     { totalPrice: 0, totalNumberOfItems: 0 }
   );
 
-  const onOrder = async () => {
-    await push(Route.CHECKOUT);
+  const onOrder = () => {
+    void push(Route.CHECKOUT);
   };
 
   return Layout(

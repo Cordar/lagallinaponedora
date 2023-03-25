@@ -1,55 +1,72 @@
 import { OrderStatus } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const publicRouter = createTRPCRouter({
   getProducts: publicProcedure.query(async ({ ctx }) => {
-    return await ctx.prisma.product.findMany({
-      include: { choiceGroups: true },
-      orderBy: { id: "asc" },
-    });
+    try {
+      return await ctx.prisma.product.findMany({
+        include: { choiceGroups: true },
+        orderBy: { id: "asc" },
+      });
+    } catch (error) {
+      new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener los productos." });
+    }
   }),
 
   getProductWithChoiceGroups: publicProcedure
     .input(z.object({ productId: z.number() }))
     .query(async ({ ctx, input }) => {
-      const product = await ctx.prisma.product.findUnique({
-        where: { id: input.productId },
-        include: { choiceGroups: { include: { choices: true }, orderBy: { id: "asc" } } },
-      });
+      try {
+        const product = await ctx.prisma.product.findUnique({
+          where: { id: input.productId },
+          include: { choiceGroups: { include: { choices: true }, orderBy: { id: "asc" } } },
+        });
 
-      if (!product) throw new Error("Hubo un error al obtener la personalización del producto.");
+        if (!product) throw new Error();
 
-      return product;
+        return product;
+      } catch (error) {
+        new TRPCError({ code: "CONFLICT", message: "Hubo un error al obtener la personalización del producto." });
+      }
     }),
 
   getOrCreateCustomer: publicProcedure.input(z.object({ sessionId: z.string() })).query(async ({ ctx, input }) => {
-    return await ctx.prisma.customer.upsert({
-      where: { sessionId: input.sessionId },
-      create: { sessionId: input.sessionId },
-      update: {},
-      include: { orders: true },
-    });
+    try {
+      return await ctx.prisma.customer.upsert({
+        where: { sessionId: input.sessionId },
+        create: { sessionId: input.sessionId },
+        update: {},
+        include: { orders: true },
+      });
+    } catch (error) {
+      new TRPCError({ code: "CONFLICT", message: "Hubo un error al obtener o crear el cliente." });
+    }
   }),
 
   getCurrentOrder: publicProcedure.input(z.object({ sessionId: z.string() })).query(async ({ ctx, input }) => {
-    const customer = await ctx.prisma.customer.findUnique({
-      where: { sessionId: input.sessionId },
-      include: { orders: { include: { customizedProducts: { include: { choices: true } } } } },
-    });
-
-    if (!customer) throw new Error("Hubo un error al obtener tu pedido actual.");
-
-    // Get or create order
-    let order = customer.orders.find((order) => order.status === OrderStatus.STARTED);
-    if (!order) {
-      order = await ctx.prisma.order.create({
-        data: { customerId: customer.id },
-        include: { customizedProducts: { include: { choices: true } } },
+    try {
+      const customer = await ctx.prisma.customer.findUnique({
+        where: { sessionId: input.sessionId },
+        include: { orders: { include: { customizedProducts: { include: { choices: true } } } } },
       });
-    }
 
-    return order;
+      if (!customer) throw new Error();
+
+      // Get or create order
+      let order = customer.orders.find((order) => order.status === OrderStatus.STARTED);
+      if (!order) {
+        order = await ctx.prisma.order.create({
+          data: { customerId: customer.id },
+          include: { customizedProducts: { include: { choices: true } } },
+        });
+      }
+
+      return order;
+    } catch (error) {
+      new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener tu pedido actual." });
+    }
   }),
 
   addorRemoveItemToOrder: publicProcedure
@@ -63,56 +80,63 @@ export const publicRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Find order
-      const order = await ctx.prisma.order.findUnique({
-        where: { id: input.orderId },
-        include: { customizedProducts: { include: { choices: true } } },
-      });
-
-      if (!order || order.status !== OrderStatus.STARTED)
-        throw new Error(`Hubo un error al ${input.remove ? "quitar" : "añadir"} el producto.`);
-
-      // Check if product exists
-      const product = await ctx.prisma.product.findUnique({ where: { id: input.productId } });
-      if (!product) throw new Error(`Hubo un error al ${input.remove ? "quitar" : "añadir"} el producto.`);
-
-      // Try to find a CustomizedProduct in the order with exactly the same choices
-      const existingCustomizedProduct = order.customizedProducts.find(
-        (customizedProduct) =>
-          customizedProduct.productId === product.id &&
-          customizedProduct.choices.length === input.choices.length &&
-          customizedProduct.choices.every((choice) => input.choices.some((inputChoice) => inputChoice.id === choice.id))
-      );
-
-      // Increase the amount if it exists and there is more than 1
-      if (existingCustomizedProduct && input.remove && existingCustomizedProduct.amount > 1) {
-        await ctx.prisma.customizedProduct.update({
-          where: { id: existingCustomizedProduct.id },
-          data: { amount: existingCustomizedProduct.amount - 1 },
+      try {
+        const order = await ctx.prisma.order.findUnique({
+          where: { id: input.orderId },
+          include: { customizedProducts: { include: { choices: true } } },
         });
-      }
 
-      // Delete if it exists and there is only 1
-      else if (existingCustomizedProduct && input.remove) {
-        await ctx.prisma.customizedProduct.delete({ where: { id: existingCustomizedProduct.id } });
-      }
+        if (!order || order.status !== OrderStatus.STARTED)
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `Hubo un error al ${input.remove ? "quitar" : "añadir"} el producto.`,
+          });
 
-      // Increase the amount if it exists
-      else if (existingCustomizedProduct) {
-        await ctx.prisma.customizedProduct.update({
-          where: { id: existingCustomizedProduct.id },
-          data: { amount: existingCustomizedProduct.amount + 1 },
-        });
-      }
+        // Try to find a CustomizedProduct in the order with exactly the same choices
+        const existingCustomizedProduct = order.customizedProducts.find(
+          (customizedProduct) =>
+            customizedProduct.productId === input.productId &&
+            customizedProduct.choices.length === input.choices.length &&
+            customizedProduct.choices.every((choice) =>
+              input.choices.some((inputChoice) => inputChoice.id === choice.id)
+            )
+        );
 
-      // Add to order if it doesn't exist
-      else {
-        await ctx.prisma.customizedProduct.create({
-          data: {
-            productId: product.id,
-            choices: { connect: [...input.choices].map((choice) => ({ id: choice.id })) },
-            orders: { connect: { id: order.id } },
-          },
+        // Increase the amount if it exists and there is more than 1
+        if (existingCustomizedProduct && input.remove && existingCustomizedProduct.amount > 1) {
+          await ctx.prisma.customizedProduct.update({
+            where: { id: existingCustomizedProduct.id },
+            data: { amount: existingCustomizedProduct.amount - 1 },
+          });
+        }
+
+        // Delete if it exists and there is only 1
+        else if (existingCustomizedProduct && input.remove) {
+          await ctx.prisma.customizedProduct.delete({ where: { id: existingCustomizedProduct.id } });
+        }
+
+        // Increase the amount if it exists
+        else if (existingCustomizedProduct) {
+          await ctx.prisma.customizedProduct.update({
+            where: { id: existingCustomizedProduct.id },
+            data: { amount: existingCustomizedProduct.amount + 1 },
+          });
+        }
+
+        // Add to order if it doesn't exist
+        else {
+          await ctx.prisma.customizedProduct.create({
+            data: {
+              productId: input.productId,
+              choices: { connect: [...input.choices].map((choice) => ({ id: choice.id })) },
+              orders: { connect: { id: order.id } },
+            },
+          });
+        }
+      } catch (error) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Hubo un error al ${input.remove ? "quitar" : "añadir"} el producto.`,
         });
       }
     }),
@@ -120,15 +144,13 @@ export const publicRouter = createTRPCRouter({
   updateCustomerInfo: publicProcedure
     .input(z.object({ sessionId: z.string(), name: z.string(), email: z.string().email() }))
     .mutation(async ({ ctx, input }) => {
-      const customer = await ctx.prisma.customer.findUnique({
-        where: { sessionId: input.sessionId },
-      });
-
-      if (!customer) throw new Error(`Hubo un error al guardar tus datos.`);
-
-      await ctx.prisma.customer.update({
-        where: { id: customer.id },
-        data: { name: input.name, email: input.email },
-      });
+      try {
+        await ctx.prisma.customer.update({
+          where: { sessionId: input.sessionId },
+          data: { name: input.name, email: input.email },
+        });
+      } catch (error) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al guardar tu información." });
+      }
     }),
 });
