@@ -2,6 +2,7 @@ import { type Choice } from "@prisma/client";
 import { type GetServerSideProps, type NextPage } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { RiArrowLeftLine } from "react-icons/ri";
 import Button from "~/components/Button";
@@ -10,6 +11,7 @@ import Input from "~/components/Input";
 import Loading from "~/components/Loading";
 import OrderedProduct from "~/components/OrderedProduct";
 import useAddOrRemoveProductToOrder from "~/hooks/api/mutation/useAddOrRemoveProductToOrder";
+import useUpdateCustomerInfo from "~/hooks/api/mutation/useUpdateCustomerInfo";
 import useCurrentOrder from "~/hooks/api/query/useCurrentOrder";
 import useProducts from "~/hooks/api/query/useProducts";
 import useUser from "~/hooks/api/query/useUser";
@@ -37,6 +39,8 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
   const { order, isLoadingOrder, isErrorOrder } = useCurrentOrder(user?.sessionId);
 
+  const { mutateUpdateCustomerInfo, isLoadingUpdateCustomerInfo, isErrorUpdateCustomerInfo } = useUpdateCustomerInfo();
+
   // TODO redirect to home if there are no products in the order
 
   const { mutateAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } = useAddOrRemoveProductToOrder();
@@ -54,10 +58,21 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isDirty, isValid },
+    watch,
+    setValue,
+    formState: { errors },
   } = useForm<Inputs>();
 
+  useEffect(() => {
+    if (user && user.email && user.name) {
+      setValue("email", user.email);
+      setValue("name", user.name);
+    }
+  }, [setValue, user]);
+
   const getFormError = (name: keyof Inputs) => errors[name] && errors[name]?.message;
+
+  const [updateData, setUpdateData] = useState(false);
 
   if (isLoadingProducts || isLoadingOrder) return Layout(<Loading />);
 
@@ -68,9 +83,12 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
       </div>
     );
 
-  const onFormSubmit: SubmitHandler<Inputs> = (data) => {
-    console.log(data);
-    // TODO go to payment
+  const onFormSubmit: SubmitHandler<Inputs> = ({ email, name }) => {
+    if (sessionId && email && name) {
+      mutateUpdateCustomerInfo({ sessionId, email, name });
+
+      // TODO redirect to payment
+    }
   };
 
   const totalPrice = order?.customizedProducts.reduce(
@@ -78,7 +96,8 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
     0
   );
 
-  // TODO if the user object already has an email and name, show them
+  const watchEmail = watch("email");
+  const watchName = watch("name");
 
   return Layout(
     <form onSubmit={handleSubmit(onFormSubmit)} className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
@@ -114,36 +133,63 @@ const Home: NextPage<PageProps> = ({ sessionId }) => {
       )}
 
       <div className="mb-20 flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
-        <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Dinos quién eres:</h3>
+        {updateData || !user?.email || !user?.name ? (
+          <>
+            <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Dinos quién eres:</h3>
 
-        <div className="relative flex w-full grow flex-col gap-5">
-          <Input
-            id={"email"}
-            label={"Email"}
-            register={register("email", {
-              required: { value: true, message: "Este campo es obligatorio" },
-              pattern: { value: EMAIL_REGEX, message: "El email no es válido" },
-            })}
-            errorMessage={getFormError("email")}
-          />
+            <div className="relative flex w-full grow flex-col gap-5">
+              <Input
+                id={"email"}
+                label={"Email"}
+                register={register("email", {
+                  required: { value: true, message: "Este campo es obligatorio" },
+                  pattern: { value: EMAIL_REGEX, message: "El email no es válido" },
+                })}
+                errorMessage={getFormError("email")}
+              />
 
-          <Input
-            id={"name"}
-            label={"Nombre"}
-            register={register("name", {
-              required: { value: true, message: "Este campo es obligatorio" },
-              validate: {
-                tooShort: (value: string) => value.length > 1 || "El nombre no es válido",
-              },
-            })}
-            errorMessage={getFormError("name")}
-          />
-        </div>
+              <Input
+                id={"name"}
+                label={"Nombre"}
+                register={register("name", {
+                  required: { value: true, message: "Este campo es obligatorio" },
+                  maxLength: { value: 16, message: "El nombre no es demasiado largo" },
+                  minLength: { value: 2, message: "El nombre no es demasiado corto" },
+                })}
+                errorMessage={getFormError("name")}
+              />
+
+              <small className="text-slate-400">
+                Solo usaremos tu email para avisarte de que tu pedido está listo. También te llamaremos por tu nombre.
+              </small>
+
+              {isErrorUpdateCustomerInfo && <ErrorMessage message="Hubo un error al guardar tus datos." />}
+            </div>
+          </>
+        ) : (
+          <>
+            <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{`Bienvenido de nuevo ${user.name}`}</h3>
+
+            <p className="text-sm font-medium tracking-wide">{`Tu email: ${user.email}`}</p>
+
+            <small className="text-slate-400">
+              Te avisaremos por email cuando tu pedido esté listo y te llamaremos por tu nombre
+            </small>
+
+            <button
+              onClick={() => setUpdateData(true)}
+              type="button"
+              className="tracking-wid p-2 font-medium text-slate-500"
+            >
+              Cambiar tus datos
+            </button>
+          </>
+        )}
       </div>
 
       <Button
-        isDisabled={!isDirty}
-        isLoading={false} // TODO use the mutation isLoading
+        isDisabled={!watchEmail || watchEmail.length <= 0 || !watchName || watchName.length <= 0}
+        isLoading={isLoadingUpdateCustomerInfo}
         label="Pagar"
         className="fixed left-5 right-5 bottom-5 w-[unset]"
       />
