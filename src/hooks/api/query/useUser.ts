@@ -1,20 +1,19 @@
 import { useEffect, useState } from "react";
 import uuid from "react-uuid";
 import { api } from "~/utils/api";
-import { Cookie, ONE_DAY_MS, ONE_YEAR_MS } from "~/utils/constant";
-import useCookies from "../../useCookies";
+import { ONE_DAY_MS, ONE_YEAR_MS, StorageKey } from "~/utils/constant";
+import { getCookie, setCookie } from "~/utils/storage";
 
 const useUser = () => {
-  const { setCookie, getCookie } = useCookies();
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
-    let cookie = getCookie(Cookie.SESSION);
+    let cookie = getCookie(StorageKey.SESSION);
     if (!cookie) cookie = uuid();
-    setCookie(Cookie.SESSION, cookie, new Date(Date.now() + ONE_YEAR_MS), "/");
+    setCookie(StorageKey.SESSION, cookie, new Date(Date.now() + ONE_YEAR_MS), "/");
 
     setSessionId(cookie);
-  }, [getCookie, setCookie]);
+  }, []);
 
   const {
     data: user,

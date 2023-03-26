@@ -6,8 +6,8 @@ import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import Product from "~/components/Product";
 import useProducts from "~/hooks/api/query/useProducts";
-import useStartedOrder from "~/hooks/api/query/useStartedOrder";
 import useUser from "~/hooks/api/query/useUser";
+import useStartedOrder from "~/hooks/useStartedOrder";
 import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import { default as getLayout } from "~/utils/getLayout";
 import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
@@ -35,19 +35,19 @@ const Home: NextPage<PageProps> = () => {
   // useEffect(() => populateDatabase, [populateDatabase]);
 
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
-  const { user, isErrorUser } = useUser();
-  const { startedOrder, isErrorStartedOrder } = useStartedOrder(user?.sessionId);
+  const { isErrorUser } = useUser();
+  const { startedOrder, addProduct, removeProduct } = useStartedOrder();
 
   if (isLoadingProducts) return Layout(<Loading />);
 
-  if (isErrorProducts || isErrorUser || isErrorStartedOrder)
+  if (isErrorProducts || isErrorUser)
     return Layout(
       <div className="flex h-full w-full items-center justify-center">
         <ErrorMessage message="No se ha podido cargar la página" />
       </div>
     );
 
-  const buttonInfo = startedOrder?.customizedProducts.reduce(
+  const buttonInfo = startedOrder.reduce(
     ({ totalPrice, totalNumberOfItems }, { amount, productId }) => ({
       totalNumberOfItems: totalNumberOfItems + amount,
       totalPrice: totalPrice + amount * (products?.find(({ id }) => id === productId)?.price ?? 0),
@@ -79,11 +79,9 @@ const Home: NextPage<PageProps> = () => {
                       <Product
                         key={product.id}
                         product={product}
-                        orderProducts={startedOrder?.customizedProducts.filter(
-                          ({ productId }) => productId === product.id
-                        )}
-                        sessionId={user?.sessionId}
-                        orderId={startedOrder?.id}
+                        orderProducts={startedOrder.filter(({ productId }) => productId === product.id)}
+                        addProduct={addProduct}
+                        removeProduct={removeProduct}
                       />
                     ))}
               </div>
@@ -91,7 +89,7 @@ const Home: NextPage<PageProps> = () => {
           )}
         </div>
 
-        {startedOrder && buttonInfo && startedOrder.customizedProducts.length > 0 && (
+        {startedOrder && buttonInfo && startedOrder.length > 0 && (
           <Button
             onClick={onOrder}
             label={`Pide ${buttonInfo.totalNumberOfItems} por ${buttonInfo.totalPrice} €`}
