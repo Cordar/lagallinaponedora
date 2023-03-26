@@ -48,8 +48,8 @@ const OrderedProduct = ({
           </p>
         )}
 
-        {removeProduct && addProduct && (
-          <div className="flex grow items-center justify-center gap-3">
+        <div className="flex grow items-center justify-center gap-3">
+          {removeProduct && (
             <button
               type="button"
               disabled={disableButtons}
@@ -58,9 +58,11 @@ const OrderedProduct = ({
             >
               <RiSubtractLine className="h-6 w-6" />
             </button>
+          )}
 
-            <p className="w-5 min-w-fit text-center text-base font-medium tracking-wide">{amount}</p>
+          <p className="w-5 min-w-fit text-center text-base font-medium tracking-wide">{amount}</p>
 
+          {addProduct && (
             <button
               type="button"
               disabled={disableButtons}
@@ -69,8 +71,8 @@ const OrderedProduct = ({
             >
               <RiAddLine className="h-6 w-6" />
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

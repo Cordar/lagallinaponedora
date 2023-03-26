@@ -81,7 +81,12 @@ const useStartedOrder = () => {
     }, [] as (CustomizedProduct & { choices: Choice[] })[]);
   };
 
-  return { startedOrder, addProduct, removeProduct };
+  const clearStartedOrder = () => {
+    setStartedOrder([]);
+    setToStorage(StorageKey.STARTED_ORDER, []);
+  };
+
+  return { startedOrder, addProduct, removeProduct, clearStartedOrder };
 };
 
 export default useStartedOrder;

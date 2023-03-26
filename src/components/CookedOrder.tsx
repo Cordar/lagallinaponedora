@@ -23,6 +23,7 @@ const CookedOrder = ({ order, first }: CookedOrderProps) => {
                 alt="animación de una olla cocinando"
                 width={256}
                 height={256}
+                priority
               />
             </div>
           </>

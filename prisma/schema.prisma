@@ -55,15 +55,16 @@ model Choice {
 }
 
 enum OrderStatus {
-    STARTED
+    CREATED
     PAID
     COOKED
     DELIVERED
 }
 
+// TODO delete cascade the customized products
 model Order {
     id                 Int                 @id @default(autoincrement())
-    status             OrderStatus         @default(STARTED)
+    status             OrderStatus         @default(CREATED)
     customizedProducts CustomizedProduct[]
 
     Customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)

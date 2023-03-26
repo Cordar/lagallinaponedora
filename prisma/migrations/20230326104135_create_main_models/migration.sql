@@ -2,7 +2,7 @@
 CREATE TYPE "ProductCategory" AS ENUM ('COMBO', 'DISH', 'DRINK', 'DESSERT');
 
 -- CreateEnum
-CREATE TYPE "OrderStatus" AS ENUM ('STARTED', 'PAID', 'COOKED', 'DELIVERED');
+CREATE TYPE "OrderStatus" AS ENUM ('CREATED', 'PAID', 'COOKED', 'DELIVERED');
 
 -- CreateTable
 CREATE TABLE "Product" (
@@ -45,7 +45,7 @@ CREATE TABLE "Choice" (
 -- CreateTable
 CREATE TABLE "Order" (
     "id" SERIAL NOT NULL,
-    "status" "OrderStatus" NOT NULL DEFAULT 'STARTED',
+    "status" "OrderStatus" NOT NULL DEFAULT 'CREATED',
     "customerId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,

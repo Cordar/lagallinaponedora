@@ -1,5 +1,6 @@
 import { type GetStaticProps, type NextPage } from "next";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { RiArrowLeftLine } from "react-icons/ri";
@@ -8,6 +9,7 @@ import ErrorMessage from "~/components/ErrorMessage";
 import Input from "~/components/Input";
 import Loading from "~/components/Loading";
 import OrderedProduct from "~/components/OrderedProduct";
+import useRegisterOrder from "~/hooks/api/mutation/useRegisterOrder";
 import useUpdateCustomerInfo from "~/hooks/api/mutation/useUpdateCustomerInfo";
 import useProducts from "~/hooks/api/query/useProducts";
 import useUser from "~/hooks/api/query/useUser";
@@ -29,6 +31,7 @@ interface Inputs {
 }
 
 const YourOrder: NextPage<PageProps> = () => {
+  const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
 
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
@@ -36,6 +39,7 @@ const YourOrder: NextPage<PageProps> = () => {
   const { startedOrder, addProduct, removeProduct } = useStartedOrder();
 
   const { mutateUpdateCustomerInfo, isLoadingUpdateCustomerInfo, isErrorUpdateCustomerInfo } = useUpdateCustomerInfo();
+  const { mutateRegisterOrder, isLoadingRegisterOrder, isErrorRegisterOrder } = useRegisterOrder();
 
   const {
     register,
@@ -68,10 +72,23 @@ const YourOrder: NextPage<PageProps> = () => {
   const onFormSubmit: SubmitHandler<Inputs> = ({ email, name }) => {
     if (user?.sessionId && email && name && startedOrder) {
       mutateUpdateCustomerInfo({ sessionId: user.sessionId, email, name });
-
-      // TODO Redirect to payment here
-      // TODO Create paid order
-      // void push(`${Route.ORDER_STATUS}${startedOrder.id}`);
+      mutateRegisterOrder(
+        {
+          sessionId: user.sessionId,
+          customizedProducts: startedOrder.map(({ amount, productId, choices }) => ({
+            amount,
+            productId,
+            choices: choices.map(({ id }) => id),
+          })),
+        },
+        {
+          onSuccess: (order) => {
+            // TODO Redirect to payment here, the callback should have the order id
+            void push(`${Route.ORDER_STATUS}${order.id}`);
+            // TODO If payment is canceled or fails redirect to this page again with an error message
+          },
+        }
+      );
     }
   };
 
@@ -122,6 +139,8 @@ const YourOrder: NextPage<PageProps> = () => {
             <h3 className="text-ellipsis text-lg font-semibold tracking-wide text-lgp-orange-dark">{`Total ${totalPrice} €`}</h3>
           </div>
         )}
+
+        {isErrorRegisterOrder && <ErrorMessage message="Hubo un error al registrar el pedido." />}
       </div>
 
       {startedOrder.length > 0 && (
@@ -185,7 +204,7 @@ const YourOrder: NextPage<PageProps> = () => {
         isDisabled={
           !watchEmail || watchEmail.length <= 0 || !watchName || watchName.length <= 0 || startedOrder.length <= 0
         }
-        isLoading={isLoadingUpdateCustomerInfo}
+        isLoading={isLoadingUpdateCustomerInfo || isLoadingRegisterOrder}
         label="Pagar"
         className="fixed left-5 right-5 bottom-5 w-[unset]"
       />

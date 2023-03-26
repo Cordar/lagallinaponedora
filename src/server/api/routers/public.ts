@@ -117,19 +117,66 @@ export const publicRouter = createTRPCRouter({
     }
   }),
 
-  updateOrderToPaid: publicProcedure.input(z.object({ orderId: z.number() })).mutation(async ({ ctx, input }) => {
-    try {
-      await ctx.prisma.order.updateMany({
-        where: { id: input.orderId, status: OrderStatus.STARTED },
-        data: { status: OrderStatus.PAID },
-      });
-    } catch (error) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: `Hubo un error al actualizar el pedido.`,
-      });
-    }
-  }),
+  registerOrder: publicProcedure
+    .input(
+      z.object({
+        sessionId: z.string(),
+        customizedProducts: z.array(
+          z.object({ amount: z.number().positive(), productId: z.number(), choices: z.array(z.number()) })
+        ),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const customer = await ctx.prisma.customer.findUnique({ where: { sessionId: input.sessionId } });
+        if (!customer) throw new Error();
+
+        // Remove all previous orders with status CREATED
+        await ctx.prisma.order.deleteMany({ where: { Customer: { id: customer.id }, status: OrderStatus.CREATED } });
+
+        const order = await ctx.prisma.order.create({
+          data: {
+            Customer: { connect: { id: customer.id } },
+            customizedProducts: {
+              create: input.customizedProducts.map((customizedProduct) => ({
+                amount: customizedProduct.amount,
+                Product: { connect: { id: customizedProduct.productId } },
+                choices: { connect: customizedProduct.choices.map((choiceId) => ({ id: choiceId })) },
+              })),
+            },
+          },
+        });
+
+        return order;
+      } catch (error) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Hubo un error al crear el pedido.`,
+        });
+      }
+    }),
+
+  registerPayment: publicProcedure
+    .input(
+      z.object({
+        orderId: z.number(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const order = await ctx.prisma.order.update({
+          where: { id: input.orderId },
+          data: { status: OrderStatus.PAID },
+        });
+
+        return order;
+      } catch (error) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Hubo un error al registrar el pago.`,
+        });
+      }
+    }),
 
   updateCustomerInfo: publicProcedure
     .input(z.object({ sessionId: z.string(), name: z.string(), email: z.string().email() }))
