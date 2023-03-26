@@ -20,7 +20,7 @@ const CookedOrder = ({ order, first }: CookedOrderProps) => {
               <Image
                 src="/waiting.gif"
                 className="h-24 w-24 mix-blend-darken"
-                alt="animación de una olla cocinando"
+                alt="animación de un plato siendo revelado"
                 width={256}
                 height={256}
                 priority

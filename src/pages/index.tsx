@@ -1,10 +1,13 @@
 import { ProductCategory } from "@prisma/client";
 import { type GetStaticProps, type NextPage } from "next";
+import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import Product from "~/components/Product";
+import useAreOrdersInProgress from "~/hooks/api/query/useAreOrdersInProgress";
 import useProducts from "~/hooks/api/query/useProducts";
 import useUser from "~/hooks/api/query/useUser";
 import useStartedOrder from "~/hooks/useStartedOrder";
@@ -35,8 +38,9 @@ const Home: NextPage<PageProps> = () => {
   // useEffect(() => populateDatabase, [populateDatabase]);
 
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
-  const { isErrorUser } = useUser();
+  const { user, isErrorUser } = useUser();
   const { startedOrder, addProduct, removeProduct } = useStartedOrder();
+  const { areOrdersInProgress } = useAreOrdersInProgress(user?.sessionId);
 
   if (isLoadingProducts) return Layout(<Loading />);
 
@@ -59,14 +63,17 @@ const Home: NextPage<PageProps> = () => {
     void push(Route.CHECKOUT);
   };
 
+  const ordersInProgress =
+    (areOrdersInProgress && (areOrdersInProgress?.readyOrders || areOrdersInProgress?.cookingOrders)) ?? false;
+
   return Layout(
     <>
-      <div className="relative flex flex-col items-center gap-5 bg-gradient-to-b from-lgp-gradient-orange-dark to-lgp-gradient-orange-light px-5 py-10">
+      <div className="relative flex flex-col items-center gap-5 bg-gradient-to-b from-lgp-gradient-orange-dark to-lgp-gradient-orange-light px-5 py-16">
         <h1 className="text-ellipsis text-xl font-bold tracking-wide">La Gallina Ponedora</h1>
       </div>
 
       <div className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
-        <div className="mb-20 flex flex-col gap-6">
+        <div className={`mb-20 flex flex-col gap-6 ${ordersInProgress ? "mb-40" : ""}`}>
           {[ProductCategory.COMBO, ProductCategory.DISH, ProductCategory.DESSERT, ProductCategory.DRINK].map(
             (category) => (
               <div key={category} className="flex max-w-full flex-col gap-2">
@@ -93,8 +100,46 @@ const Home: NextPage<PageProps> = () => {
           <Button
             onClick={onOrder}
             label={`Pide ${buttonInfo.totalNumberOfItems} por ${buttonInfo.totalPrice} €`}
-            className="fixed left-5 right-5 bottom-5 m-auto w-[unset] max-w-md"
+            className={`fixed left-5 right-5 bottom-5 m-auto w-[unset] md:max-w-md ${
+              ordersInProgress ? "bottom-24" : ""
+            }`}
           />
+        )}
+
+        {areOrdersInProgress && (areOrdersInProgress.readyOrders || areOrdersInProgress.cookingOrders) && (
+          <div className="fixed left-0 bottom-0 right-0 bg-slate-50 shadow-[0_0_1rem_rgb(0,0,0,0.5)]">
+            <div className="flex items-center justify-center gap-4 p-4 md:max-w-md">
+              {areOrdersInProgress.readyOrders ? (
+                <Image
+                  src="/waiting.gif"
+                  className="h-10 w-10 mix-blend-darken"
+                  alt="animación de un plato siendo revelado"
+                  width={256}
+                  height={256}
+                  priority
+                />
+              ) : (
+                <Image
+                  src="/cooking.gif"
+                  className="h-10 w-10 mix-blend-darken"
+                  alt="animación de una olla cocinando"
+                  width={256}
+                  height={256}
+                  priority
+                />
+              )}
+
+              <h3 className="grow text-ellipsis text-sm font-semibold tracking-wide">
+                {areOrdersInProgress.readyOrders ? "¡Tu pedido está listo!" : "¡Estamos preparando tu pedido!"}
+              </h3>
+
+              <Link href={Route.ORDER_STATUS}>
+                <p className="text-ellipsis rounded-full bg-lgp-green px-4 py-2 text-sm font-medium tracking-wide text-white">
+                  Ver
+                </p>
+              </Link>
+            </div>
+          </div>
         )}
       </div>
     </>

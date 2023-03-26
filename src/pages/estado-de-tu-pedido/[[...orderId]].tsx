@@ -42,7 +42,7 @@ const OrderStatus: NextPage<PageProps> = () => {
 
   const [orderId, setOrderId] = useState(parseQueryOrderId(query.orderId) ?? null);
 
-  const { user, isErrorUser } = useUser();
+  const { user, isLoadingUser, isErrorUser } = useUser();
   const { clearStartedOrder } = useStartedOrder();
   const { cookedOrders, isLoadingCookedOrders, isErrorCookedOrders } = useCookedOrders(user?.sessionId, true);
   const { paidOrders, isLoadingPaidOrders, isErrorPaidOrders } = usePaidOrders(user?.sessionId, true);
@@ -97,7 +97,7 @@ const OrderStatus: NextPage<PageProps> = () => {
         (order, i) => order.customizedProducts.length > 0 && <PaidOrder key={order.id} order={order} first={i === 0} />
       )}
 
-      {(isLoadingCookedOrders || isLoadingPaidOrders) && <Loading />}
+      {(isLoadingUser || isLoadingCookedOrders || isLoadingPaidOrders) && <Loading />}
     </div>
   );
 };

@@ -79,6 +79,23 @@ export const publicRouter = createTRPCRouter({
     }
   }),
 
+  getAreOrdersInProgress: publicProcedure.input(z.object({ sessionId: z.string() })).query(async ({ ctx, input }) => {
+    try {
+      const customer = await ctx.prisma.customer.findUnique({
+        where: { sessionId: input.sessionId },
+        include: { orders: true },
+      });
+      if (!customer) throw new Error();
+
+      const cookingOrders = customer.orders.some((order) => order.status === OrderStatus.PAID);
+      const readyOrders = customer.orders.some((order) => order.status === OrderStatus.COOKED);
+
+      return { cookingOrders, readyOrders };
+    } catch (error) {
+      new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener tus pedidos." });
+    }
+  }),
+
   getPaidOrders: publicProcedure.input(z.object({ sessionId: z.string() })).query(async ({ ctx, input }) => {
     try {
       const customer = await ctx.prisma.customer.findUnique({
