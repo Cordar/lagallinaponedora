@@ -5,8 +5,9 @@ export enum Route {
   ORDER_STATUS = "/estado-de-tu-pedido/",
 }
 
-export enum Cookie {
+export enum StorageKey {
   SESSION = "lagallinaponedora_session",
+  STARTED_ORDER = "lagallinaponedora_started_order",
 }
 
 export const ONE_MINUTE_MS = 1000 * 60;

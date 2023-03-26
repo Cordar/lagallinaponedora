@@ -1,19 +1,20 @@
 import { type Choice, type CustomizedProduct } from "@prisma/client";
 import { RiAddLine, RiSubtractLine } from "react-icons/ri";
 import useProducts from "~/hooks/api/query/useProducts";
+import getRandomNumberId from "~/utils/getRandomNumberId";
 
 export interface OrderedProductProps {
   customizedProduct: CustomizedProduct & { choices: Choice[] };
-  onAddProduct?: (productId: number, choices: Choice[]) => void;
-  onRemoveProduct?: (productId: number, choices: Choice[]) => void;
+  addProduct?: (product: CustomizedProduct & { choices: Choice[] }) => void;
+  removeProduct?: (product: CustomizedProduct & { choices: Choice[] }) => void;
   disableButtons?: boolean;
   showPrice?: boolean;
 }
 
 const OrderedProduct = ({
   customizedProduct,
-  onAddProduct,
-  onRemoveProduct,
+  addProduct,
+  removeProduct,
   disableButtons,
   showPrice,
 }: OrderedProductProps) => {
@@ -47,29 +48,31 @@ const OrderedProduct = ({
           </p>
         )}
 
-        {onRemoveProduct && onAddProduct && (
-          <div className="flex grow items-center justify-center gap-3">
+        <div className="flex grow items-center justify-center gap-3">
+          {removeProduct && (
             <button
               type="button"
               disabled={disableButtons}
-              onClick={() => onRemoveProduct(productId, choices)}
+              onClick={() => removeProduct({ id: getRandomNumberId(), productId, amount: 1, choices })}
               className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white disabled:opacity-70"
             >
               <RiSubtractLine className="h-6 w-6" />
             </button>
+          )}
 
-            <p className="w-5 min-w-fit text-center text-base font-medium tracking-wide">{amount}</p>
+          <p className="w-5 min-w-fit text-center text-base font-medium tracking-wide">{amount}</p>
 
+          {addProduct && (
             <button
               type="button"
               disabled={disableButtons}
-              onClick={() => onAddProduct(productId, choices)}
+              onClick={() => addProduct({ id: getRandomNumberId(), productId, amount: 1, choices })}
               className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white disabled:opacity-70"
             >
               <RiAddLine className="h-6 w-6" />
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

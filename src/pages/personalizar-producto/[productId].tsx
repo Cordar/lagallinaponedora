@@ -9,13 +9,13 @@ import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import RadioGroup from "~/components/RadioGroup";
-import useAddOrRemoveProductToOrder from "~/hooks/api/mutation/useAddOrRemoveProductToOrder";
 import useProduct from "~/hooks/api/query/useProduct";
 import useProducts from "~/hooks/api/query/useProducts";
-import useStartedOrder from "~/hooks/api/query/useStartedOrder";
 import { default as useUser } from "~/hooks/api/query/useUser";
+import useStartedOrder from "~/hooks/useStartedOrder";
 import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
+import getRandomNumberId from "~/utils/getRandomNumberId";
 import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
 import { type PageProps } from "../_app";
 
@@ -45,10 +45,7 @@ const CustomizeProduct: NextPage<PageProps> = () => {
   const { products } = useProducts();
   const { product, isErrorProduct } = useProduct(productId);
   const { user, isLoadingUser, isErrorUser } = useUser();
-  const { startedOrder, isErrorStartedOrder } = useStartedOrder(user?.sessionId);
-
-  const { mutateAddOrRemoveProductToOrder, isLoadingAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } =
-    useAddOrRemoveProductToOrder();
+  const { startedOrder, addProduct } = useStartedOrder();
 
   const {
     register,
@@ -78,8 +75,7 @@ const CustomizeProduct: NextPage<PageProps> = () => {
   const productInfo = products?.find((product) => product.id === productId);
 
   if (!productInfo) return Layout(<Loading />);
-  else if (isErrorProduct || isErrorUser || isErrorStartedOrder)
-    return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
+  else if (isErrorProduct || isErrorUser) return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
 
   const onFormSubmit: SubmitHandler<FormData> = (data) => {
     if (!startedOrder || !user || !product) return;
@@ -90,12 +86,13 @@ const CustomizeProduct: NextPage<PageProps> = () => {
         .map((choice) => ({ id: choice.id, label: choice.label, choiceGroupId: id }))
     );
 
-    mutateAddOrRemoveProductToOrder({
-      sessionId: user.sessionId,
-      orderId: startedOrder.id,
+    addProduct({
+      id: getRandomNumberId(),
+      amount: 1,
       productId: product.id,
       choices,
     });
+
     void push(Route.HOME);
   };
 
@@ -123,8 +120,6 @@ const CustomizeProduct: NextPage<PageProps> = () => {
             <h3 className="grow text-lg font-semibold tracking-wide">{name}</h3>
             <p className="min-w-fit text-lg font-semibold tracking-wide">{price} €</p>
           </div>
-
-          {isErrorAddOrRemoveProductToOrder && <ErrorMessage message="No se ha podido añadir el producto." />}
         </div>
 
         <div className="mb-20 flex flex-col gap-5">
@@ -148,7 +143,6 @@ const CustomizeProduct: NextPage<PageProps> = () => {
 
         <Button
           isDisabled={!allInputsFilled || isLoadingUser}
-          isLoading={isLoadingAddOrRemoveProductToOrder}
           label="Añadir"
           className="fixed left-5 right-5 bottom-5 w-[unset]"
         />

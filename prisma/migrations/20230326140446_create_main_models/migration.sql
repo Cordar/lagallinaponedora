@@ -2,7 +2,7 @@
 CREATE TYPE "ProductCategory" AS ENUM ('COMBO', 'DISH', 'DRINK', 'DESSERT');
 
 -- CreateEnum
-CREATE TYPE "OrderStatus" AS ENUM ('STARTED', 'PAID', 'COOKED', 'DELIVERED');
+CREATE TYPE "OrderStatus" AS ENUM ('CREATED', 'PAID', 'COOKED', 'DELIVERED');
 
 -- CreateTable
 CREATE TABLE "Product" (
@@ -45,12 +45,20 @@ CREATE TABLE "Choice" (
 -- CreateTable
 CREATE TABLE "Order" (
     "id" SERIAL NOT NULL,
-    "status" "OrderStatus" NOT NULL DEFAULT 'STARTED',
+    "status" "OrderStatus" NOT NULL DEFAULT 'CREATED',
     "customerId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Order_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "CustomizedProductsOnOrders" (
+    "orderId" INTEGER NOT NULL,
+    "customizedProductId" INTEGER NOT NULL,
+
+    CONSTRAINT "CustomizedProductsOnOrders_pkey" PRIMARY KEY ("orderId","customizedProductId")
 );
 
 -- CreateTable
@@ -63,12 +71,6 @@ CREATE TABLE "Customer" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Customer_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "_CustomizedProductToOrder" (
-    "A" INTEGER NOT NULL,
-    "B" INTEGER NOT NULL
 );
 
 -- CreateTable
@@ -85,12 +87,6 @@ CREATE TABLE "_ChoiceToCustomizedProduct" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Customer_sessionId_key" ON "Customer"("sessionId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "_CustomizedProductToOrder_AB_unique" ON "_CustomizedProductToOrder"("A", "B");
-
--- CreateIndex
-CREATE INDEX "_CustomizedProductToOrder_B_index" ON "_CustomizedProductToOrder"("B");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "_ChoiceGroupToProduct_AB_unique" ON "_ChoiceGroupToProduct"("A", "B");
@@ -114,10 +110,10 @@ ALTER TABLE "Choice" ADD CONSTRAINT "Choice_choiceGroupId_fkey" FOREIGN KEY ("ch
 ALTER TABLE "Order" ADD CONSTRAINT "Order_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_CustomizedProductToOrder" ADD CONSTRAINT "_CustomizedProductToOrder_A_fkey" FOREIGN KEY ("A") REFERENCES "CustomizedProduct"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "CustomizedProductsOnOrders" ADD CONSTRAINT "CustomizedProductsOnOrders_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "_CustomizedProductToOrder" ADD CONSTRAINT "_CustomizedProductToOrder_B_fkey" FOREIGN KEY ("B") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "CustomizedProductsOnOrders" ADD CONSTRAINT "CustomizedProductsOnOrders_customizedProductId_fkey" FOREIGN KEY ("customizedProductId") REFERENCES "CustomizedProduct"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_ChoiceGroupToProduct" ADD CONSTRAINT "_ChoiceGroupToProduct_A_fkey" FOREIGN KEY ("A") REFERENCES "ChoiceGroup"("id") ON DELETE CASCADE ON UPDATE CASCADE;

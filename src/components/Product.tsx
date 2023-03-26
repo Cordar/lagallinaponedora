@@ -2,32 +2,22 @@ import { Product, type Choice, type ChoiceGroup, type CustomizedProduct } from "
 import Image from "next/image";
 import Link from "next/link";
 import { type ReactElement } from "react";
-import useAddOrRemoveProductToOrder from "~/hooks/api/mutation/useAddOrRemoveProductToOrder";
 import { Route } from "~/utils/constant";
-import ErrorMessage from "./ErrorMessage";
+import getRandomNumberId from "~/utils/getRandomNumberId";
 import OrderedProduct from "./OrderedProduct";
 
 export interface ProductProps {
   product: Product & { choiceGroups: ChoiceGroup[] };
   orderProducts?: (CustomizedProduct & { choices: Choice[] })[];
-  orderId?: number;
-  sessionId?: string;
+  addProduct: (product: CustomizedProduct & { choices: Choice[] }) => void;
+  removeProduct: (product: CustomizedProduct & { choices: Choice[] }) => void;
 }
 
-const Product = ({ product, orderProducts, orderId, sessionId }: ProductProps) => {
+const Product = ({ product, orderProducts, addProduct, removeProduct }: ProductProps) => {
   const { id, name, price, imageSrc, choiceGroups } = product;
 
-  const { mutateAddOrRemoveProductToOrder, isLoadingAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } =
-    useAddOrRemoveProductToOrder();
-
-  const handleAddProduct = (productId: number, choices: Choice[]) => {
-    if (!orderId || !sessionId) return;
-    mutateAddOrRemoveProductToOrder({ productId, orderId, sessionId, choices });
-  };
-
-  const handleRemoveProduct = (productId: number, choices: Choice[]) => {
-    if (!orderId || !sessionId) return;
-    mutateAddOrRemoveProductToOrder({ remove: true, productId, orderId, sessionId, choices });
+  const addProductWithNoChoices = () => {
+    addProduct({ id: getRandomNumberId(), productId: id, amount: 1, choices: [] });
   };
 
   const linkOrButton = (children: ReactElement) =>
@@ -39,10 +29,7 @@ const Product = ({ product, orderProducts, orderId, sessionId }: ProductProps) =
         {children}
       </Link>
     ) : (
-      <button
-        onClick={() => handleAddProduct(product.id, [])}
-        className={`relative flex max-w-full gap-3 ${imageSrc ? "" : "py-3"}`}
-      >
+      <button onClick={addProductWithNoChoices} className={`relative flex max-w-full gap-3 ${imageSrc ? "" : "py-3"}`}>
         {children}
       </button>
     );
@@ -72,13 +59,10 @@ const Product = ({ product, orderProducts, orderId, sessionId }: ProductProps) =
           <OrderedProduct
             key={customizedProduct.id}
             customizedProduct={customizedProduct}
-            onAddProduct={handleAddProduct}
-            disableButtons={isLoadingAddOrRemoveProductToOrder}
-            onRemoveProduct={handleRemoveProduct}
+            addProduct={addProduct}
+            removeProduct={removeProduct}
           />
         ))}
-
-      {isErrorAddOrRemoveProductToOrder && <ErrorMessage message="Hubo un error al modificar el pedido." />}
     </div>
   );
 };

@@ -1,4 +1,3 @@
-import { type Choice } from "@prisma/client";
 import { type GetStaticProps, type NextPage } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -10,11 +9,11 @@ import ErrorMessage from "~/components/ErrorMessage";
 import Input from "~/components/Input";
 import Loading from "~/components/Loading";
 import OrderedProduct from "~/components/OrderedProduct";
-import useAddOrRemoveProductToOrder from "~/hooks/api/mutation/useAddOrRemoveProductToOrder";
+import useRegisterOrder from "~/hooks/api/mutation/useRegisterOrder";
 import useUpdateCustomerInfo from "~/hooks/api/mutation/useUpdateCustomerInfo";
 import useProducts from "~/hooks/api/query/useProducts";
-import useStartedOrder from "~/hooks/api/query/useStartedOrder";
 import useUser from "~/hooks/api/query/useUser";
+import useStartedOrder from "~/hooks/useStartedOrder";
 import { EMAIL_REGEX, ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
 import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
@@ -37,31 +36,10 @@ const YourOrder: NextPage<PageProps> = () => {
 
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
   const { user, isErrorUser } = useUser();
-  const { startedOrder, isLoadingStartedOrder, isErrorStartedOrder } = useStartedOrder(user?.sessionId);
+  const { startedOrder, addProduct, removeProduct } = useStartedOrder();
 
   const { mutateUpdateCustomerInfo, isLoadingUpdateCustomerInfo, isErrorUpdateCustomerInfo } = useUpdateCustomerInfo();
-  const { mutateAddOrRemoveProductToOrder, isLoadingAddOrRemoveProductToOrder, isErrorAddOrRemoveProductToOrder } =
-    useAddOrRemoveProductToOrder();
-
-  useEffect(() => {
-    if (startedOrder && startedOrder.customizedProducts.length <= 0) void push(Route.HOME);
-  }, [startedOrder, push]);
-
-  const handleAddProduct = (productId: number, choices: Choice[]) => {
-    if (!startedOrder || !user?.sessionId) return;
-    mutateAddOrRemoveProductToOrder({ productId, orderId: startedOrder.id, sessionId: user.sessionId, choices });
-  };
-
-  const handleRemoveProduct = (productId: number, choices: Choice[]) => {
-    if (!startedOrder || !user?.sessionId) return;
-    mutateAddOrRemoveProductToOrder({
-      remove: true,
-      productId,
-      orderId: startedOrder.id,
-      sessionId: user.sessionId,
-      choices,
-    });
-  };
+  const { mutateRegisterOrder, isLoadingRegisterOrder, isErrorRegisterOrder } = useRegisterOrder();
 
   const {
     register,
@@ -82,9 +60,9 @@ const YourOrder: NextPage<PageProps> = () => {
 
   const [updateData, setUpdateData] = useState(false);
 
-  if (isLoadingProducts || isLoadingStartedOrder) return Layout(<Loading />);
+  if (isLoadingProducts) return Layout(<Loading />);
 
-  if (isErrorProducts || isErrorUser || isErrorStartedOrder)
+  if (isErrorProducts || isErrorUser)
     return Layout(
       <div className="flex h-full w-full items-center justify-center">
         <ErrorMessage message="No se ha podido cargar la página" />
@@ -94,13 +72,27 @@ const YourOrder: NextPage<PageProps> = () => {
   const onFormSubmit: SubmitHandler<Inputs> = ({ email, name }) => {
     if (user?.sessionId && email && name && startedOrder) {
       mutateUpdateCustomerInfo({ sessionId: user.sessionId, email, name });
-
-      // TODO Redirect to payment here
-      void push(`${Route.ORDER_STATUS}${startedOrder.id}`);
+      mutateRegisterOrder(
+        {
+          sessionId: user.sessionId,
+          customizedProducts: startedOrder.map(({ amount, productId, choices }) => ({
+            amount,
+            productId,
+            choices: choices.map(({ id }) => id),
+          })),
+        },
+        {
+          onSuccess: (order) => {
+            // TODO Redirect to payment here, the callback should have the order id
+            void push(`${Route.ORDER_STATUS}${order.id}`);
+            // TODO If payment is canceled or fails redirect to this page again with an error message
+          },
+        }
+      );
     }
   };
 
-  const totalPrice = startedOrder?.customizedProducts.reduce(
+  const totalPrice = startedOrder.reduce(
     (prev, { amount, productId }) => prev + amount * (products?.find(({ id }) => id === productId)?.price ?? 0),
     0
   );
@@ -116,90 +108,103 @@ const YourOrder: NextPage<PageProps> = () => {
         </Link>
       </div>
 
-      {startedOrder?.customizedProducts && (
-        <div className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
-          <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Tu pedido</h3>
+      <div className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
+        <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Tu pedido</h3>
 
-          {startedOrder.customizedProducts
-            .sort((a, b) => b.id - a.id)
-            .map((customizedProduct) => (
-              <OrderedProduct
-                key={customizedProduct.id}
-                customizedProduct={customizedProduct}
-                onAddProduct={handleAddProduct}
-                disableButtons={isLoadingAddOrRemoveProductToOrder}
-                onRemoveProduct={handleRemoveProduct}
-              />
-            ))}
+        {startedOrder.length <= 0 && (
+          <>
+            <p className="tracking-wide">¡Esto está un poco vacío!</p>
 
-          {totalPrice && (
-            <div className="flex items-center justify-end">
-              <h3 className="text-ellipsis text-lg font-semibold tracking-wide text-lgp-orange-dark">{`Total ${totalPrice} €`}</h3>
+            <div className="flex w-full items-center justify-center">
+              <Link href={Route.HOME} className="w-fit">
+                <Button label="Volver a la carta" />
+              </Link>
             </div>
-          )}
+          </>
+        )}
 
-          {isErrorAddOrRemoveProductToOrder && <ErrorMessage message="No se ha podido modificar el pedido." />}
+        {startedOrder
+          .sort((a, b) => b.id - a.id)
+          .map((customizedProduct) => (
+            <OrderedProduct
+              key={customizedProduct.id}
+              customizedProduct={customizedProduct}
+              addProduct={addProduct}
+              removeProduct={removeProduct}
+            />
+          ))}
+
+        {startedOrder.length > 0 && totalPrice && (
+          <div className="flex items-center justify-end">
+            <h3 className="text-ellipsis text-lg font-semibold tracking-wide text-lgp-orange-dark">{`Total ${totalPrice} €`}</h3>
+          </div>
+        )}
+
+        {isErrorRegisterOrder && <ErrorMessage message="Hubo un error al registrar el pedido." />}
+      </div>
+
+      {startedOrder.length > 0 && (
+        <div className="mb-20 flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
+          {updateData || !user?.email || !user?.name ? (
+            <>
+              <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Dinos quién eres:</h3>
+
+              <div className="relative flex w-full grow flex-col gap-5">
+                <Input
+                  id={"email"}
+                  label={"Email"}
+                  register={register("email", {
+                    required: { value: true, message: "Este campo es obligatorio" },
+                    pattern: { value: EMAIL_REGEX, message: "El email no es válido" },
+                  })}
+                  errorMessage={getFormError("email")}
+                />
+
+                <Input
+                  id={"name"}
+                  label={"Nombre"}
+                  register={register("name", {
+                    required: { value: true, message: "Este campo es obligatorio" },
+                    maxLength: { value: 16, message: "El nombre no es demasiado largo" },
+                    minLength: { value: 2, message: "El nombre no es demasiado corto" },
+                  })}
+                  errorMessage={getFormError("name")}
+                />
+
+                <small className="text-slate-400">
+                  Solo usaremos tu email para avisarte de que tu pedido está listo. También te llamaremos por tu nombre.
+                </small>
+
+                {isErrorUpdateCustomerInfo && <ErrorMessage message="Hubo un error al guardar tus datos." />}
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{`¡Bienvenido de nuevo ${user.name}!`}</h3>
+
+              <p className="text-sm font-medium tracking-wide">{user.email}</p>
+
+              <small className="text-slate-400">
+                Te avisaremos por email cuando tu pedido esté listo y te llamaremos por tu nombre.
+              </small>
+
+              <button
+                onClick={() => setUpdateData(true)}
+                type="button"
+                className="tracking-wid p-2 font-medium text-slate-500"
+              >
+                Cambiar tus datos
+              </button>
+            </>
+          )}
         </div>
       )}
 
-      <div className="mb-20 flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
-        {updateData || !user?.email || !user?.name ? (
-          <>
-            <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Dinos quién eres:</h3>
-
-            <div className="relative flex w-full grow flex-col gap-5">
-              <Input
-                id={"email"}
-                label={"Email"}
-                register={register("email", {
-                  required: { value: true, message: "Este campo es obligatorio" },
-                  pattern: { value: EMAIL_REGEX, message: "El email no es válido" },
-                })}
-                errorMessage={getFormError("email")}
-              />
-
-              <Input
-                id={"name"}
-                label={"Nombre"}
-                register={register("name", {
-                  required: { value: true, message: "Este campo es obligatorio" },
-                  maxLength: { value: 16, message: "El nombre no es demasiado largo" },
-                  minLength: { value: 2, message: "El nombre no es demasiado corto" },
-                })}
-                errorMessage={getFormError("name")}
-              />
-
-              <small className="text-slate-400">
-                Solo usaremos tu email para avisarte de que tu pedido está listo. También te llamaremos por tu nombre.
-              </small>
-
-              {isErrorUpdateCustomerInfo && <ErrorMessage message="Hubo un error al guardar tus datos." />}
-            </div>
-          </>
-        ) : (
-          <>
-            <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{`¡Bienvenido de nuevo ${user.name}!`}</h3>
-
-            <p className="text-sm font-medium tracking-wide">{user.email}</p>
-
-            <small className="text-slate-400">
-              Te avisaremos por email cuando tu pedido esté listo y te llamaremos por tu nombre.
-            </small>
-
-            <button
-              onClick={() => setUpdateData(true)}
-              type="button"
-              className="tracking-wid p-2 font-medium text-slate-500"
-            >
-              Cambiar tus datos
-            </button>
-          </>
-        )}
-      </div>
-
       <Button
-        isDisabled={!watchEmail || watchEmail.length <= 0 || !watchName || watchName.length <= 0}
-        isLoading={isLoadingUpdateCustomerInfo}
+        isDisabled={
+          !watchEmail || watchEmail.length <= 0 || !watchName || watchName.length <= 0 || startedOrder.length <= 0
+        }
+        isLoading={isLoadingUpdateCustomerInfo || isLoadingRegisterOrder}
         label="Pagar"
         className="fixed left-5 right-5 bottom-5 w-[unset]"
       />

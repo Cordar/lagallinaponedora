@@ -1,10 +1,10 @@
-import { type Choice, type CustomizedProduct, type Order } from "@prisma/client";
 import Image from "next/image";
+import { type OrderWithCustomizedProducts } from "~/utils/types";
 import OrderedProduct from "./OrderedProduct";
 import OrderNumber from "./OrderNumber";
 
 export interface CookedOrderProps {
-  order: Order & { customizedProducts: (CustomizedProduct & { choices: Choice[] })[] };
+  order: OrderWithCustomizedProducts;
   first?: boolean;
 }
 
@@ -20,9 +20,10 @@ const CookedOrder = ({ order, first }: CookedOrderProps) => {
               <Image
                 src="/waiting.gif"
                 className="h-24 w-24 mix-blend-darken"
-                alt="animación de una olla cocinando"
+                alt="animación de un plato siendo revelado"
                 width={256}
                 height={256}
+                priority
               />
             </div>
           </>
@@ -35,9 +36,12 @@ const CookedOrder = ({ order, first }: CookedOrderProps) => {
         )}
 
         {order.customizedProducts
-          .sort((a, b) => b.id - a.id)
-          .map((customizedProduct) => (
-            <OrderedProduct key={customizedProduct.id} customizedProduct={customizedProduct} />
+          .sort((a, b) => b.customizedProduct.id - a.customizedProduct.id)
+          .map((customizedProductOnOrder) => (
+            <OrderedProduct
+              key={customizedProductOnOrder.customizedProduct.id}
+              customizedProduct={customizedProductOnOrder.customizedProduct}
+            />
           ))}
 
         <p className="text-ellipsis text-xs tracking-wide text-slate-600">
