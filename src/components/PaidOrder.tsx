@@ -1,11 +1,11 @@
-import { type Choice, type CustomizedProduct, type Order } from "@prisma/client";
 import Image from "next/image";
 import useEstimatedWaitingTime from "~/hooks/api/query/useEstimatedWaitingTime";
+import { type OrderWithCustomizedProducts } from "~/utils/types";
 import ErrorMessage from "./ErrorMessage";
 import OrderedProduct from "./OrderedProduct";
 
 export interface PaidOrderProps {
-  order: Order & { customizedProducts: (CustomizedProduct & { choices: Choice[] })[] };
+  order: OrderWithCustomizedProducts;
   first?: boolean;
 }
 
@@ -57,9 +57,12 @@ const PaidOrder = ({ order, first }: PaidOrderProps) => {
       </div>
 
       {order.customizedProducts
-        .sort((a, b) => b.id - a.id)
-        .map((customizedProduct) => (
-          <OrderedProduct key={customizedProduct.id} customizedProduct={customizedProduct} />
+        .sort((a, b) => b.customizedProduct.id - a.customizedProduct.id)
+        .map((customizedProductOnOrder) => (
+          <OrderedProduct
+            key={customizedProductOnOrder.customizedProduct.id}
+            customizedProduct={customizedProductOnOrder.customizedProduct}
+          />
         ))}
 
       {first && (

@@ -50,11 +50,11 @@ export const publicRouter = createTRPCRouter({
       const [order, paidOrders] = await Promise.all([
         ctx.prisma.order.findUnique({
           where: { id: input.orderId },
-          include: { customizedProducts: { include: { Product: true } } },
+          include: { customizedProducts: { include: { customizedProduct: { include: { Product: true } } } } },
         }),
         ctx.prisma.order.findMany({
           where: { status: OrderStatus.PAID, NOT: { id: input.orderId } },
-          include: { customizedProducts: { include: { Product: true } } },
+          include: { customizedProducts: { include: { customizedProduct: { include: { Product: true } } } } },
         }),
       ]);
 
@@ -62,14 +62,14 @@ export const publicRouter = createTRPCRouter({
 
       let totalCookingTime = 0;
 
-      order.customizedProducts.forEach((customizedProduct) => {
-        totalCookingTime += customizedProduct.Product.cookingTimeInMinutes;
+      order.customizedProducts.forEach((customizedProductOnOrder) => {
+        totalCookingTime += customizedProductOnOrder.customizedProduct.Product.cookingTimeInMinutes;
       });
 
       paidOrders.forEach((paidOrder) => {
         if (paidOrder.updatedAt < order.updatedAt)
-          paidOrder.customizedProducts.forEach((customizedProduct) => {
-            totalCookingTime += customizedProduct.Product.cookingTimeInMinutes;
+          paidOrder.customizedProducts.forEach((customizedProductOnOrder) => {
+            totalCookingTime += customizedProductOnOrder.customizedProduct.Product.cookingTimeInMinutes;
           });
       });
 
@@ -85,7 +85,7 @@ export const publicRouter = createTRPCRouter({
         where: { sessionId: input.sessionId },
         include: {
           orders: {
-            include: { customizedProducts: { include: { choices: true } } },
+            include: { customizedProducts: { include: { customizedProduct: { include: { choices: true } } } } },
             orderBy: { updatedAt: "asc" },
           },
         },
@@ -104,7 +104,7 @@ export const publicRouter = createTRPCRouter({
         where: { sessionId: input.sessionId },
         include: {
           orders: {
-            include: { customizedProducts: { include: { choices: true } } },
+            include: { customizedProducts: { include: { customizedProduct: { include: { choices: true } } } } },
             orderBy: { updatedAt: "asc" },
           },
         },
@@ -134,16 +134,22 @@ export const publicRouter = createTRPCRouter({
         // Remove all previous orders with status CREATED
         await ctx.prisma.order.deleteMany({ where: { Customer: { id: customer.id }, status: OrderStatus.CREATED } });
 
-        const order = await ctx.prisma.order.create({
-          data: {
-            Customer: { connect: { id: customer.id } },
-            customizedProducts: {
-              create: input.customizedProducts.map((customizedProduct) => ({
+        const customizedProducts = input.customizedProducts.map((customizedProduct) => {
+          return {
+            customizedProduct: {
+              create: {
                 amount: customizedProduct.amount,
                 Product: { connect: { id: customizedProduct.productId } },
                 choices: { connect: customizedProduct.choices.map((choiceId) => ({ id: choiceId })) },
-              })),
+              },
             },
+          };
+        });
+
+        const order = await ctx.prisma.order.create({
+          data: {
+            Customer: { connect: { id: customer.id } },
+            customizedProducts: { create: customizedProducts },
           },
         });
 

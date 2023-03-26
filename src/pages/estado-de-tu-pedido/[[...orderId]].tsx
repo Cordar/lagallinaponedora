@@ -54,7 +54,6 @@ const OrderStatus: NextPage<PageProps> = () => {
 
   useEffect(() => {
     // TODO very important, only do this if the payment provider has returned a success
-    console.log(orderId);
     if (orderId) mutateRegisterPayment({ orderId });
   }, [mutateRegisterPayment, orderId]);
 
