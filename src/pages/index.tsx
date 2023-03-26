@@ -63,9 +63,6 @@ const Home: NextPage<PageProps> = () => {
     void push(Route.CHECKOUT);
   };
 
-  const ordersInProgress =
-    (areOrdersInProgress && (areOrdersInProgress?.readyOrders || areOrdersInProgress?.cookingOrders)) ?? false;
-
   return Layout(
     <>
       <div className="relative flex flex-col items-center gap-5 bg-gradient-to-b from-lgp-gradient-orange-dark to-lgp-gradient-orange-light px-5 py-16">
@@ -73,7 +70,7 @@ const Home: NextPage<PageProps> = () => {
       </div>
 
       <div className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
-        <div className={`mb-20 flex flex-col gap-6 ${ordersInProgress ? "mb-40" : ""}`}>
+        <div className="mb-40 flex flex-col gap-6">
           {[ProductCategory.COMBO, ProductCategory.DISH, ProductCategory.DESSERT, ProductCategory.DRINK].map(
             (category) => (
               <div key={category} className="flex max-w-full flex-col gap-2">
@@ -96,51 +93,53 @@ const Home: NextPage<PageProps> = () => {
           )}
         </div>
 
-        {startedOrder && buttonInfo && startedOrder.length > 0 && (
-          <Button
-            onClick={onOrder}
-            label={`Pide ${buttonInfo.totalNumberOfItems} por ${buttonInfo.totalPrice} €`}
-            className={`fixed left-5 right-5 bottom-5 m-auto w-[unset] md:max-w-md ${
-              ordersInProgress ? "bottom-24" : ""
-            }`}
-          />
-        )}
-
-        {areOrdersInProgress && (areOrdersInProgress.readyOrders || areOrdersInProgress.cookingOrders) && (
-          <div className="fixed left-0 bottom-0 right-0 bg-slate-50 shadow-[0_0_1rem_rgb(0,0,0,0.5)]">
-            <div className="flex items-center justify-center gap-4 p-4 md:max-w-md">
-              {areOrdersInProgress.readyOrders ? (
-                <Image
-                  src="/waiting.gif"
-                  className="h-10 w-10 mix-blend-darken"
-                  alt="animación de un plato siendo revelado"
-                  width={256}
-                  height={256}
-                  priority
-                />
-              ) : (
-                <Image
-                  src="/cooking.gif"
-                  className="h-10 w-10 mix-blend-darken"
-                  alt="animación de una olla cocinando"
-                  width={256}
-                  height={256}
-                  priority
-                />
-              )}
-
-              <h3 className="grow text-ellipsis text-sm font-semibold tracking-wide">
-                {areOrdersInProgress.readyOrders ? "¡Tu pedido está listo!" : "¡Estamos preparando tu pedido!"}
-              </h3>
-
-              <Link href={Route.ORDER_STATUS}>
-                <p className="text-ellipsis rounded-full bg-lgp-green px-4 py-2 text-sm font-medium tracking-wide text-white">
-                  Ver
-                </p>
-              </Link>
+        <div className="fixed left-0 bottom-0 right-0">
+          {startedOrder && buttonInfo && startedOrder.length > 0 && (
+            <div className="flex w-full justify-center p-5">
+              <Button
+                onClick={onOrder}
+                label={`Pide ${buttonInfo.totalNumberOfItems} por ${buttonInfo.totalPrice} €`}
+                className="w-full lg:max-w-md"
+              />
             </div>
-          </div>
-        )}
+          )}
+
+          {areOrdersInProgress && (areOrdersInProgress.readyOrders || areOrdersInProgress.cookingOrders) && (
+            <div className="bg-slate-50 shadow-[0_0_1rem_rgb(0,0,0,0.5)]">
+              <div className="m-auto flex items-center justify-center gap-4 p-5 lg:max-w-md">
+                {areOrdersInProgress.readyOrders ? (
+                  <Image
+                    src="/waiting.gif"
+                    className="h-10 w-10 mix-blend-darken"
+                    alt="animación de un plato siendo revelado"
+                    width={256}
+                    height={256}
+                    priority
+                  />
+                ) : (
+                  <Image
+                    src="/cooking.gif"
+                    className="h-10 w-10 mix-blend-darken"
+                    alt="animación de una olla cocinando"
+                    width={256}
+                    height={256}
+                    priority
+                  />
+                )}
+
+                <h3 className="grow text-ellipsis text-sm font-semibold tracking-wide">
+                  {areOrdersInProgress.readyOrders ? "¡Tu pedido está listo!" : "¡Estamos preparando tu pedido!"}
+                </h3>
+
+                <Link href={Route.ORDER_STATUS}>
+                  <p className="text-ellipsis rounded-full bg-lgp-green px-4 py-2 text-sm font-medium tracking-wide text-white">
+                    Ver
+                  </p>
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </>
   );

@@ -206,7 +206,7 @@ const YourOrder: NextPage<PageProps> = () => {
         }
         isLoading={isLoadingUpdateCustomerInfo || isLoadingRegisterOrder}
         label="Pagar"
-        className="fixed left-5 right-5 bottom-5 w-[unset]"
+        className="fixed left-5 right-5 bottom-5 m-auto w-[unset] lg:max-w-md"
       />
     </form>
   );
