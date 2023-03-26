@@ -144,7 +144,7 @@ const CustomizeProduct: NextPage<PageProps> = () => {
         <Button
           isDisabled={!allInputsFilled || isLoadingUser}
           label="Añadir"
-          className="fixed left-5 right-5 bottom-5 w-[unset]"
+          className="fixed left-5 right-5 bottom-5 m-auto w-[unset] lg:max-w-md"
         />
       </form>
     </div>
