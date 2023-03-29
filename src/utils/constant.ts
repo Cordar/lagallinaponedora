@@ -3,6 +3,7 @@ export enum Route {
   CUSTOMIZE_PRODUCT = "/personalizar-producto/",
   CHECKOUT = "/tu-pedido/",
   ORDER_STATUS = "/estado-de-tu-pedido/",
+  PAY = "/api/checkout_sessions/"
 }
 
 export enum StorageKey {

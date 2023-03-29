@@ -18,40 +18,30 @@ enum ProductCategory {
 }
 
 model Product {
-    id                   Int                 @id @default(autoincrement())
+    id                   Int             @id @default(autoincrement())
     name                 String
     price                Int
     imageSrc             String?
     category             ProductCategory
-    choiceGroups         ChoiceGroup[]
-    customizedProducts   CustomizedProduct[]
     cookingTimeInMinutes Int
+    groups               Group[]
+    chosenProduct        ChosenProduct[]
 }
 
-model CustomizedProduct {
-    id      Int                          @id @default(autoincrement())
-    amount  Int                          @default(1)
-    choices Choice[]
-    orders  CustomizedProductsOnOrders[]
-
-    Product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-    productId Int
+model Group {
+    id          Int          @id @default(autoincrement())
+    name        String
+    subproducts Subproduct[]
+    product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+    productId   Int
 }
 
-model ChoiceGroup {
-    id       Int       @id @default(autoincrement())
-    title    String
-    products Product[]
-    choices  Choice[]
-}
-
-model Choice {
-    id                 Int                 @id @default(autoincrement())
-    label              String
-    customizedProducts CustomizedProduct[]
-
-    ChoiceGroup   ChoiceGroup @relation(fields: [choiceGroupId], references: [id], onDelete: Cascade)
-    choiceGroupId Int
+model Subproduct {
+    id               Int                @id @default(autoincrement())
+    name             String
+    group            Group              @relation(fields: [groupId], references: [id], onDelete: Cascade)
+    groupId          Int
+    chosenSubproduct ChosenSubproduct[]
 }
 
 enum OrderStatus {
@@ -62,24 +52,34 @@ enum OrderStatus {
 }
 
 model Order {
-    id                 Int                          @id @default(autoincrement())
-    status             OrderStatus                  @default(CREATED)
-    customizedProducts CustomizedProductsOnOrders[]
+    id             Int             @id @default(autoincrement())
+    status         OrderStatus     @default(CREATED)
+    chosenProducts ChosenProduct[]
 
-    Customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
     customerId Int
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
 
-model CustomizedProductsOnOrders {
-    order               Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
-    orderId             Int
-    customizedProduct   CustomizedProduct @relation(fields: [customizedProductId], references: [id], onDelete: Cascade)
-    customizedProductId Int
+model ChosenProduct {
+    id               Int                @id @default(autoincrement())
+    amount           Int
+    product          Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+    productId        Int
+    order            Order?             @relation(fields: [orderId], references: [id])
+    orderId          Int?
+    chosenSubproduct ChosenSubproduct[]
+}
 
-    @@id([orderId, customizedProductId])
+model ChosenSubproduct {
+    id Int @id @default(autoincrement())
+
+    chosenProduct   ChosenProduct @relation(fields: [chosenProductId], references: [id], onDelete: Cascade)
+    chosenProductId Int
+    subproduct      Subproduct    @relation(fields: [subproductId], references: [id], onDelete: Cascade)
+    subproductId    Int
 }
 
 model Customer {

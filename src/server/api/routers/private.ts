@@ -4,36 +4,37 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 export const privateRouter = createTRPCRouter({
   populateDatabase: publicProcedure.mutation(async ({ ctx }) => {
     await ctx.prisma.product.deleteMany();
-    await ctx.prisma.choice.deleteMany();
-    await ctx.prisma.choiceGroup.deleteMany();
-    await ctx.prisma.customizedProduct.deleteMany();
+    await ctx.prisma.group.deleteMany();
+    await ctx.prisma.subproduct.deleteMany();
+    await ctx.prisma.chosenSubproduct.deleteMany();
+    await ctx.prisma.chosenProduct.deleteMany();
     await ctx.prisma.order.deleteMany();
     await ctx.prisma.customer.deleteMany();
 
-    const dishGroup = await ctx.prisma.choiceGroup.create({ data: { title: "Elige tu plato" } });
-    const sauceGroup = await ctx.prisma.choiceGroup.create({ data: { title: "Elige tu salsa" } });
-    const drinkGroup = await ctx.prisma.choiceGroup.create({ data: { title: "Elige tu bebida" } });
-    const dessertGroup = await ctx.prisma.choiceGroup.create({ data: { title: "Elige tu postre" } });
-    const alcoholGroup = await ctx.prisma.choiceGroup.create({ data: { title: "¿Como lo quieres?" } });
-
-    await ctx.prisma.choice.createMany({
-      data: [
-        { label: "Hamburguesa", choiceGroupId: dishGroup.id },
-        { label: "Pizza", choiceGroupId: dishGroup.id },
-        { label: "Tacos", choiceGroupId: dishGroup.id },
-        { label: "Salsa verde", choiceGroupId: sauceGroup.id },
-        { label: "Salsa roja", choiceGroupId: sauceGroup.id },
-        { label: "Salsa picante", choiceGroupId: sauceGroup.id },
-        { label: "Coca-cola", choiceGroupId: drinkGroup.id },
-        { label: "Agua", choiceGroupId: drinkGroup.id },
-        { label: "Coctail con alchool", choiceGroupId: drinkGroup.id },
-        { label: "Coctail sin alchool", choiceGroupId: drinkGroup.id },
-        { label: "Helado", choiceGroupId: dessertGroup.id },
-        { label: "Pastel", choiceGroupId: dessertGroup.id },
-        { label: "Con alcohol", choiceGroupId: alcoholGroup.id },
-        { label: "Sin alcohol", choiceGroupId: alcoholGroup.id },
-      ],
-    });
+    const subproduct_salsas = {
+      name: "Elige tu Salsa",
+      subproducts: {
+        create: [{ name: "Salsa Roja" }, { name: "Salsa Verde" }, { name: "Salsa Amarilla" }]
+      }
+    };
+    const subproduct_dishes = {
+      name: "Elige tu Plato",
+      subproducts: {
+        create: [{ name: "Hamburguesa" }, { name: "Tortilla" }, { name: "Platano" }]
+      }
+    };
+    const subproduct_drinks = {
+      name: "Elige tu bebida",
+      subproducts: {
+        create: [{ name: "Agua" }, { name: "Vino" }, { name: "CocaCola" }]
+      }
+    };
+    const subproduct_dessert = {
+      name: "Elige tu postre",
+      subproducts: {
+        create: [{ name: "Tarta queso" }, { name: "Flan chocolate" }]
+      }
+    };
 
     await ctx.prisma.product.create({
       data: {
@@ -41,21 +42,21 @@ export const privateRouter = createTRPCRouter({
         price: 12,
         category: ProductCategory.COMBO,
         cookingTimeInMinutes: 3,
-        choiceGroups: { connect: [{ id: dishGroup.id }, { id: sauceGroup.id }, { id: drinkGroup.id }] },
+        groups: {
+          create: [subproduct_dishes, subproduct_drinks, subproduct_salsas]
+        },
       },
-      include: { choiceGroups: true },
     }),
       await ctx.prisma.product.create({
         data: {
           name: "Plato + Postre + Bebida",
           price: 15,
           category: ProductCategory.COMBO,
-          cookingTimeInMinutes: 3,
-          choiceGroups: {
-            connect: [{ id: dishGroup.id }, { id: sauceGroup.id }, { id: drinkGroup.id }, { id: dessertGroup.id }],
+          cookingTimeInMinutes: 4,
+          groups: {
+            create: [subproduct_dishes, subproduct_drinks, subproduct_salsas, subproduct_dessert],
           },
         },
-        include: { choiceGroups: true },
       }),
       await ctx.prisma.product.create({
         data: {
@@ -64,9 +65,8 @@ export const privateRouter = createTRPCRouter({
           category: ProductCategory.DISH,
           cookingTimeInMinutes: 3,
           imageSrc: "https://media-cdn.tripadvisor.com/media/photo-s/16/5e/62/88/mushie.jpg",
-          choiceGroups: { connect: [{ id: sauceGroup.id }] },
+          groups: { create: [subproduct_salsas] },
         },
-        include: { choiceGroups: true },
       }),
       await ctx.prisma.product.create({
         data: {
@@ -75,9 +75,8 @@ export const privateRouter = createTRPCRouter({
           category: ProductCategory.DISH,
           cookingTimeInMinutes: 3,
           imageSrc: "https://img.freepik.com/premium-photo/delicious-pizza-professional-photography_741265-41.jpg",
-          choiceGroups: { connect: [{ id: sauceGroup.id }] },
+          groups: { create: [subproduct_salsas] },
         },
-        include: { choiceGroups: true },
       }),
       await ctx.prisma.product.create({
         data: {
@@ -87,9 +86,8 @@ export const privateRouter = createTRPCRouter({
           cookingTimeInMinutes: 3,
           imageSrc:
             "https://thumbs.dreamstime.com/b/mexican-street-tacos-flat-lay-composition-pork-carnitas-avocado-onion-cilantro-red-cabbage-143864544.jpg",
-          choiceGroups: { connect: [{ id: sauceGroup.id }] },
+          groups: { create: [subproduct_salsas] },
         },
-        include: { choiceGroups: true },
       }),
       await ctx.prisma.product.create({
         data: {
@@ -112,14 +110,13 @@ export const privateRouter = createTRPCRouter({
       }),
       await ctx.prisma.product.create({
         data: {
-          name: "Coctail",
+          name: "Cocktail",
           price: 8,
           category: ProductCategory.DRINK,
           cookingTimeInMinutes: 2,
           imageSrc: "https://i.pinimg.com/550x/42/57/57/425757bec893d00c54b07adbc5100833.jpg",
-          choiceGroups: { connect: [{ id: alcoholGroup.id }] },
+          groups: { create: [{ name: "Lo quieres con alcohol?", subproducts: { create: [{ name: "Sí" }, { name: "No" }] } }] },
         },
-        include: { choiceGroups: true },
       }),
       await ctx.prisma.product.create({
         data: {
