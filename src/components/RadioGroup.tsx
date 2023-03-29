@@ -4,7 +4,7 @@ import RadioButton from "./RadioButton";
 
 interface RadioGroupProps {
   title: string;
-  buttons: { label: string; id: string }[];
+  buttons: { name: string; id: string }[];
   register: UseFormRegisterReturn;
   error?: string;
 }
@@ -17,8 +17,8 @@ const RadioGroup = ({ title, buttons, register, error }: RadioGroupProps) => {
         {error && <ErrorMessage message={error} />}
       </div>
 
-      {buttons.map(({ label, id }) => (
-        <RadioButton key={id} id={id} label={label} register={register} />
+      {buttons.map(({ name, id }) => (
+        <RadioButton key={id} id={id} name={name} register={register} />
       ))}
     </div>
   );

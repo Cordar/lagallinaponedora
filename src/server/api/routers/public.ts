@@ -7,7 +7,7 @@ export const publicRouter = createTRPCRouter({
   getProducts: publicProcedure.query(async ({ ctx }) => {
     try {
       return await ctx.prisma.product.findMany({
-        include: { choiceGroups: true },
+        include: { groups: { include: { subproducts: true } } },
         orderBy: { id: "asc" },
       });
     } catch (error) {
@@ -21,7 +21,7 @@ export const publicRouter = createTRPCRouter({
       try {
         const product = await ctx.prisma.product.findUnique({
           where: { id: input.productId },
-          include: { choiceGroups: { include: { choices: true }, orderBy: { id: "asc" } } },
+          include: { groups: { include: { subproducts: true }, orderBy: { id: "asc" } } },
         });
 
         if (!product) throw new Error();

@@ -1,28 +1,28 @@
-import { type Choice, type CustomizedProduct } from "@prisma/client";
 import { RiAddLine, RiSubtractLine } from "react-icons/ri";
 import useProducts from "~/hooks/api/query/useProducts";
+import { ChosenProductStorage } from "~/hooks/useStartedOrder";
 import getRandomNumberId from "~/utils/getRandomNumberId";
 
 export interface OrderedProductProps {
-  customizedProduct: CustomizedProduct & { choices: Choice[] };
-  addProduct?: (product: CustomizedProduct & { choices: Choice[] }) => void;
-  removeProduct?: (product: CustomizedProduct & { choices: Choice[] }) => void;
+  chosenProduct: ChosenProductStorage;
+  removeProduct?: ( id: number) => void;
   disableButtons?: boolean;
   showPrice?: boolean;
 }
 
 const OrderedProduct = ({
-  customizedProduct,
-  addProduct,
+  chosenProduct,
   removeProduct,
   disableButtons,
   showPrice,
 }: OrderedProductProps) => {
-  const { id, amount, choices, productId } = customizedProduct;
+  const { id, amount,name,chosenSubproducts } = chosenProduct;
 
-  const { products } = useProducts();
+  console.log(chosenProduct)
 
-  const product = products?.find(({ id }) => id === productId);
+  // const { products } = useProducts();
+
+  // const product = products?.find(({ id }) => id === productId);
 
   return (
     <div
@@ -32,16 +32,16 @@ const OrderedProduct = ({
       } gap-3 rounded-lg border border-opacity-10 bg-slate-100 p-2`}
     >
       <div className="flex grow flex-col gap-1">
-        <p className="text-sm font-medium tracking-wide">{product?.name ?? ""}</p>
+      {chosenSubproducts.length <= 0 && <p className="text-sm font-medium tracking-wide">{name }</p>}
 
-        {choices.length > 0 && (
-          <p className="text-xs font-normal tracking-wide">
-            {choices.map(({ label }, i) => `${i === 0 ? "" : ", "}${label}`)}
+        {chosenSubproducts.length > 0 && (
+          <p className="text-sm font-medium tracking-wide">
+            {chosenSubproducts.map(({ name }, i) => `${i === 0 ? "" : ", "}${name}`)}
           </p>
         )}
       </div>
 
-      <div className="flex flex-col items-end gap-3">
+      {/* <div className="flex flex-col items-end gap-3">
         {showPrice && (
           <p className="text-sm font-medium tracking-wide text-lgp-orange-dark">
             {product?.price ? `${product?.price * amount} €` : ""}
@@ -73,7 +73,7 @@ const OrderedProduct = ({
             </button>
           )}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

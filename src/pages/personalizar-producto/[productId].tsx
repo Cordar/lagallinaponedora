@@ -62,10 +62,10 @@ const CustomizeProduct: NextPage<PageProps> = () => {
 
   useEffect(() => {
     const isFilled =
-      (product?.choiceGroups &&
-        product.choiceGroups.every(({ id, choices }) => {
+      (product?.groups &&
+        product.groups.every(({ id, subproducts }) => {
           const value = getValues(id.toString());
-          return value && choices.some((choice) => choice.id.toString() === value);
+          return value && subproducts.some((subproduct) => subproduct.id.toString() === value);
         })) ??
       false;
 
@@ -75,22 +75,23 @@ const CustomizeProduct: NextPage<PageProps> = () => {
   const productInfo = products?.find((product) => product.id === productId);
 
   if (!productInfo) return Layout(<Loading />);
-  else if (isErrorProduct || isErrorUser) return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
+  else if (isErrorUser) return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
 
   const onFormSubmit: SubmitHandler<FormData> = (data) => {
+    console.log(data)
     if (!startedOrder || !user || !product) return;
-    const choicesIds = new Set(Object.values(data).map((choice) => parseInt(choice)));
-    const choices = product.choiceGroups.flatMap(({ choices, id }) =>
-      choices
-        .filter((choice) => choicesIds.has(choice.id))
-        .map((choice) => ({ id: choice.id, label: choice.label, choiceGroupId: id }))
+    const subproductIds = new Set(Object.values(data).map((subproduct) => parseInt(subproduct)));
+    const subproducts = product.groups.flatMap(({ subproducts, id }) =>
+      subproducts
+        .filter((subproduct) => subproductIds.has(subproduct.id))
+        .map((subproduct) => ({ name: subproduct.name, chosenProductId: id, subproductId: subproduct.id }))
     );
 
     addProduct({
-      id: getRandomNumberId(),
+      name: product.name,
       amount: 1,
       productId: product.id,
-      choices,
+      chosenSubproducts: subproducts,
     });
 
     void push(Route.HOME);
@@ -124,13 +125,13 @@ const CustomizeProduct: NextPage<PageProps> = () => {
 
         <div className="mb-20 flex flex-col gap-5">
           {product ? (
-            product.choiceGroups.map(({ id, title, choices }) => (
+            product.groups.map(({ id, name, subproducts }) => (
               <RadioGroup
                 key={id}
-                title={title}
-                buttons={choices.map(({ id, label }) => ({
+                title={name}
+                buttons={subproducts.map(({ id, name }) => ({
                   id: id.toString(),
-                  label,
+                  name,
                 }))}
                 register={register(id.toString())}
                 error={getFormError(id.toString())}

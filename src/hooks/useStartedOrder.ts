@@ -1,34 +1,56 @@
-import { type Choice, type CustomizedProduct } from "@prisma/client";
+import type { ChosenProduct, ChosenSubproduct } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { StorageKey } from "~/utils/constant";
+import getRandomNumberId from "~/utils/getRandomNumberId";
 import { getFromStorage, setToStorage } from "~/utils/storage";
+
 
 const storageSchema = z.array(
   z.object({
     id: z.number(),
+    name: z.string(),
     productId: z.number(),
+    orderId: z.number().optional(),
     amount: z.number(),
-    choices: z.array(
+    chosenSubproducts: z.array(
       z.object({
-        id: z.number(),
-        label: z.string(),
-        choiceGroupId: z.number(),
+        name: z.string(),
+        chosenProductId: z.number(),
+        subproductId: z.number(),
       })
     ),
   })
-);
+)
+
+interface ChosenSubproductStorage {
+  name: string,
+  chosenProductId: number,
+  subproductId: number,
+}
+
+export interface CreateChosenProductStorage {
+  name: string,
+  productId: number,
+  orderId?: number,
+  amount: number,
+  chosenSubproducts: ChosenSubproductStorage[]
+}
+
+export interface ChosenProductStorage extends CreateChosenProductStorage {
+  id: number,
+}
 
 const useStartedOrder = () => {
-  const [startedOrder, setStartedOrder] = useState<(CustomizedProduct & { choices: Choice[] })[]>([]);
+  const [startedOrder, setStartedOrder] = useState<ChosenProductStorage[]>([]);
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const startedOrder = getFromStorage(StorageKey.STARTED_ORDER);
 
-    let parsedData: (CustomizedProduct & { choices: Choice[] })[] = [];
+    let parsedData: ChosenProductStorage[] = [];
     try {
-      parsedData = storageSchema.parse(startedOrder) as (CustomizedProduct & { choices: Choice[] })[];
+      parsedData = storageSchema.parse(startedOrder);
     } catch (error) {
     } finally {
       setStartedOrder(parsedData);
@@ -36,49 +58,21 @@ const useStartedOrder = () => {
     }
   }, []);
 
-  const addProduct = (product: CustomizedProduct & { choices: Choice[] }) => {
-    const newStartedOrder = [...startedOrder, product];
+  const addProduct = (product: CreateChosenProductStorage) => {
+    const newId = getRandomNumberId()
+    const chosenProductStorage: ChosenProductStorage = { ...product, id: newId }
 
-    const newStartedOrderWithoutDuplicates = removeDuplicates(newStartedOrder);
+    const newStartedOrder = [...startedOrder, chosenProductStorage];
 
-    setStartedOrder(newStartedOrderWithoutDuplicates);
-    setToStorage(StorageKey.STARTED_ORDER, newStartedOrderWithoutDuplicates);
+    setStartedOrder(newStartedOrder);
+    setToStorage(StorageKey.STARTED_ORDER, newStartedOrder);
   };
 
-  const removeProduct = (product: CustomizedProduct & { choices: Choice[] }) => {
-    const newStartedOrderWithoutDuplicates = removeDuplicates(startedOrder);
+  const removeProduct = (idToRemove: number) => {
+    const newStartedOrder = startedOrder.filter(({ id }) => id !== idToRemove)
 
-    const result = newStartedOrderWithoutDuplicates.filter((p) => {
-      if (p.productId !== product.productId) return true;
-      if (p.choices.length !== product.choices.length) return true;
-
-      const choicesMatch = p.choices.every((choice) => {
-        return product.choices.some((inputChoice) => inputChoice.id === choice.id);
-      });
-      if (!choicesMatch) return true;
-
-      if (p.amount > 1) {
-        p.amount -= 1;
-        return true;
-      }
-
-      return false;
-    });
-
-    setStartedOrder(result);
-    setToStorage(StorageKey.STARTED_ORDER, result);
-  };
-
-  const removeDuplicates = (array: (CustomizedProduct & { choices: Choice[] })[]) => {
-    return array.reduce((acc, product) => {
-      const productIndex = acc.findIndex((p) => p.productId === product.productId);
-
-      if (productIndex === -1) acc.push(product);
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      else acc[productIndex]!.amount += product.amount;
-
-      return acc;
-    }, [] as (CustomizedProduct & { choices: Choice[] })[]);
+    setStartedOrder(newStartedOrder);
+    setToStorage(StorageKey.STARTED_ORDER, newStartedOrder);
   };
 
   const clearStartedOrder = () => {

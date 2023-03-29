@@ -1,27 +1,27 @@
-import { Product, type Choice, type ChoiceGroup, type CustomizedProduct } from "@prisma/client";
+import { Product } from "@prisma/client";
+import type { ChosenProduct, Group, ChosenSubproduct, Subproduct } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import { type ReactElement } from "react";
 import { Route } from "~/utils/constant";
-import getRandomNumberId from "~/utils/getRandomNumberId";
 import OrderedProduct from "./OrderedProduct";
+import type { CreateChosenProductStorage, ChosenProductStorage } from "~/hooks/useStartedOrder";
 
 export interface ProductProps {
-  product: Product & { choiceGroups: ChoiceGroup[] };
-  orderProducts?: (CustomizedProduct & { choices: Choice[] })[];
-  addProduct: (product: CustomizedProduct & { choices: Choice[] }) => void;
-  removeProduct: (product: CustomizedProduct & { choices: Choice[] }) => void;
+  product: Product & {
+    groups: (Group & {
+        subproducts: Subproduct[];
+    })[];
+},
+  chosenProducts?: ChosenProductStorage[];
+  addProduct: (product: CreateChosenProductStorage) => void
 }
 
-const Product = ({ product, orderProducts, addProduct, removeProduct }: ProductProps) => {
-  const { id, name, price, imageSrc, choiceGroups } = product;
-
-  const addProductWithNoChoices = () => {
-    addProduct({ id: getRandomNumberId(), productId: id, amount: 1, choices: [] });
-  };
+const Product = ({ product, chosenProducts, addProduct }: ProductProps) => {
+  const { id, name, price, imageSrc, groups } = product;
 
   const linkOrButton = (children: ReactElement) =>
-    choiceGroups.length > 0 ? (
+    groups.length > 0 ? (
       <Link
         href={`${Route.CUSTOMIZE_PRODUCT}${id}`}
         className={`relative flex max-w-full gap-3 ${imageSrc ? "" : "py-3"}`}
@@ -29,7 +29,12 @@ const Product = ({ product, orderProducts, addProduct, removeProduct }: ProductP
         {children}
       </Link>
     ) : (
-      <button onClick={addProductWithNoChoices} className={`relative flex max-w-full gap-3 ${imageSrc ? "" : "py-3"}`}>
+      <button onClick={() =>addProduct({
+        name: name,
+        productId: id,
+        amount: 1,
+        chosenSubproducts: []
+      })} className={`relative flex max-w-full gap-3 ${imageSrc ? "" : "py-3"}`}>
         {children}
       </button>
     );
@@ -54,13 +59,11 @@ const Product = ({ product, orderProducts, addProduct, removeProduct }: ProductP
         </>
       )}
 
-      {orderProducts &&
-        orderProducts.map((customizedProduct) => (
+      {chosenProducts &&
+        chosenProducts.map((product) => (
           <OrderedProduct
-            key={customizedProduct.id}
-            customizedProduct={customizedProduct}
-            addProduct={addProduct}
-            removeProduct={removeProduct}
+            key={product.id}
+            chosenProduct={product}
           />
         ))}
     </div>

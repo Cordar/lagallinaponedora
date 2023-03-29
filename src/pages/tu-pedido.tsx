@@ -19,6 +19,17 @@ import getLayout from "~/utils/getLayout";
 import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
 import { type PageProps } from "./_app";
 
+import React from "react";
+import { loadStripe } from '@stripe/stripe-js';
+import axios
+ from "axios";
+import { Order } from "@prisma/client";
+import { check } from "prettier";
+// Make sure to call `loadStripe` outside of a component’s render to avoid
+// recreating the `Stripe` object on every render.
+const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+const stripePromise = loadStripe(publishableKey);
+
 export const getStaticProps: GetStaticProps = async () => {
   const ssg = getTrpcSSGHelpers();
   await ssg.public.getProducts.prefetch();
@@ -33,6 +44,38 @@ interface Inputs {
 const YourOrder: NextPage<PageProps> = () => {
   const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
+
+  // Pagos
+  React.useEffect(() => {
+    // Check to see if this is a redirect back from Checkout
+    const query = new URLSearchParams(window.location.search);
+    if (query.get('success')) {
+      console.log('Order placed! You will receive an email confirmation.');
+    }
+
+    if (query.get('canceled')) {
+      console.log('Order canceled -- continue to shop around and checkout when you’re ready.');
+    }
+  }, []);
+
+  const createCheckOutSession = async (order: Order) => {
+    const stripe = await stripePromise;
+    if (!stripe) {
+      return;
+    }
+    const checkoutSession = await axios.post('/api/checkout_sessions', {
+      order: order,
+    });
+    if (!checkoutSession || !checkoutSession.data) {
+      return;
+    }
+    const result = await stripe.redirectToCheckout({
+      sessionId: checkoutSession.data.id,
+    });
+    if (result.error) {
+      alert(result.error.message);
+    }
+  };
 
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
   const { user, isErrorUser } = useUser();
@@ -69,7 +112,7 @@ const YourOrder: NextPage<PageProps> = () => {
       </div>
     );
 
-  const onFormSubmit: SubmitHandler<Inputs> = ({ email, name }) => {
+  const onFormSubmit: SubmitHandler<Inputs> = async ({ email, name }) => {
     if (user?.sessionId && email && name && startedOrder) {
       mutateUpdateCustomerInfo({ sessionId: user.sessionId, email, name });
       mutateRegisterOrder(
@@ -83,9 +126,7 @@ const YourOrder: NextPage<PageProps> = () => {
         },
         {
           onSuccess: (order) => {
-            // TODO Redirect to payment here, the callback should have the order id
-            void push(`${Route.ORDER_STATUS}${order.id}`);
-            // TODO If payment is canceled or fails redirect to this page again with an error message
+            void createCheckOutSession(order);
           },
         }
       );
