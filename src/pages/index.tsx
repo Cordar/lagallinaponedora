@@ -1,5 +1,5 @@
 import { ProductCategory } from "@prisma/client";
-import { type GetStaticProps, type NextPage } from "next";
+import { type GetStaticProps, type NextPage, InferGetStaticPropsType } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -15,6 +15,7 @@ import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import { default as getLayout } from "~/utils/getLayout";
 import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
 import { type PageProps } from "./_app";
+import logoImage from '../../public/gallina.svg'
 
 const ProductCategoryMap: Record<ProductCategory, string> = {
   COMBO: "Combos",
@@ -30,7 +31,7 @@ export const getStaticProps: GetStaticProps = async () => {
   return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
 };
 
-const Home: NextPage<PageProps> = () => {
+const Home: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Productos", "Haz un pedido de los productos presentados.");
 
@@ -66,8 +67,11 @@ const Home: NextPage<PageProps> = () => {
 
   return Layout(
     <>
-      <div className="relative flex flex-col items-center gap-5 bg-gradient-to-b from-lgp-gradient-orange-dark to-lgp-gradient-orange-light px-5 py-16">
-        <h1 className="text-ellipsis text-xl font-bold tracking-wide">La Gallina Ponedora</h1>
+      <div className="w-full flex flex-col items-center gap-5 bg-gradient-to-b from-lgp-gradient-orange-dark to-lgp-gradient-orange-light px-5 py-16">
+        <Image
+        src={logoImage}
+        alt="Picture of the logo"
+        />
       </div>
 
       <div className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
