@@ -1,9 +1,10 @@
-import type { Choice, CustomizedProduct, CustomizedProductsOnOrders, Order } from "@prisma/client";
+import type { ChosenProduct, ChosenSubproduct, Order } from "@prisma/client";
 
-export type OrderWithCustomizedProducts = Order & {
-  customizedProducts: (CustomizedProductsOnOrders & {
-    customizedProduct: CustomizedProduct & {
-      choices: Choice[];
-    };
+export type OrderWithChosenProducts = Order & {
+  chosenProducts: (ChosenProduct & {
+    product: Product;
+    chosenSubproducts: (ChosenSubproduct & {
+      subproduct: Subproduct;
+    })[];
   })[];
 };

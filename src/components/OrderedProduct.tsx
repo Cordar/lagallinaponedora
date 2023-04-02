@@ -1,5 +1,6 @@
 import { RiAddLine, RiCloseLine, RiSubtractLine } from "react-icons/ri";
 import useProduct from "~/hooks/api/query/useProduct";
+import useProducts from "~/hooks/api/query/useProducts";
 import useSubproducts from "~/hooks/api/query/useSubproducts";
 import type { ChosenProductWithSubproducts } from "~/hooks/useStartedOrder";
 import getRandomNumberId from "~/utils/getRandomNumberId";
@@ -11,6 +12,7 @@ export interface OrderedProductProps {
   disableButtons?: boolean;
   showPrice?: boolean;
   showOnlyRemove?: boolean;
+  showProductName?: boolean;
 }
 
 const OrderedProduct = ({
@@ -20,10 +22,12 @@ const OrderedProduct = ({
   disableButtons,
   showPrice,
   showOnlyRemove,
+  showProductName,
 }: OrderedProductProps) => {
   const { id, amount, productId, orderId, chosenSubproducts } = chosenProduct;
 
   const { product } = useProduct(productId);
+  const { products } = useProducts();
   const { subproducts } = useSubproducts();
 
   return (
@@ -34,10 +38,20 @@ const OrderedProduct = ({
       } gap-3 rounded-lg border border-opacity-10 bg-slate-100 p-2`}
     >
       <div className="flex grow flex-col gap-1">
-        {chosenSubproducts.length <= 0 && <p className="text-sm font-medium tracking-wide">{product?.name}</p>}
+        {showProductName && (
+          <p className="text-sm font-medium tracking-wide">
+            {products?.find(({ id }) => id === productId)?.name ?? ""}
+          </p>
+        )}
+
+        {chosenSubproducts.length <= 0 && !showProductName && (
+          <p className="text-xs font-normal tracking-wide">
+            {products?.find(({ id }) => id === productId)?.name ?? ""}
+          </p>
+        )}
 
         {chosenSubproducts.length > 0 && (
-          <p className="text-sm font-medium tracking-wide">
+          <p className="text-xs font-normal tracking-wide">
             {chosenSubproducts.map(
               ({ subproductId }, i) =>
                 `${i === 0 ? "" : ", "}${subproducts?.find(({ id }) => id === subproductId)?.name ?? ""}`

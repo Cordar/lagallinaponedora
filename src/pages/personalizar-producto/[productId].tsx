@@ -29,6 +29,7 @@ export const getStaticPaths = async () => {
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   const ssg = getTrpcSSGHelpers();
   await ssg.public.getProducts.prefetch();
+  await ssg.public.getSubproducts.prefetch();
   if (params?.productId) await ssg.public.getProductById.prefetch({ productId: parseInt(params.productId as string) });
   return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
 };

@@ -112,7 +112,9 @@ export const publicRouter = createTRPCRouter({
         where: { sessionId: input.sessionId },
         include: {
           orders: {
-            include: { chosenProducts: { include: { chosenSubproducts: { include: { subproduct: true } } } } },
+            include: {
+              chosenProducts: { include: { product: true, chosenSubproducts: { include: { subproduct: true } } } },
+            },
             orderBy: { updatedAt: "asc" },
           },
         },
@@ -131,7 +133,9 @@ export const publicRouter = createTRPCRouter({
         where: { sessionId: input.sessionId },
         include: {
           orders: {
-            include: { chosenProducts: { include: { chosenSubproducts: { include: { subproduct: true } } } } },
+            include: {
+              chosenProducts: { include: { product: true, chosenSubproducts: { include: { subproduct: true } } } },
+            },
             orderBy: { updatedAt: "asc" },
           },
         },
@@ -152,11 +156,7 @@ export const publicRouter = createTRPCRouter({
           z.object({
             amount: z.number().positive(),
             productId: z.number(),
-            chosenSubproducts: z.array(
-              z.object({
-                subproductId: z.number(),
-              })
-            ),
+            chosenSubproducts: z.array(z.number()),
           })
         ),
       })
@@ -174,7 +174,7 @@ export const publicRouter = createTRPCRouter({
             amount,
             product: { connect: { id: productId } },
             chosenSubproducts: {
-              create: chosenSubproducts.map(({ subproductId }) => ({
+              create: chosenSubproducts.map((subproductId) => ({
                 subproduct: { connect: { id: subproductId } },
               })),
             },
