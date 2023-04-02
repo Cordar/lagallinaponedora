@@ -26,6 +26,7 @@ const ProductCategoryMap: Record<ProductCategory, string> = {
 export const getStaticProps: GetStaticProps = async () => {
   const ssg = getTrpcSSGHelpers();
   await ssg.public.getProducts.prefetch();
+  await ssg.public.getSubproducts.prefetch();
   return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
 };
 
@@ -85,6 +86,7 @@ const Home: NextPage<PageProps> = () => {
                         product={product}
                         chosenProducts={startedOrder.filter(({ productId }) => productId === product.id)}
                         addProduct={addProduct}
+                        removeProduct={removeProduct}
                       />
                     ))}
               </div>

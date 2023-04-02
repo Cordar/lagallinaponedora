@@ -30,6 +30,18 @@ export const publicRouter = createTRPCRouter({
     }
   }),
 
+  getSubproducts: publicProcedure.query(async ({ ctx }) => {
+    try {
+      const subproducts = await ctx.prisma.subproduct.findMany({
+        orderBy: { id: "asc" },
+      });
+
+      return subproducts;
+    } catch (error) {
+      new TRPCError({ code: "CONFLICT", message: "Hubo un error al obtener la personalización del producto." });
+    }
+  }),
+
   getOrCreateCustomer: publicProcedure.input(z.object({ sessionId: z.string() })).query(async ({ ctx, input }) => {
     try {
       return await ctx.prisma.customer.upsert({

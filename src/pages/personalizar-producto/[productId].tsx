@@ -15,6 +15,7 @@ import { default as useUser } from "~/hooks/api/query/useUser";
 import useStartedOrder from "~/hooks/useStartedOrder";
 import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
+import getRandomNumberId from "~/utils/getRandomNumberId";
 import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
 import { type PageProps } from "../_app";
 
@@ -73,23 +74,23 @@ const CustomizeProduct: NextPage<PageProps> = () => {
   const productInfo = products?.find((product) => product.id === productId);
 
   if (!productInfo) return Layout(<Loading />);
-  else if (isErrorUser) return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
+  else if (isErrorUser || isErrorProduct) return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
 
   const onFormSubmit: SubmitHandler<FormData> = (data) => {
-    console.log(data);
     if (!startedOrder || !user || !product) return;
-    const subproductIds = new Set(Object.values(data).map((subproduct) => parseInt(subproduct)));
-    const subproducts = product.groups.flatMap(({ subproducts, id }) =>
-      subproducts
-        .filter((subproduct) => subproductIds.has(subproduct.id))
-        .map((subproduct) => ({ name: subproduct.name, chosenProductId: id, subproductId: subproduct.id }))
-    );
+
+    const randomId = -getRandomNumberId();
 
     addProduct({
-      name: product.name,
+      id: randomId,
       amount: 1,
       productId: product.id,
-      chosenSubproducts: subproducts,
+      orderId: null,
+      chosenSubproducts: Object.values(data).map((subproductId) => ({
+        id: -getRandomNumberId(),
+        subproductId: parseInt(subproductId),
+        chosenProductId: randomId,
+      })),
     });
 
     void push(Route.HOME);
