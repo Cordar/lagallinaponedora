@@ -6,7 +6,7 @@ const useProduct = (productId?: number) => {
     data: product,
     isLoading: isLoadingProduct,
     isError: isErrorProduct,
-  } = api.public.getProductWithChoiceGroups.useQuery(
+  } = api.public.getProductById.useQuery(
     { productId: productId ?? -1 },
     { enabled: !!productId, staleTime: ONE_DAY_MS }
   );

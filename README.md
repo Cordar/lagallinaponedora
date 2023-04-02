@@ -33,3 +33,6 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 
 Every time the model in `schema.prisma` changes, run:
 `npx prisma migrate dev`
+
+To view the database, run:
+`npx prisma studio`

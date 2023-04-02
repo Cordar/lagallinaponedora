@@ -1,23 +1,25 @@
+import type { Group, Subproduct } from "@prisma/client";
 import { Product } from "@prisma/client";
-import type { ChosenProduct, Group, ChosenSubproduct, Subproduct } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import { type ReactElement } from "react";
+import type { ChosenProductWithSubproducts } from "~/hooks/useStartedOrder";
 import { Route } from "~/utils/constant";
+import getRandomNumberId from "~/utils/getRandomNumberId";
 import OrderedProduct from "./OrderedProduct";
-import type { CreateChosenProductStorage, ChosenProductStorage } from "~/hooks/useStartedOrder";
 
 export interface ProductProps {
   product: Product & {
     groups: (Group & {
-        subproducts: Subproduct[];
+      subproducts: Subproduct[];
     })[];
-},
-  chosenProducts?: ChosenProductStorage[];
-  addProduct: (product: CreateChosenProductStorage) => void
+  };
+  chosenProducts?: ChosenProductWithSubproducts[];
+  addProduct: (product: ChosenProductWithSubproducts) => void;
+  removeProduct: (id: number) => void;
 }
 
-const Product = ({ product, chosenProducts, addProduct }: ProductProps) => {
+const Product = ({ product, chosenProducts, addProduct, removeProduct }: ProductProps) => {
   const { id, name, price, imageSrc, groups } = product;
 
   const linkOrButton = (children: ReactElement) =>
@@ -29,12 +31,12 @@ const Product = ({ product, chosenProducts, addProduct }: ProductProps) => {
         {children}
       </Link>
     ) : (
-      <button onClick={() =>addProduct({
-        name: name,
-        productId: id,
-        amount: 1,
-        chosenSubproducts: []
-      })} className={`relative flex max-w-full gap-3 ${imageSrc ? "" : "py-3"}`}>
+      <button
+        onClick={() =>
+          addProduct({ id: -getRandomNumberId(), amount: 1, productId: id, orderId: null, chosenSubproducts: [] })
+        }
+        className={`relative flex max-w-full gap-3 ${imageSrc ? "" : "py-3"}`}
+      >
         {children}
       </button>
     );
@@ -64,6 +66,9 @@ const Product = ({ product, chosenProducts, addProduct }: ProductProps) => {
           <OrderedProduct
             key={product.id}
             chosenProduct={product}
+            addProduct={addProduct}
+            removeProduct={removeProduct}
+            showOnlyRemove
           />
         ))}
     </div>

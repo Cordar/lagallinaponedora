@@ -1,28 +1,34 @@
-import { RiAddLine, RiSubtractLine } from "react-icons/ri";
+import { RiAddLine, RiCloseLine, RiSubtractLine } from "react-icons/ri";
+import useProduct from "~/hooks/api/query/useProduct";
 import useProducts from "~/hooks/api/query/useProducts";
-import { ChosenProductStorage } from "~/hooks/useStartedOrder";
+import useSubproducts from "~/hooks/api/query/useSubproducts";
+import type { ChosenProductWithSubproducts } from "~/hooks/useStartedOrder";
 import getRandomNumberId from "~/utils/getRandomNumberId";
 
 export interface OrderedProductProps {
-  chosenProduct: ChosenProductStorage;
-  removeProduct?: ( id: number) => void;
+  chosenProduct: ChosenProductWithSubproducts;
+  addProduct?: (product: ChosenProductWithSubproducts) => void;
+  removeProduct?: (id: number) => void;
   disableButtons?: boolean;
   showPrice?: boolean;
+  showOnlyRemove?: boolean;
+  showProductName?: boolean;
 }
 
 const OrderedProduct = ({
   chosenProduct,
+  addProduct,
   removeProduct,
   disableButtons,
   showPrice,
+  showOnlyRemove,
+  showProductName,
 }: OrderedProductProps) => {
-  const { id, amount,name,chosenSubproducts } = chosenProduct;
+  const { id, amount, productId, orderId, chosenSubproducts } = chosenProduct;
 
-  console.log(chosenProduct)
-
-  // const { products } = useProducts();
-
-  // const product = products?.find(({ id }) => id === productId);
+  const { product } = useProduct(productId);
+  const { products } = useProducts();
+  const { subproducts } = useSubproducts();
 
   return (
     <div
@@ -32,16 +38,29 @@ const OrderedProduct = ({
       } gap-3 rounded-lg border border-opacity-10 bg-slate-100 p-2`}
     >
       <div className="flex grow flex-col gap-1">
-      {chosenSubproducts.length <= 0 && <p className="text-sm font-medium tracking-wide">{name }</p>}
+        {showProductName && (
+          <p className="text-sm font-medium tracking-wide">
+            {products?.find(({ id }) => id === productId)?.name ?? ""}
+          </p>
+        )}
+
+        {chosenSubproducts.length <= 0 && !showProductName && (
+          <p className="text-xs font-normal tracking-wide">
+            {products?.find(({ id }) => id === productId)?.name ?? ""}
+          </p>
+        )}
 
         {chosenSubproducts.length > 0 && (
-          <p className="text-sm font-medium tracking-wide">
-            {chosenSubproducts.map(({ name }, i) => `${i === 0 ? "" : ", "}${name}`)}
+          <p className="text-xs font-normal tracking-wide">
+            {chosenSubproducts.map(
+              ({ subproductId }, i) =>
+                `${i === 0 ? "" : ", "}${subproducts?.find(({ id }) => id === subproductId)?.name ?? ""}`
+            )}
           </p>
         )}
       </div>
 
-      {/* <div className="flex flex-col items-end gap-3">
+      <div className="flex flex-col items-end gap-3">
         {showPrice && (
           <p className="text-sm font-medium tracking-wide text-lgp-orange-dark">
             {product?.price ? `${product?.price * amount} €` : ""}
@@ -49,11 +68,11 @@ const OrderedProduct = ({
         )}
 
         <div className="flex grow items-center justify-center gap-3">
-          {removeProduct && (
+          {!showOnlyRemove && removeProduct && (
             <button
               type="button"
               disabled={disableButtons}
-              onClick={() => removeProduct({ id: getRandomNumberId(), productId, amount: 1, choices })}
+              onClick={() => removeProduct(id)}
               className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white disabled:opacity-70"
             >
               <RiSubtractLine className="h-6 w-6" />
@@ -62,18 +81,37 @@ const OrderedProduct = ({
 
           <p className="w-5 min-w-fit text-center text-base font-medium tracking-wide">{amount}</p>
 
-          {addProduct && (
+          {showOnlyRemove && removeProduct && (
             <button
               type="button"
               disabled={disableButtons}
-              onClick={() => addProduct({ id: getRandomNumberId(), productId, amount: 1, choices })}
+              onClick={() => removeProduct(id)}
+              className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-slate-500 text-white disabled:opacity-70"
+            >
+              <RiCloseLine className="h-6 w-6" />
+            </button>
+          )}
+
+          {!showOnlyRemove && addProduct && (
+            <button
+              type="button"
+              disabled={disableButtons}
+              onClick={() =>
+                addProduct({
+                  id: -getRandomNumberId(),
+                  amount: 1,
+                  productId,
+                  orderId,
+                  chosenSubproducts: [...chosenSubproducts],
+                })
+              }
               className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white disabled:opacity-70"
             >
               <RiAddLine className="h-6 w-6" />
             </button>
           )}
         </div>
-      </div> */}
+      </div>
     </div>
   );
 };

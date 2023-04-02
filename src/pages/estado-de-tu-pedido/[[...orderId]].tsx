@@ -33,6 +33,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 export const getStaticProps: GetStaticProps = async () => {
   const ssg = getTrpcSSGHelpers();
   await ssg.public.getProducts.prefetch();
+  await ssg.public.getSubproducts.prefetch();
   return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
 };
 
@@ -89,12 +90,11 @@ const OrderStatus: NextPage<PageProps> = () => {
       )}
 
       {cookedOrders?.map(
-        (order, i) =>
-          order.customizedProducts.length > 0 && <CookedOrder key={order.id} order={order} first={i === 0} />
+        (order, i) => order.chosenProducts.length > 0 && <CookedOrder key={order.id} order={order} first={i === 0} />
       )}
 
       {paidOrders?.map(
-        (order, i) => order.customizedProducts.length > 0 && <PaidOrder key={order.id} order={order} first={i === 0} />
+        (order, i) => order.chosenProducts.length > 0 && <PaidOrder key={order.id} order={order} first={i === 0} />
       )}
 
       {(isLoadingUser || isLoadingCookedOrders || isLoadingPaidOrders) && <Loading />}

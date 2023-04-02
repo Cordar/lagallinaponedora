@@ -1,10 +1,10 @@
 import Image from "next/image";
-import { type OrderWithCustomizedProducts } from "~/utils/types";
-import OrderedProduct from "./OrderedProduct";
+import { type OrderWithChosenProducts } from "~/utils/types";
 import OrderNumber from "./OrderNumber";
+import OrderedProduct from "./OrderedProduct";
 
 export interface CookedOrderProps {
-  order: OrderWithCustomizedProducts;
+  order: OrderWithChosenProducts;
   first?: boolean;
 }
 
@@ -35,13 +35,10 @@ const CookedOrder = ({ order, first }: CookedOrderProps) => {
           </h3>
         )}
 
-        {order.customizedProducts
-          .sort((a, b) => b.customizedProduct.id - a.customizedProduct.id)
-          .map((customizedProductOnOrder) => (
-            <OrderedProduct
-              key={customizedProductOnOrder.customizedProduct.id}
-              customizedProduct={customizedProductOnOrder.customizedProduct}
-            />
+        {order.chosenProducts
+          .sort((a, b) => b.id - a.id)
+          .map((chosenProduct) => (
+            <OrderedProduct key={chosenProduct.id} chosenProduct={chosenProduct} showProductName />
           ))}
 
         <p className="text-ellipsis text-xs tracking-wide text-slate-600">
