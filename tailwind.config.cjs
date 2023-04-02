@@ -6,13 +6,13 @@ const config = {
     extend: {
       colors: {
         "lgp-green": "#779F56",
-        "lgp-orange-dark": "#AF4F35",
+        "lgp-orange-dark": "#1B1500",
         "lgp-red-dark": "#401317",
 
-        "lgp-orange-light": "#FFDEBC",
+        "lgp-orange-light": "#FFF1A8",
 
-        "lgp-gradient-orange-light": "#F5B27E",
-        "lgp-gradient-orange-dark": "#DE6F52",
+        "lgp-gradient-orange-light": "#FFE667",
+        "lgp-gradient-orange-dark": "#ffc244",
       },
       fontFamily: {
         main: "Montserrat",
