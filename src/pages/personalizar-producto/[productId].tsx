@@ -15,7 +15,6 @@ import { default as useUser } from "~/hooks/api/query/useUser";
 import useStartedOrder from "~/hooks/useStartedOrder";
 import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
-import getRandomNumberId from "~/utils/getRandomNumberId";
 import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
 import { type PageProps } from "../_app";
 
@@ -29,8 +28,7 @@ export const getStaticPaths = async () => {
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   const ssg = getTrpcSSGHelpers();
   await ssg.public.getProducts.prefetch();
-  if (params?.productId)
-    await ssg.public.getProductWithChoiceGroups.prefetch({ productId: parseInt(params.productId as string) });
+  if (params?.productId) await ssg.public.getProductById.prefetch({ productId: parseInt(params.productId as string) });
   return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
 };
 
@@ -78,7 +76,7 @@ const CustomizeProduct: NextPage<PageProps> = () => {
   else if (isErrorUser) return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
 
   const onFormSubmit: SubmitHandler<FormData> = (data) => {
-    console.log(data)
+    console.log(data);
     if (!startedOrder || !user || !product) return;
     const subproductIds = new Set(Object.values(data).map((subproduct) => parseInt(subproduct)));
     const subproducts = product.groups.flatMap(({ subproducts, id }) =>

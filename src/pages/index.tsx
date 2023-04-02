@@ -3,12 +3,10 @@ import { type GetStaticProps, type NextPage } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
 import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import Product from "~/components/Product";
-import usePopulateDatabase from "~/hooks/api/mutation/usePopulateDatabase";
 import useAreOrdersInProgress from "~/hooks/api/query/useAreOrdersInProgress";
 import useProducts from "~/hooks/api/query/useProducts";
 import useUser from "~/hooks/api/query/useUser";
@@ -43,7 +41,6 @@ const Home: NextPage<PageProps> = () => {
   const { user, isErrorUser } = useUser();
   const { startedOrder, addProduct, removeProduct } = useStartedOrder();
   const { areOrdersInProgress } = useAreOrdersInProgress(user?.sessionId);
-
 
   if (isLoadingProducts) return Layout(<Loading />);
 

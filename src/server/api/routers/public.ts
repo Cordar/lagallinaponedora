@@ -15,22 +15,20 @@ export const publicRouter = createTRPCRouter({
     }
   }),
 
-  getProductWithChoiceGroups: publicProcedure
-    .input(z.object({ productId: z.number() }))
-    .query(async ({ ctx, input }) => {
-      try {
-        const product = await ctx.prisma.product.findUnique({
-          where: { id: input.productId },
-          include: { groups: { include: { subproducts: true }, orderBy: { id: "asc" } } },
-        });
+  getProductById: publicProcedure.input(z.object({ productId: z.number() })).query(async ({ ctx, input }) => {
+    try {
+      const product = await ctx.prisma.product.findUnique({
+        where: { id: input.productId },
+        include: { groups: { include: { subproducts: true }, orderBy: { id: "asc" } } },
+      });
 
-        if (!product) throw new Error();
+      if (!product) throw new Error();
 
-        return product;
-      } catch (error) {
-        new TRPCError({ code: "CONFLICT", message: "Hubo un error al obtener la personalización del producto." });
-      }
-    }),
+      return product;
+    } catch (error) {
+      new TRPCError({ code: "CONFLICT", message: "Hubo un error al obtener la personalización del producto." });
+    }
+  }),
 
   getOrCreateCustomer: publicProcedure.input(z.object({ sessionId: z.string() })).query(async ({ ctx, input }) => {
     try {
@@ -50,11 +48,11 @@ export const publicRouter = createTRPCRouter({
       const [order, paidOrders] = await Promise.all([
         ctx.prisma.order.findUnique({
           where: { id: input.orderId },
-          include: { customizedProducts: { include: { customizedProduct: { include: { Product: true } } } } },
+          include: { chosenProducts: { include: { product: true } } },
         }),
         ctx.prisma.order.findMany({
           where: { status: OrderStatus.PAID, NOT: { id: input.orderId } },
-          include: { customizedProducts: { include: { customizedProduct: { include: { Product: true } } } } },
+          include: { chosenProducts: { include: { product: true } } },
         }),
       ]);
 
@@ -62,14 +60,14 @@ export const publicRouter = createTRPCRouter({
 
       let totalCookingTime = 0;
 
-      order.customizedProducts.forEach((customizedProductOnOrder) => {
-        totalCookingTime += customizedProductOnOrder.customizedProduct.Product.cookingTimeInMinutes;
+      order.chosenProducts.forEach((chosenProduct) => {
+        totalCookingTime += chosenProduct.product.cookingTimeInMinutes * chosenProduct.amount;
       });
 
       paidOrders.forEach((paidOrder) => {
         if (paidOrder.updatedAt < order.updatedAt)
-          paidOrder.customizedProducts.forEach((customizedProductOnOrder) => {
-            totalCookingTime += customizedProductOnOrder.customizedProduct.Product.cookingTimeInMinutes;
+          paidOrder.chosenProducts.forEach((chosenProduct) => {
+            totalCookingTime += chosenProduct.product.cookingTimeInMinutes * chosenProduct.amount;
           });
       });
 
@@ -102,7 +100,7 @@ export const publicRouter = createTRPCRouter({
         where: { sessionId: input.sessionId },
         include: {
           orders: {
-            include: { customizedProducts: { include: { customizedProduct: { include: { choices: true } } } } },
+            include: { chosenProducts: { include: { chosenSubproducts: { include: { subproduct: true } } } } },
             orderBy: { updatedAt: "asc" },
           },
         },
@@ -121,7 +119,7 @@ export const publicRouter = createTRPCRouter({
         where: { sessionId: input.sessionId },
         include: {
           orders: {
-            include: { customizedProducts: { include: { customizedProduct: { include: { choices: true } } } } },
+            include: { chosenProducts: { include: { chosenSubproducts: { include: { subproduct: true } } } } },
             orderBy: { updatedAt: "asc" },
           },
         },
@@ -138,8 +136,16 @@ export const publicRouter = createTRPCRouter({
     .input(
       z.object({
         sessionId: z.string(),
-        customizedProducts: z.array(
-          z.object({ amount: z.number().positive(), productId: z.number(), choices: z.array(z.number()) })
+        chosenProducts: z.array(
+          z.object({
+            amount: z.number().positive(),
+            productId: z.number(),
+            chosenSubproducts: z.array(
+              z.object({
+                subproductId: z.number(),
+              })
+            ),
+          })
         ),
       })
     )
@@ -149,24 +155,24 @@ export const publicRouter = createTRPCRouter({
         if (!customer) throw new Error();
 
         // Remove all previous orders with status CREATED
-        await ctx.prisma.order.deleteMany({ where: { Customer: { id: customer.id }, status: OrderStatus.CREATED } });
+        await ctx.prisma.order.deleteMany({ where: { customer: { id: customer.id }, status: OrderStatus.CREATED } });
 
-        const customizedProducts = input.customizedProducts.map((customizedProduct) => {
+        const chosenProducts = input.chosenProducts.map(({ amount, productId, chosenSubproducts }) => {
           return {
-            customizedProduct: {
-              create: {
-                amount: customizedProduct.amount,
-                Product: { connect: { id: customizedProduct.productId } },
-                choices: { connect: customizedProduct.choices.map((choiceId) => ({ id: choiceId })) },
-              },
+            amount,
+            product: { connect: { id: productId } },
+            chosenSubproducts: {
+              create: chosenSubproducts.map(({ subproductId }) => ({
+                subproduct: { connect: { id: subproductId } },
+              })),
             },
           };
         });
 
         const order = await ctx.prisma.order.create({
           data: {
-            Customer: { connect: { id: customer.id } },
-            customizedProducts: { create: customizedProducts },
+            customer: { connect: { id: customer.id } },
+            chosenProducts: { create: chosenProducts },
           },
         });
 
