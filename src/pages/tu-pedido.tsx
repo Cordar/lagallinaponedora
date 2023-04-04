@@ -1,4 +1,4 @@
-import { type GetStaticProps, type NextPage } from "next";
+import { type GetStaticProps, type NextPage, InferGetStaticPropsType } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -38,7 +38,7 @@ interface Inputs {
   name: string;
 }
 
-const YourOrder: NextPage<PageProps> = () => {
+const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
 
@@ -141,117 +141,138 @@ const YourOrder: NextPage<PageProps> = () => {
   const watchName = watch("name");
 
   return Layout(
-    <form onSubmit={handleSubmit(onFormSubmit)} className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
-      <div className="flex w-full items-center gap-3">
-        <Link href={Route.HOME} className="w-fit">
-          <RiArrowLeftLine className="h-8 w-8" />
-        </Link>
-      </div>
+    <div>
+      <form onSubmit={handleSubmit(onFormSubmit)} className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
+        <div className="flex w-full items-center gap-3">
+          <Link href={Route.HOME} className="w-fit">
+            <RiArrowLeftLine className="h-8 w-8" />
+          </Link>
+        </div>
 
-      <div className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
-        <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Tu pedido</h3>
+        <div className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
+          <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Tu pedido</h3>
 
-        {startedOrder.length <= 0 && (
-          <>
-            <p className="tracking-wide">¡Esto está un poco vacío!</p>
+          {startedOrder.length <= 0 && (
+            <>
+              <p className="tracking-wide">¡Esto está un poco vacío!</p>
 
-            <div className="flex w-full items-center justify-center">
-              <Link href={Route.HOME} className="w-fit">
-                <Button label="Volver a la carta" />
-              </Link>
+              <div className="flex w-full items-center justify-center">
+                <Link href={Route.HOME} className="w-fit">
+                  <Button label="Volver a la carta" />
+                </Link>
+              </div>
+            </>
+          )}
+
+          {startedOrder
+            .sort((a, b) => b.id - a.id)
+            .map((chosenProduct) => (
+              <OrderedProduct
+                key={chosenProduct.id}
+                chosenProduct={chosenProduct}
+                addProduct={addProduct}
+                removeProduct={removeProduct}
+                showPrice
+                showProductName
+                showOnlyRemove
+              />
+            ))}
+
+          {startedOrder.length > 0 && totalPrice && (
+            <div className="flex items-center justify-end">
+              <h3 className="text-ellipsis text-lg font-semibold tracking-wide text-lgp-orange-dark">{`Total ${totalPrice} €`}</h3>
             </div>
-          </>
-        )}
+          )}
 
-        {startedOrder
-          .sort((a, b) => b.id - a.id)
-          .map((chosenProduct) => (
-            <OrderedProduct
-              key={chosenProduct.id}
-              chosenProduct={chosenProduct}
-              addProduct={addProduct}
-              removeProduct={removeProduct}
-              showPrice
-              showProductName
-              showOnlyRemove
-            />
-          ))}
+          {isErrorRegisterOrder && <ErrorMessage message="Hubo un error al registrar el pedido." />}
+        </div>
 
-        {startedOrder.length > 0 && totalPrice && (
-          <div className="flex items-center justify-end">
-            <h3 className="text-ellipsis text-lg font-semibold tracking-wide text-lgp-orange-dark">{`Total ${totalPrice} €`}</h3>
+        {startedOrder.length > 0 && (
+          <div className="mb-3 flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
+            {updateData || !user?.email || !user?.name ? (
+              <>
+                <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Dinos quién eres:</h3>
+
+                <div className="relative flex w-full grow flex-col gap-5">
+                  <Input
+                    id={"email"}
+                    label={"Email"}
+                    register={register("email", {
+                      required: { value: true, message: "Este campo es obligatorio" },
+                      pattern: { value: EMAIL_REGEX, message: "El email no es válido" },
+                    })}
+                    errorMessage={getFormError("email")}
+                  />
+
+                  <Input
+                    id={"name"}
+                    label={"Nombre"}
+                    register={register("name", {
+                      required: { value: true, message: "Este campo es obligatorio" },
+                      maxLength: { value: 16, message: "El nombre no es demasiado largo" },
+                      minLength: { value: 2, message: "El nombre no es demasiado corto" },
+                    })}
+                    errorMessage={getFormError("name")}
+                  />
+
+                  <small className="text-slate-400">
+                    Solo usaremos tu email para avisarte de que tu pedido está listo. También te llamaremos por tu
+                    nombre.
+                  </small>
+
+                  {isErrorUpdateCustomerInfo && <ErrorMessage message="Hubo un error al guardar tus datos." />}
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{`¡Bienvenido de nuevo ${user.name}!`}</h3>
+
+                <p className="text-sm font-medium tracking-wide">{user.email}</p>
+
+                <small className="text-slate-400">
+                  Te avisaremos por email cuando tu pedido esté listo y te llamaremos por tu nombre.
+                </small>
+
+                <button
+                  onClick={() => setUpdateData(true)}
+                  type="button"
+                  className="tracking-wid p-2 font-medium text-slate-500"
+                >
+                  Cambiar tus datos
+                </button>
+              </>
+            )}
           </div>
         )}
 
-        {isErrorRegisterOrder && <ErrorMessage message="Hubo un error al registrar el pedido." />}
-      </div>
+        <Button
+          isDisabled={
+            !watchEmail || watchEmail.length <= 0 || !watchName || watchName.length <= 0 || startedOrder.length <= 0
+          }
+          isLoading={isLoadingUpdateCustomerInfo || isLoadingRegisterOrder}
+          label="Pagar"
+          className="m-auto mb-6 px-24 text-center"
+        />
+      </form>
 
-      {startedOrder.length > 0 && (
-        <div className="mb-20 flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
-          {updateData || !user?.email || !user?.name ? (
-            <>
-              <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Dinos quién eres:</h3>
-
-              <div className="relative flex w-full grow flex-col gap-5">
-                <Input
-                  id={"email"}
-                  label={"Email"}
-                  register={register("email", {
-                    required: { value: true, message: "Este campo es obligatorio" },
-                    pattern: { value: EMAIL_REGEX, message: "El email no es válido" },
-                  })}
-                  errorMessage={getFormError("email")}
-                />
-
-                <Input
-                  id={"name"}
-                  label={"Nombre"}
-                  register={register("name", {
-                    required: { value: true, message: "Este campo es obligatorio" },
-                    maxLength: { value: 16, message: "El nombre no es demasiado largo" },
-                    minLength: { value: 2, message: "El nombre no es demasiado corto" },
-                  })}
-                  errorMessage={getFormError("name")}
-                />
-
-                <small className="text-slate-400">
-                  Solo usaremos tu email para avisarte de que tu pedido está listo. También te llamaremos por tu nombre.
-                </small>
-
-                {isErrorUpdateCustomerInfo && <ErrorMessage message="Hubo un error al guardar tus datos." />}
-              </div>
-            </>
-          ) : (
-            <>
-              <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{`¡Bienvenido de nuevo ${user.name}!`}</h3>
-
-              <p className="text-sm font-medium tracking-wide">{user.email}</p>
-
-              <small className="text-slate-400">
-                Te avisaremos por email cuando tu pedido esté listo y te llamaremos por tu nombre.
-              </small>
-
-              <button
-                onClick={() => setUpdateData(true)}
-                type="button"
-                className="tracking-wid p-2 font-medium text-slate-500"
-              >
-                Cambiar tus datos
-              </button>
-            </>
-          )}
+      <div className="flex w-full gap-3 bg-slate-100 p-2 text-xs">
+        <div className="flex w-full items-center gap-3 border-r-2 p-2">
+          <Link href={Route.LEGAL_ADVISE} className="m-auto">
+            <p className="text-center">Aviso Legal</p>
+          </Link>
         </div>
-      )}
-
-      <Button
-        isDisabled={
-          !watchEmail || watchEmail.length <= 0 || !watchName || watchName.length <= 0 || startedOrder.length <= 0
-        }
-        isLoading={isLoadingUpdateCustomerInfo || isLoadingRegisterOrder}
-        label="Pagar"
-        className="fixed left-5 right-5 bottom-5 m-auto w-[unset] lg:max-w-md"
-      />
-    </form>
+        <div className="flex w-full items-center gap-3 border-r-2 p-2">
+          <Link href={Route.PRIVACY_POLICY} className="m-auto">
+            <p className="text-center">Política de Privacidad</p>
+          </Link>
+        </div>
+        <div className="flex w-full items-center gap-3 p-2">
+          <Link href={Route.TERMS_AND_CONDITIONS} className="m-auto">
+            <p className="text-center">Términos y condiciones</p>
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 };
 
