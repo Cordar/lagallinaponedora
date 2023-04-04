@@ -121,6 +121,16 @@ const LegalAdvice: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof 
         conocer el número de impresiones de páginas, el número de visitas realizadas a los servidores web, el orden de
         visitas, el punto de acceso, etc.
       </p>
+      <h3>Transacciones</h3>
+      <p>
+        Este comerciante se compromete a no permitir ninguna transacción que sea ilegal, o se considere por las marcas
+        de tarjetas de crédito o el banco adquiriente, que pueda o tenga el potencial de dañar la buena voluntad de los
+        mismos o influir de manera negativa en ellos. Las siguientes actividades están prohibidas en virtud de los
+        programas de las marcas de tarjetas: la venta u oferta de un producto o servicio que no sea de plena conformidad
+        con todas las leyes aplicables al Comprador, Banco Emisor, Comerciante, Titular de la tarjeta, o tarjetas.
+        Además, las siguientes actividades también están prohibidas explícitamente: "Venta de bebidas alcohólicas a
+        menores de 18 años.
+      </p>
     </div>
   );
 };
