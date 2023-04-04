@@ -73,7 +73,7 @@ const LegalAdvice: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof 
         tercero ajeno al mismo o, si lo tiene, haya actuado con diligencia para retirar los datos o hacer imposible el
         acceso a ellos.
       </p>
-      <h3>Uso de Cookies</h3>
+      <h3 className="text-lg font-medium">Uso de Cookies</h3>
       <p>
         Este sitio web puede utilizar cookies técnicas (pequeños archivos de información que el servidor envía al
         ordenador de quien accede a la página) para llevar a cabo determinadas funciones que son consideradas
@@ -91,7 +91,7 @@ const LegalAdvice: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof 
         y para impedir su instalación en su equipo. Por favor, consulte las instrucciones de su navegador para ampliar
         esta información.
       </p>
-      <h3>Política de enlaces</h3>
+      <h3 className="text-lg font-medium">Política de enlaces</h3>
       <p>
         Desde el sitio web, es posible que se redirija a contenidos de terceros sitios web. Dado que el RESPONSABLE no
         puede controlar siempre los contenidos introducidos por terceros en sus respectivos sitios web, no asume ningún
@@ -112,7 +112,7 @@ const LegalAdvice: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof 
         que existan ciertos errores de programación, o que acontezcan causas de fuerza mayor, catástrofes naturales,
         huelgas o circunstancias semejantes que hagan imposible el acceso a la página web.
       </p>
-      <h3>Direcciones IP</h3>
+      <h3 className="text-lg font-medium">Direcciones IP</h3>
       <p>
         Los servidores del sitio web podrán detectar de manera automática la dirección IP y el nombre de dominio
         utilizados por el usuario. Una dirección IP es un número asignado automáticamente a un ordenador cuando este se
@@ -121,7 +121,7 @@ const LegalAdvice: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof 
         conocer el número de impresiones de páginas, el número de visitas realizadas a los servidores web, el orden de
         visitas, el punto de acceso, etc.
       </p>
-      <h3>Transacciones</h3>
+      <h3 className="text-lg font-medium">Transacciones</h3>
       <p>
         Este comerciante se compromete a no permitir ninguna transacción que sea ilegal, o se considere por las marcas
         de tarjetas de crédito o el banco adquiriente, que pueda o tenga el potencial de dañar la buena voluntad de los
