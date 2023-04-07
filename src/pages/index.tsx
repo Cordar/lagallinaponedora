@@ -1,5 +1,5 @@
 import { ProductCategory } from "@prisma/client";
-import { type GetStaticProps, type InferGetStaticPropsType, type NextPage } from "next";
+import { type GetStaticProps, type NextPage } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -31,7 +31,7 @@ export const getStaticProps: GetStaticProps = async () => {
   return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
 };
 
-const Home: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
+const Home: NextPage<PageProps> = () => {
   const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Productos", "Haz un pedido de los productos presentados.");
 
