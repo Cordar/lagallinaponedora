@@ -66,7 +66,7 @@ model ChosenProduct {
     amount            Int
     product           Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
     productId         Int
-    order             Order?             @relation(fields: [orderId], references: [id])
+    order             Order?             @relation(fields: [orderId], references: [id], onDelete: Cascade)
     orderId           Int?
     chosenSubproducts ChosenSubproduct[]
 }

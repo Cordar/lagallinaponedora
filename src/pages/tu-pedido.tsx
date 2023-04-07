@@ -122,6 +122,7 @@ const YourOrder: NextPage<PageProps> = () => {
         },
         {
           onSuccess: (order) => {
+            console.log("ORDER");
             // TODO Redirect to payment here, the callback should have the order id
             void push(`${Route.ORDER_STATUS}${order.id}`);
             // TODO If payment is canceled or fails redirect to this page again with an error message
@@ -244,7 +245,7 @@ const YourOrder: NextPage<PageProps> = () => {
           </div>
         )}
 
-        <div className="flex flex-col justify-center rounded-lg">
+        <div className="mb-20 flex flex-col justify-center rounded-lg">
           <Link href={Route.LEGAL_ADVISE} className="w-full p-4">
             <p className="text-center font-semibold tracking-wide opacity-60">Aviso Legal</p>
           </Link>
