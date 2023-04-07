@@ -16,13 +16,15 @@ const LegalAdvice: NextPage<PageProps> = () => {
 
   return Layout(
     <div className="relative flex w-full grow flex-col gap-5 bg-lgp-background">
-      <div className="fixed left-0 top-0 right-0 flex items-center gap-3 bg-lgp-background">
-        <Link href={Route.CHECKOUT} className="p-5">
-          <RiArrowLeftLine className="h-8 w-8" />
-        </Link>
+      <div className="fixed left-0 top-0 right-0 z-10 bg-lgp-background">
+        <div className="m-auto flex w-full items-center bg-lgp-background p-1 lg:max-w-xl">
+          <Link href={Route.CHECKOUT} className="p-4">
+            <RiArrowLeftLine className="h-8 w-8" />
+          </Link>
+        </div>
       </div>
 
-      <div className="mt-16relative flex flex-col gap-5 p-5">
+      <div className="relative mt-16 flex flex-col gap-5 p-5">
         <h1 className="text-lg font-bold">LEY DE LOS SERVICIOS DE LA SOCIEDAD DE LA INFORMACIÓN (LSSI)</h1>
 
         <p>
