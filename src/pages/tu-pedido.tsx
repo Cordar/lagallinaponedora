@@ -122,6 +122,7 @@ const YourOrder: NextPage<PageProps> = () => {
         },
         {
           onSuccess: (order) => {
+            console.log("ORDER");
             // TODO Redirect to payment here, the callback should have the order id
             void push(`${Route.ORDER_STATUS}${order.id}`);
             // TODO If payment is canceled or fails redirect to this page again with an error message
