@@ -25,6 +25,7 @@
     "react-dom": "18.2.0",
     "react-hook-form": "^7.43.7",
     "react-icons": "^4.8.0",
+    "react-inlinesvg": "^3.0.2",
     "react-uuid": "^2.0.0",
     "stripe": "^11.16.0",
     "superjson": "1.9.1",

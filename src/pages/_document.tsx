@@ -26,7 +26,7 @@ const Document = () => {
         />
       </Head>
 
-      <body className="relative h-full w-full bg-lgp-orange-light font-main">
+      <body className="relative h-full w-full bg-lgp-background font-main">
         <Main />
         <NextScript />
       </body>

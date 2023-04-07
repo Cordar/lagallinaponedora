@@ -1,4 +1,4 @@
-import { type GetStaticProps, type NextPage, InferGetStaticPropsType } from "next";
+import type { GetStaticProps, NextPage } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -18,13 +18,12 @@ import { EMAIL_REGEX, ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
 import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
 import { type PageProps } from "./_app";
-
-import { loadStripe } from "@stripe/stripe-js";
-import axios from "axios";
+// import { loadStripe } from "@stripe/stripe-js";
+// import axios from "axios";
 // Make sure to call `loadStripe` outside of a component’s render to avoid
 // recreating the `Stripe` object on every render.
-const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-const stripePromise = loadStripe(publishableKey);
+// const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+// const stripePromise = loadStripe(publishableKey);
 
 export const getStaticProps: GetStaticProps = async () => {
   const ssg = getTrpcSSGHelpers();
@@ -38,41 +37,41 @@ interface Inputs {
   name: string;
 }
 
-const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
+const YourOrder: NextPage<PageProps> = () => {
   const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
 
   // Pagos
-  useEffect(() => {
-    // Check to see if this is a redirect back from Checkout
-    const query = new URLSearchParams(window.location.search);
-    if (query.get("success")) {
-      console.log("Order placed! You will receive an email confirmation.");
-    }
+  // useEffect(() => {
+  //   // Check to see if this is a redirect back from Checkout
+  //   const query = new URLSearchParams(window.location.search);
+  //   if (query.get("success")) {
+  //     console.log("Order placed! You will receive an email confirmation.");
+  //   }
 
-    if (query.get("canceled")) {
-      console.log("Order canceled -- continue to shop around and checkout when you’re ready.");
-    }
-  }, []);
+  //   if (query.get("canceled")) {
+  //     console.log("Order canceled -- continue to shop around and checkout when you’re ready.");
+  //   }
+  // }, []);
 
-  const createCheckOutSession = async (order: Order) => {
-    const stripe = await stripePromise;
-    if (!stripe) {
-      return;
-    }
-    const checkoutSession = await axios.post("/api/checkout_sessions", {
-      order: order,
-    });
-    if (!checkoutSession || !checkoutSession.data) {
-      return;
-    }
-    const result = await stripe.redirectToCheckout({
-      sessionId: checkoutSession.data.id,
-    });
-    if (result.error) {
-      alert(result.error.message);
-    }
-  };
+  // const createCheckOutSession = async (order: Order) => {
+  //   const stripe = await stripePromise;
+  //   if (!stripe) {
+  //     return;
+  //   }
+  //   const checkoutSession = await axios.post("/api/checkout_sessions", {
+  //     order: order,
+  //   });
+  //   if (!checkoutSession || !checkoutSession.data) {
+  //     return;
+  //   }
+  //   const result = await stripe.redirectToCheckout({
+  //     sessionId: checkoutSession.data.id,
+  //   });
+  //   if (result.error) {
+  //     alert(result.error.message);
+  //   }
+  // };
 
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
   const { user, isErrorUser } = useUser();
@@ -142,7 +141,7 @@ const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof ge
 
   return Layout(
     <div>
-      <form onSubmit={handleSubmit(onFormSubmit)} className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
+      <form onSubmit={handleSubmit(onFormSubmit)} className="relative flex grow flex-col gap-5 bg-lgp-background p-5">
         <div className="flex w-full items-center gap-3">
           <Link href={Route.HOME} className="w-fit">
             <RiArrowLeftLine className="h-8 w-8" />
@@ -180,7 +179,7 @@ const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof ge
 
           {startedOrder.length > 0 && totalPrice && (
             <div className="flex items-center justify-end">
-              <h3 className="text-ellipsis text-lg font-semibold tracking-wide text-lgp-orange-dark">{`Total ${totalPrice} €`}</h3>
+              <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{`Total ${totalPrice} €`}</h3>
             </div>
           )}
 
@@ -245,33 +244,29 @@ const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof ge
           </div>
         )}
 
+        <div className="flex flex-col justify-center rounded-lg">
+          <Link href={Route.LEGAL_ADVISE} className="w-full p-4">
+            <p className="text-center font-semibold tracking-wide opacity-60">Aviso Legal</p>
+          </Link>
+
+          <Link href={Route.PRIVACY_POLICY} className="w-full p-4">
+            <p className="text-center font-semibold tracking-wide opacity-60">Política de Privacidad</p>
+          </Link>
+
+          <Link href={Route.TERMS_AND_CONDITIONS} className="w-full p-4">
+            <p className="text-center font-semibold tracking-wide opacity-60">Términos y condiciones</p>
+          </Link>
+        </div>
+
         <Button
           isDisabled={
             !watchEmail || watchEmail.length <= 0 || !watchName || watchName.length <= 0 || startedOrder.length <= 0
           }
           isLoading={isLoadingUpdateCustomerInfo || isLoadingRegisterOrder}
           label="Pagar"
-          className="m-auto mb-6 px-24 text-center"
+          className="fixed left-5 right-5 bottom-5 m-auto w-[unset] lg:max-w-md"
         />
       </form>
-
-      <div className="flex w-full gap-3 bg-slate-100 p-2 text-xs">
-        <div className="flex w-full items-center gap-3 border-r-2 p-2">
-          <Link href={Route.LEGAL_ADVISE} className="m-auto">
-            <p className="text-center">Aviso Legal</p>
-          </Link>
-        </div>
-        <div className="flex w-full items-center gap-3 border-r-2 p-2">
-          <Link href={Route.PRIVACY_POLICY} className="m-auto">
-            <p className="text-center">Política de Privacidad</p>
-          </Link>
-        </div>
-        <div className="flex w-full items-center gap-3 p-2">
-          <Link href={Route.TERMS_AND_CONDITIONS} className="m-auto">
-            <p className="text-center">Términos y condiciones</p>
-          </Link>
-        </div>
-      </div>
     </div>
   );
 };

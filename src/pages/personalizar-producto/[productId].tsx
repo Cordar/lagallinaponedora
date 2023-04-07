@@ -100,7 +100,7 @@ const CustomizeProduct: NextPage<PageProps> = () => {
   const { name, price, imageSrc } = productInfo;
 
   return Layout(
-    <div className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
+    <div className="relative flex grow flex-col gap-5 bg-lgp-background p-5">
       <Link href={Route.HOME} className="w-fit">
         <RiArrowLeftLine className="h-8 w-8" />
       </Link>
@@ -117,7 +117,7 @@ const CustomizeProduct: NextPage<PageProps> = () => {
             />
           )}
 
-          <div className="relative flex w-full gap-2 rounded-md bg-lgp-gradient-orange-light py-2 px-4">
+          <div className="relative flex w-full gap-2 rounded-md ">
             <h3 className="grow text-lg font-semibold tracking-wide">{name}</h3>
             <p className="min-w-fit text-lg font-semibold tracking-wide">{price} €</p>
           </div>

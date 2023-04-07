@@ -41,17 +41,47 @@ const useStartedOrder = () => {
   }, []);
 
   const addProduct = (product: ChosenProductWithSubproducts) => {
-    const newStartedOrder = [...startedOrder, product];
+    const newStartedOrder = mergeDuplicates([...startedOrder, product]);
 
     setStartedOrder(newStartedOrder);
     setToStorage(StorageKey.STARTED_ORDER, newStartedOrder);
   };
 
   const removeProduct = (idToRemove: number) => {
-    const newStartedOrder = startedOrder.filter(({ id }) => id !== idToRemove);
+    const productToRemove = startedOrder.find(({ id }) => id === idToRemove);
+    if (!productToRemove) return;
+
+    const newStartedOrder =
+      productToRemove.amount > 1
+        ? startedOrder.map((product) => {
+            if (product.id === idToRemove) return { ...product, amount: product.amount - 1 };
+            return product;
+          })
+        : startedOrder.filter(({ id }) => id !== idToRemove);
 
     setStartedOrder(newStartedOrder);
     setToStorage(StorageKey.STARTED_ORDER, newStartedOrder);
+  };
+
+  const mergeDuplicates = (products: ChosenProductWithSubproducts[]) => {
+    const mergedProducts: ChosenProductWithSubproducts[] = [];
+
+    products.forEach((product) => {
+      const existingProduct = mergedProducts.find(({ productId, chosenSubproducts }) => {
+        return (
+          product.productId === productId &&
+          product.chosenSubproducts.length === chosenSubproducts.length &&
+          product.chosenSubproducts.every(({ subproductId }) =>
+            chosenSubproducts.some(({ subproductId: chosenSubproductId }) => chosenSubproductId === subproductId)
+          )
+        );
+      });
+
+      if (existingProduct) existingProduct.amount += product.amount;
+      else mergedProducts.push(product);
+    });
+
+    return mergedProducts;
   };
 
   const clearStartedOrder = () => {
