@@ -7,9 +7,11 @@ export const publicRouter = createTRPCRouter({
   checkPassword: publicProcedure.input(z.object({ password: z.string() })).query(async ({ ctx, input }) => {
     try {
       const password = await ctx.prisma.password.findUnique({ where: { password: input.password } });
-      return !!password;
+
+      if (!password) throw new Error();
+      return true;
     } catch (error) {
-      return false;
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "La contraseña no es correcta." });
     }
   }),
 
@@ -20,7 +22,7 @@ export const publicRouter = createTRPCRouter({
         orderBy: { id: "asc" },
       });
     } catch (error) {
-      new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener los productos." });
+      throw new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener los productos." });
     }
   }),
 
@@ -35,7 +37,7 @@ export const publicRouter = createTRPCRouter({
 
       return product;
     } catch (error) {
-      new TRPCError({ code: "CONFLICT", message: "Hubo un error al obtener la personalización del producto." });
+      throw new TRPCError({ code: "CONFLICT", message: "Hubo un error al obtener la personalización del producto." });
     }
   }),
 
@@ -47,7 +49,7 @@ export const publicRouter = createTRPCRouter({
 
       return subproducts;
     } catch (error) {
-      new TRPCError({ code: "CONFLICT", message: "Hubo un error al obtener la personalización del producto." });
+      throw new TRPCError({ code: "CONFLICT", message: "Hubo un error al obtener la personalización del producto." });
     }
   }),
 
@@ -60,7 +62,7 @@ export const publicRouter = createTRPCRouter({
         include: { orders: true },
       });
     } catch (error) {
-      new TRPCError({ code: "CONFLICT", message: "Hubo un error al obtener o crear el cliente." });
+      throw new TRPCError({ code: "CONFLICT", message: "Hubo un error al obtener o crear el cliente." });
     }
   }),
 
@@ -94,7 +96,7 @@ export const publicRouter = createTRPCRouter({
 
       return totalCookingTime;
     } catch (error) {
-      new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener el tiempo de espera." });
+      throw new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener el tiempo de espera." });
     }
   }),
 
@@ -111,7 +113,7 @@ export const publicRouter = createTRPCRouter({
 
       return { cookingOrders, readyOrders };
     } catch (error) {
-      new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener tus pedidos." });
+      throw new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener tus pedidos." });
     }
   }),
 
@@ -132,7 +134,7 @@ export const publicRouter = createTRPCRouter({
 
       return customer.orders.filter((order) => order.status === OrderStatus.PAID);
     } catch (error) {
-      new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener tus pedidos." });
+      throw new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener tus pedidos." });
     }
   }),
 
@@ -153,7 +155,7 @@ export const publicRouter = createTRPCRouter({
 
       return customer.orders.filter((order) => order.status === OrderStatus.COOKED);
     } catch (error) {
-      new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener tus pedidos." });
+      throw new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener tus pedidos." });
     }
   }),
 

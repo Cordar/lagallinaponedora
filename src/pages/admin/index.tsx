@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import SVG from "react-inlinesvg";
 import Button from "~/components/Button";
+import ErrorMessage from "~/components/ErrorMessage";
 import Input from "~/components/Input";
 import useIsPasswordValid from "~/hooks/api/query/useIsPasswordValid";
 import useStorage from "~/hooks/useStorage";
@@ -39,7 +40,8 @@ const AdminPassword: NextPage<PageProps> = () => {
   );
 
   const [passwordToCheck, setPasswordToCheck] = useState<string>();
-  const { isPasswordValid, isLoadingIsPasswordValid } = useIsPasswordValid(passwordToCheck);
+  const { isPasswordValid, isLoadingIsPasswordValid, isErrorIsPasswordValid, errorIsPasswordValid } =
+    useIsPasswordValid(passwordToCheck);
 
   useEffect(() => {
     if (isPasswordValid && passwordToCheck) {
@@ -57,8 +59,6 @@ const AdminPassword: NextPage<PageProps> = () => {
   const onFormSubmit: SubmitHandler<Inputs> = ({ password }) => {
     setPasswordToCheck(password);
   };
-
-  console.log(isPasswordValid);
 
   const getFormError = (name: keyof Inputs) => errors[name] && errors[name]?.message;
 
@@ -83,6 +83,8 @@ const AdminPassword: NextPage<PageProps> = () => {
         />
 
         <Button label="Entrar" isLoading={isLoadingIsPasswordValid} />
+
+        {isErrorIsPasswordValid && errorIsPasswordValid && <ErrorMessage message={errorIsPasswordValid.message} />}
       </form>
     </div>
   );
