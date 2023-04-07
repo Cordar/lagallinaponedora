@@ -244,7 +244,7 @@ const YourOrder: NextPage<PageProps> = () => {
           </div>
         )}
 
-        <div className="flex flex-col justify-center rounded-lg">
+        <div className="mb-20 flex flex-col justify-center rounded-lg">
           <Link href={Route.LEGAL_ADVISE} className="w-full p-4">
             <p className="text-center font-semibold tracking-wide opacity-60">Aviso Legal</p>
           </Link>
