@@ -66,7 +66,7 @@ const OrderStatus: NextPage<PageProps> = () => {
     );
 
   return Layout(
-    <div className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
+    <div className="relative flex grow flex-col gap-5 bg-lgp-background p-5">
       <div className="flex w-full items-center gap-3">
         <Link href={Route.HOME} className="w-fit">
           <RiArrowLeftLine className="h-8 w-8" />

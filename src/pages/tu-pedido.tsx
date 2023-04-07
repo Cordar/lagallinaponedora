@@ -1,4 +1,4 @@
-import { type GetStaticProps, type NextPage, InferGetStaticPropsType } from "next";
+import { type GetStaticProps, type InferGetStaticPropsType, type NextPage } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -142,7 +142,7 @@ const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof ge
 
   return Layout(
     <div>
-      <form onSubmit={handleSubmit(onFormSubmit)} className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
+      <form onSubmit={handleSubmit(onFormSubmit)} className="relative flex grow flex-col gap-5 bg-lgp-background p-5">
         <div className="flex w-full items-center gap-3">
           <Link href={Route.HOME} className="w-fit">
             <RiArrowLeftLine className="h-8 w-8" />
@@ -180,7 +180,7 @@ const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof ge
 
           {startedOrder.length > 0 && totalPrice && (
             <div className="flex items-center justify-end">
-              <h3 className="text-ellipsis text-lg font-semibold tracking-wide text-lgp-orange-dark">{`Total ${totalPrice} €`}</h3>
+              <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{`Total ${totalPrice} €`}</h3>
             </div>
           )}
 

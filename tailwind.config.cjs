@@ -6,16 +6,14 @@ const config = {
     extend: {
       colors: {
         "lgp-green": "#779F56",
-        "lgp-orange-dark": "#1B1500",
-        "lgp-red-dark": "#401317",
-
-        "lgp-orange-light": "#FFF1A8",
-
-        "lgp-gradient-orange-light": "#FFE667",
-        "lgp-gradient-orange-dark": "#ffc244",
+        "lgp-background": "#FFEDC2",
       },
       fontFamily: {
         main: "Montserrat",
+      },
+      backgroundImage: {
+        chickens: "url('/chickens.jpeg')",
+        field: "url('/field.png')",
       },
     },
   },

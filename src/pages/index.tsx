@@ -1,8 +1,9 @@
 import { ProductCategory } from "@prisma/client";
-import { type GetStaticProps, type NextPage, InferGetStaticPropsType } from "next";
+import { type GetStaticProps, type InferGetStaticPropsType, type NextPage } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import SVG from "react-inlinesvg";
 import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
@@ -15,7 +16,6 @@ import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import { default as getLayout } from "~/utils/getLayout";
 import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
 import { type PageProps } from "./_app";
-import logoImage from '../../public/gallina.svg'
 
 const ProductCategoryMap: Record<ProductCategory, string> = {
   COMBO: "Combos",
@@ -66,15 +66,12 @@ const Home: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof getStat
   };
 
   return Layout(
-    <>
-      <div className="w-full flex flex-col items-center gap-5 bg-gradient-to-b from-lgp-gradient-orange-dark to-lgp-gradient-orange-light px-5 py-16">
-        <Image
-        src={logoImage}
-        alt="Picture of the logo"
-        />
+    <div className="relative flex grow flex-col gap-5 bg-lgp-background">
+      <div className="mb-8 flex h-56 w-full flex-col items-center gap-5 overflow-visible bg-field bg-cover bg-center pt-8">
+        <SVG src="/gallina.svg" className="-mb-16 w-3/4" />
       </div>
 
-      <div className="relative flex grow flex-col gap-5 bg-lgp-orange-light p-5">
+      <div className="relative flex grow flex-col gap-5 p-5">
         <div className="mb-40 flex flex-col gap-6">
           {[ProductCategory.COMBO, ProductCategory.DISH, ProductCategory.DESSERT, ProductCategory.DRINK].map(
             (category) => (
@@ -146,7 +143,7 @@ const Home: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof getStat
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

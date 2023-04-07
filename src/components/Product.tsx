@@ -57,7 +57,7 @@ const Product = ({ product, chosenProducts, addProduct, removeProduct }: Product
 
           <h3 className="grow text-left text-base font-medium tracking-wide">{name}</h3>
 
-          <p className="min-w-fit text-base font-medium tracking-wide text-lgp-orange-dark">{price} €</p>
+          <p className="min-w-fit text-base font-medium tracking-wide">{price} €</p>
         </>
       )}
 

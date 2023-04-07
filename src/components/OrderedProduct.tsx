@@ -62,9 +62,7 @@ const OrderedProduct = ({
 
       <div className="flex flex-col items-end gap-3">
         {showPrice && (
-          <p className="text-sm font-medium tracking-wide text-lgp-orange-dark">
-            {product?.price ? `${product?.price * amount} €` : ""}
-          </p>
+          <p className="text-sm font-medium tracking-wide">{product?.price ? `${product?.price * amount} €` : ""}</p>
         )}
 
         <div className="flex grow items-center justify-center gap-3">
