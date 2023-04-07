@@ -4,6 +4,15 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const publicRouter = createTRPCRouter({
+  checkPassword: publicProcedure.input(z.object({ password: z.string() })).query(async ({ ctx, input }) => {
+    try {
+      const password = await ctx.prisma.password.findUnique({ where: { password: input.password } });
+      return !!password;
+    } catch (error) {
+      return false;
+    }
+  }),
+
   getProducts: publicProcedure.query(async ({ ctx }) => {
     try {
       return await ctx.prisma.product.findMany({

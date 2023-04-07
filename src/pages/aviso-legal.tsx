@@ -12,12 +12,12 @@ export const getStaticProps: GetStaticProps = () => {
 };
 
 const LegalAdvice: NextPage<PageProps> = () => {
-  const Layout = getLayout("La Gallina Ponedora | Aviso Legal", "");
+  const Layout = getLayout("La Gallina Ponedora | Aviso Legal", "Aviso Legal");
 
   return Layout(
     <div className="relative flex w-full grow flex-col gap-5 bg-lgp-background">
       <div className="fixed left-0 top-0 right-0 z-10 bg-lgp-background">
-        <div className="m-auto flex w-full items-center bg-lgp-background p-1 lg:max-w-xl">
+        <div className="m-auto flex w-full items-center bg-lgp-background lg:max-w-xl">
           <Link href={Route.CHECKOUT} className="p-4">
             <RiArrowLeftLine className="h-8 w-8" />
           </Link>
