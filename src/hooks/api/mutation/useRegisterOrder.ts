@@ -9,7 +9,6 @@ const useRegisterOrder = () => {
     isError: isErrorRegisterOrder,
   } = api.public.registerOrder.useMutation({
     onSettled: () => {
-      console.log("settle");
       void apiContext.public.getPaidOrders.invalidate();
       void apiContext.public.getCookedOrders.invalidate();
       void apiContext.public.getAreOrdersInProgress.invalidate();

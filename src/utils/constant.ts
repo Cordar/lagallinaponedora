@@ -7,11 +7,18 @@ export enum Route {
   LEGAL_ADVISE = "/aviso-legal/",
   PRIVACY_POLICY = "/politica-privacidad/",
   TERMS_AND_CONDITIONS = "/terminos-y-condiciones/",
+
+  ADMIN = "/admin/",
+  ADMIN_PANEL = "/admin/panel/",
+  ADMIN_TO_COOK = "/admin/cocina/",
+  ADMIN_TO_DELIVER = "/admin/entraga/",
+  ADMIN_TO_REGISTER = "/admin/caja/",
 }
 
 export enum StorageKey {
   SESSION = "lagallinaponedora_session",
   STARTED_ORDER = "lagallinaponedora_started_order",
+  PASSWORD = "lagallinaponedora_password",
 }
 
 export const ONE_MINUTE_MS = 1000 * 60;
