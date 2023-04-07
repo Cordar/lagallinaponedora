@@ -1,4 +1,4 @@
-import { RiAddLine, RiCloseLine, RiSubtractLine } from "react-icons/ri";
+import { RiAddLine, RiSubtractLine } from "react-icons/ri";
 import useProduct from "~/hooks/api/query/useProduct";
 import useProducts from "~/hooks/api/query/useProducts";
 import useSubproducts from "~/hooks/api/query/useSubproducts";
@@ -86,7 +86,7 @@ const OrderedProduct = ({
               onClick={() => removeProduct(id)}
               className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-slate-500 text-white disabled:opacity-70"
             >
-              <RiCloseLine className="h-6 w-6" />
+              <RiSubtractLine className="h-6 w-6" />
             </button>
           )}
 
