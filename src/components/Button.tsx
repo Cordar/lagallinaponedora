@@ -5,10 +5,13 @@ export interface ButtonProps extends DetailedHTMLProps<ButtonHTMLAttributes<HTML
   label?: string;
   isLoading?: boolean;
   isDisabled?: boolean;
+  color?: string;
 }
 
-const Button = ({ label, className, isLoading, isDisabled, ...rest }: ButtonProps) => {
-  const loadingClasses = "disabled:text-white disabled:bg-lgp-green";
+const Button = ({ label, className, isLoading, isDisabled, color, ...rest }: ButtonProps) => {
+  const colorClass = color ? color : "bg-lgp-green";
+
+  const loadingClasses = `disabled:text-white disabled:${colorClass}`;
   const disabledClasses = "disabled:text-black disabled:bg-slate-300";
 
   const extraClasses = isLoading ? loadingClasses : isDisabled ? disabledClasses : "";
@@ -20,7 +23,7 @@ const Button = ({ label, className, isLoading, isDisabled, ...rest }: ButtonProp
       {...rest}
       className={`${
         className ? className : ""
-      } flex items-center justify-center rounded-full bg-lgp-green px-4 py-3 text-white ${extraClasses}`}
+      } flex items-center justify-center rounded-full ${colorClass} px-4 py-3 text-white ${extraClasses}`}
     >
       {isLoading && <Loading className="absolute" color="text-white" />}
 

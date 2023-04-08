@@ -216,12 +216,18 @@ export const publicRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const order = await ctx.prisma.order.update({
+        const order = await ctx.prisma.order.findUnique({
+          where: { id: input.orderId },
+        });
+
+        if (!order || order.status !== OrderStatus.CREATED) return;
+
+        const updatedOrder = await ctx.prisma.order.update({
           where: { id: input.orderId },
           data: { status: OrderStatus.PAID },
         });
 
-        return order;
+        return updatedOrder;
       } catch (error) {
         throw new TRPCError({
           code: "NOT_FOUND",

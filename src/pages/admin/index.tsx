@@ -8,7 +8,7 @@ import ErrorMessage from "~/components/ErrorMessage";
 import Input from "~/components/Input";
 import useIsPasswordValid from "~/hooks/api/query/useIsPasswordValid";
 import useStorage from "~/hooks/useStorage";
-import { Route, StorageKey } from "~/utils/constant";
+import { ONE_YEAR_MS, Route, StorageKey } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
 import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
 import { type PageProps } from "../_app";
@@ -45,7 +45,7 @@ const AdminPassword: NextPage<PageProps> = () => {
 
   useEffect(() => {
     if (isPasswordValid && passwordToCheck) {
-      setCookie(StorageKey.PASSWORD, passwordToCheck);
+      setCookie(StorageKey.PASSWORD, passwordToCheck, new Date(Date.now() + ONE_YEAR_MS), "/");
       void push(Route.ADMIN_PANEL);
     }
   }, [isPasswordValid, passwordToCheck, push, setCookie]);
