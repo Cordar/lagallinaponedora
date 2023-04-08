@@ -45,7 +45,7 @@ const CookedOrder = ({ order, first }: CookedOrderProps) => {
           Acércate al food truck y muestra esta pantalla
         </p>
 
-        <OrderNumber orderId={order.id} />
+        <OrderNumber orderId={order.id} showText />
       </div>
     </div>
   );

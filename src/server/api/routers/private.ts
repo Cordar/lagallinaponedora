@@ -1,4 +1,6 @@
-import { ProductCategory } from "@prisma/client";
+import { OrderStatus, ProductCategory } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const privateRouter = createTRPCRouter({
@@ -144,5 +146,33 @@ export const privateRouter = createTRPCRouter({
         },
       }),
     ]);
+  }),
+
+  getOrdersToDeliver: publicProcedure.query(async ({ ctx }) => {
+    try {
+      const ordersToDeliver = await ctx.prisma.order.findMany({
+        where: { status: OrderStatus.COOKED },
+        include: {
+          customer: true,
+          chosenProducts: { include: { product: true, chosenSubproducts: { include: { subproduct: true } } } },
+        },
+        orderBy: { updatedAt: "asc" },
+      });
+
+      return ordersToDeliver;
+    } catch (error) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Hubo un error al cargar los pedidos." });
+    }
+  }),
+
+  setOrderAsDelivered: publicProcedure.input(z.object({ orderId: z.number() })).mutation(async ({ ctx, input }) => {
+    try {
+      await ctx.prisma.order.update({
+        where: { id: input.orderId },
+        data: { status: OrderStatus.DELIVERED },
+      });
+    } catch (error) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al marcar el pedido como entregado." });
+    }
   }),
 });

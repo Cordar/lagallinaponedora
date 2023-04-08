@@ -85,7 +85,7 @@ const OrderStatus: NextPage<PageProps> = () => {
             Por favor, ve al food truck y muestra esto para que podamos empezar a preparar tu pedido.
           </p>
 
-          {orderId && <OrderNumber orderId={orderId} />}
+          {orderId && <OrderNumber orderId={orderId} showText />}
         </div>
       )}
 
