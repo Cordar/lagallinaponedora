@@ -121,7 +121,12 @@ export const privateRouter = createTRPCRouter({
           cookingTimeInMinutes: 2,
           imageSrc: "https://i.pinimg.com/550x/42/57/57/425757bec893d00c54b07adbc5100833.jpg",
           groups: {
-            create: [{ name: "Lo quieres con alcohol?", subproducts: { create: [{ name: "Sí" }, { name: "No" }] } }],
+            create: [
+              {
+                name: "Lo quieres con alcohol?",
+                subproducts: { create: [{ name: "Con Alcohol" }, { name: "Sin Alcohol" }] },
+              },
+            ],
           },
         },
       }),
@@ -156,7 +161,7 @@ export const privateRouter = createTRPCRouter({
           customer: true,
           chosenProducts: { include: { product: true, chosenSubproducts: { include: { subproduct: true } } } },
         },
-        orderBy: { updatedAt: "asc" },
+        orderBy: { id: "asc" },
       });
 
       return ordersToDeliver;
