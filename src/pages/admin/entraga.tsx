@@ -39,7 +39,7 @@ const AdminDeliver: NextPage<PageProps> = () => {
   const container = (children: ReactElement) =>
     Layout(
       <AdminLayout title="Entrega" showBackButton>
-        <div className="relative mt-16 flex grow flex-col  gap-5 p-5">{children}</div>
+        <div className="relative mt-16 flex grow flex-col gap-5 p-5">{children}</div>
       </AdminLayout>
     );
 
