@@ -9,7 +9,7 @@ const useSetOrderAsCooked = () => {
     isError: isErrorSetOrderAsCooked,
   } = api.private.setOrderAsCooked.useMutation({
     onMutate: () => {
-      apiContext.private.getOrdersToDeliver.setData(undefined, undefined);
+      apiContext.private.getOrderToCook.setData(undefined, undefined);
     },
     onSuccess: () => {
       void apiContext.private.getOrderToCook.invalidate();
