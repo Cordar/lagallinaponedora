@@ -11,7 +11,13 @@ const useCookedOrders = (sessionId?: string, autoRefresh?: boolean) => {
     isError: isErrorCookedOrders,
   } = api.public.getCookedOrders.useQuery(
     { sessionId: sessionId ?? "" },
-    { staleTime: ONE_DAY_MS, enabled: !!sessionId, ...extraSettings }
+    {
+      staleTime: ONE_DAY_MS,
+      enabled: !!sessionId,
+      ...extraSettings,
+      refetchInterval: ONE_MINUTE_MS,
+      refetchOnWindowFocus: true,
+    }
   );
 
   const isLoadingCookedOrders = isLoading || isFetching;
