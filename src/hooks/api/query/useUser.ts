@@ -16,14 +16,25 @@ const useUser = () => {
   }, []);
 
   const {
-    data: user,
+    data: dbUser,
     isLoading: isLoadingUser,
     isError: isErrorUser,
-  } = api.public.getOrCreateCustomer.useQuery(
+  } = api.public.getCustomer.useQuery(
     { sessionId: sessionId as string },
     { enabled: !!sessionId, staleTime: ONE_DAY_MS }
   );
-
+  let user = dbUser;
+  if (user == null) {
+    user = {
+      sessionId: sessionId as string,
+      id: -1,
+      email: null,
+      name: "",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      orders: [],
+    };
+  }
   return { user, isLoadingUser, isErrorUser };
 };
 

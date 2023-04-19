@@ -24,7 +24,7 @@ const OrderedProduct = ({
   showOnlyRemove,
   showProductName,
 }: OrderedProductProps) => {
-  const { id, amount, productId, orderId, chosenSubproducts } = chosenProduct;
+  const { id, amount, productId, orderId, chosenSubproduct } = chosenProduct;
 
   const { product } = useProduct(productId);
   const { products } = useProducts();
@@ -44,15 +44,15 @@ const OrderedProduct = ({
           </p>
         )}
 
-        {chosenSubproducts.length <= 0 && !showProductName && (
+        {chosenSubproduct.length <= 0 && !showProductName && (
           <p className="text-xs font-normal tracking-wide">
             {products?.find(({ id }) => id === productId)?.name ?? ""}
           </p>
         )}
 
-        {chosenSubproducts.length > 0 && (
+        {chosenSubproduct.length > 0 && (
           <p className="text-xs font-normal tracking-wide">
-            {chosenSubproducts.map(
+            {chosenSubproduct.map(
               ({ subproductId }, i) =>
                 `${i === 0 ? "" : ", "}${subproducts?.find(({ id }) => id === subproductId)?.name ?? ""}`
             )}
@@ -100,7 +100,7 @@ const OrderedProduct = ({
                   amount: 1,
                   productId,
                   orderId,
-                  chosenSubproducts: [...chosenSubproducts],
+                  chosenSubproduct: [...chosenSubproduct],
                 })
               }
               className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white disabled:opacity-70"

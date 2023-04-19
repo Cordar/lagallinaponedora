@@ -7,9 +7,9 @@ const useUpdateCustomerInfo = () => {
     mutate: mutateUpdateCustomerInfo,
     isLoading: isLoadingUpdateCustomerInfo,
     isError: isErrorUpdateCustomerInfo,
-  } = api.public.updateCustomerInfo.useMutation({
+  } = api.public.getOrUpsertCustomer.useMutation({
     onSettled: () => {
-      void apiContext.public.getOrCreateCustomer.invalidate();
+      void apiContext.public.getCustomer.invalidate();
     },
   });
 

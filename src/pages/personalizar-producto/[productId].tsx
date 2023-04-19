@@ -1,4 +1,4 @@
-import { type GetStaticProps, type NextPage } from "next";
+import { type GetStaticProps, type NextPage, InferGetStaticPropsType } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -36,7 +36,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
 type FormData = Record<string, string>;
 
-const CustomizeProduct: NextPage<PageProps> = () => {
+const CustomizeProduct: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { query, push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Personalizar producto", "Personaliza este producto a tu gusto.");
 
@@ -87,7 +87,7 @@ const CustomizeProduct: NextPage<PageProps> = () => {
       amount: 1,
       productId: product.id,
       orderId: null,
-      chosenSubproducts: Object.values(data).map((subproductId) => ({
+      chosenSubproduct: Object.values(data).map((subproductId) => ({
         id: -getRandomNumberId(),
         subproductId: parseInt(subproductId),
         chosenProductId: randomId,

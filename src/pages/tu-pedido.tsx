@@ -73,14 +73,12 @@ const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof ge
 
   const onFormSubmit: SubmitHandler<Inputs> = ({ email, name }) => {
     if (user?.sessionId && email && name && startedOrder) {
-      console.log("hi");
       mutateUpdateCustomerInfo({ sessionId: user.sessionId, email, name });
-      console.log("hi2");
 
       mutateRegisterOrder(
         {
           sessionId: user.sessionId,
-          chosenProducts: startedOrder.map(({ amount, productId, chosenSubproducts }) => ({
+          chosenProducts: startedOrder.map(({ amount, productId, chosenSubproduct: chosenSubproducts }) => ({
             amount,
             productId,
             chosenSubproducts: chosenSubproducts.map(({ subproductId }) => subproductId),
@@ -94,7 +92,6 @@ const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof ge
           },
         }
       );
-      console.log("hi3");
     }
   };
 
