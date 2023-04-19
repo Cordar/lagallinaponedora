@@ -1,4 +1,4 @@
-import type { GetStaticProps, NextPage } from "next";
+import type { GetStaticProps, NextPage, InferGetStaticPropsType } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -18,12 +18,7 @@ import { EMAIL_REGEX, ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
 import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
 import { type PageProps } from "./_app";
-// import { loadStripe } from "@stripe/stripe-js";
-// import axios from "axios";
-// Make sure to call `loadStripe` outside of a component’s render to avoid
-// recreating the `Stripe` object on every render.
-// const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-// const stripePromise = loadStripe(publishableKey);
+import axios from "axios";
 
 export const getStaticProps: GetStaticProps = async () => {
   const ssg = getTrpcSSGHelpers();
@@ -37,41 +32,9 @@ interface Inputs {
   name: string;
 }
 
-const YourOrder: NextPage<PageProps> = () => {
+const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
-
-  // Pagos
-  // useEffect(() => {
-  //   // Check to see if this is a redirect back from Checkout
-  //   const query = new URLSearchParams(window.location.search);
-  //   if (query.get("success")) {
-  //     console.log("Order placed! You will receive an email confirmation.");
-  //   }
-
-  //   if (query.get("canceled")) {
-  //     console.log("Order canceled -- continue to shop around and checkout when you’re ready.");
-  //   }
-  // }, []);
-
-  // const createCheckOutSession = async (order: Order) => {
-  //   const stripe = await stripePromise;
-  //   if (!stripe) {
-  //     return;
-  //   }
-  //   const checkoutSession = await axios.post("/api/checkout_sessions", {
-  //     order: order,
-  //   });
-  //   if (!checkoutSession || !checkoutSession.data) {
-  //     return;
-  //   }
-  //   const result = await stripe.redirectToCheckout({
-  //     sessionId: checkoutSession.data.id,
-  //   });
-  //   if (result.error) {
-  //     alert(result.error.message);
-  //   }
-  // };
 
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
   const { user, isErrorUser } = useUser();
@@ -110,7 +73,10 @@ const YourOrder: NextPage<PageProps> = () => {
 
   const onFormSubmit: SubmitHandler<Inputs> = ({ email, name }) => {
     if (user?.sessionId && email && name && startedOrder) {
+      console.log("hi");
       mutateUpdateCustomerInfo({ sessionId: user.sessionId, email, name });
+      console.log("hi2");
+
       mutateRegisterOrder(
         {
           sessionId: user.sessionId,
@@ -128,6 +94,7 @@ const YourOrder: NextPage<PageProps> = () => {
           },
         }
       );
+      console.log("hi3");
     }
   };
 

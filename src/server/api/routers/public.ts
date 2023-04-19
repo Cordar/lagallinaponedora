@@ -124,7 +124,7 @@ export const publicRouter = createTRPCRouter({
         include: {
           orders: {
             include: {
-              chosenProducts: { include: { product: true, chosenSubproducts: { include: { subproduct: true } } } },
+              chosenProducts: { include: { product: true, chosenSubproduct: { include: { subproduct: true } } } },
             },
             orderBy: { updatedAt: "asc" },
           },
@@ -145,7 +145,7 @@ export const publicRouter = createTRPCRouter({
         include: {
           orders: {
             include: {
-              chosenProducts: { include: { product: true, chosenSubproducts: { include: { subproduct: true } } } },
+              chosenProducts: { include: { product: true, chosenSubproduct: { include: { subproduct: true } } } },
             },
             orderBy: { updatedAt: "asc" },
           },
@@ -174,11 +174,14 @@ export const publicRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
+        console.log("hi");
         const customer = await ctx.prisma.customer.findUnique({ where: { sessionId: input.sessionId } });
         if (!customer) throw new Error();
 
         // Remove all previous orders with status CREATED
         await ctx.prisma.order.deleteMany({ where: { customer: { id: customer.id }, status: OrderStatus.CREATED } });
+
+        console.log("hi");
 
         const chosenProducts = input.chosenProducts.map(({ amount, productId, chosenSubproducts }) => {
           return {
@@ -191,6 +194,8 @@ export const publicRouter = createTRPCRouter({
             },
           };
         });
+
+        console.log(chosenProducts);
 
         const order = await ctx.prisma.order.create({
           data: {
