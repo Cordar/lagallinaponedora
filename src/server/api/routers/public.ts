@@ -53,16 +53,14 @@ export const publicRouter = createTRPCRouter({
     }
   }),
 
-  getOrCreateCustomer: publicProcedure.input(z.object({ sessionId: z.string() })).query(async ({ ctx, input }) => {
+  getCustomer: publicProcedure.input(z.object({ sessionId: z.string() })).query(async ({ ctx, input }) => {
     try {
-      return await ctx.prisma.customer.upsert({
+      return await ctx.prisma.customer.findFirst({
         where: { sessionId: input.sessionId },
-        create: { sessionId: input.sessionId },
-        update: {},
         include: { orders: true },
       });
     } catch (error) {
-      throw new TRPCError({ code: "CONFLICT", message: "Hubo un error al obtener o crear el cliente." });
+      throw new TRPCError({ code: "CONFLICT", message: "Hubo un error al obtener el cliente." });
     }
   }),
 
@@ -106,7 +104,7 @@ export const publicRouter = createTRPCRouter({
         where: { sessionId: input.sessionId },
         include: { orders: true },
       });
-      if (!customer) throw new Error();
+      if (!customer) return { cookingOrders: false, readyOrders: false };
 
       const cookingOrders = customer.orders.some((order) => order.status === OrderStatus.PAID);
       const readyOrders = customer.orders.some((order) => order.status === OrderStatus.COOKED);
@@ -174,28 +172,23 @@ export const publicRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        console.log("hi");
         const customer = await ctx.prisma.customer.findUnique({ where: { sessionId: input.sessionId } });
         if (!customer) throw new Error();
 
         // Remove all previous orders with status CREATED
         await ctx.prisma.order.deleteMany({ where: { customer: { id: customer.id }, status: OrderStatus.CREATED } });
 
-        console.log("hi");
-
         const chosenProducts = input.chosenProducts.map(({ amount, productId, chosenSubproducts }) => {
           return {
             amount,
             product: { connect: { id: productId } },
-            chosenSubproducts: {
+            chosenSubproduct: {
               create: chosenSubproducts.map((subproductId) => ({
                 subproduct: { connect: { id: subproductId } },
               })),
             },
           };
         });
-
-        console.log(chosenProducts);
 
         const order = await ctx.prisma.order.create({
           data: {
@@ -241,14 +234,32 @@ export const publicRouter = createTRPCRouter({
       }
     }),
 
-  updateCustomerInfo: publicProcedure
+  getOrUpsertCustomer: publicProcedure
     .input(z.object({ sessionId: z.string(), name: z.string(), email: z.string().email() }))
     .mutation(async ({ ctx, input }) => {
       try {
-        await ctx.prisma.customer.update({
-          where: { sessionId: input.sessionId },
-          data: { name: input.name, email: input.email },
+        const customer = await ctx.prisma.customer.findFirst({
+          where: {
+            email: input.email,
+          },
         });
+        if (customer != null) {
+          await ctx.prisma.customer.update({
+            where: { id: customer.id },
+            data: {
+              name: input.name,
+              sessionId: input.sessionId,
+            },
+          });
+        } else {
+          await ctx.prisma.customer.create({
+            data: {
+              email: input.email,
+              name: input.name,
+              sessionId: input.sessionId,
+            },
+          });
+        }
       } catch (error) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al guardar tu información." });
       }
