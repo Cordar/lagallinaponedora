@@ -1,5 +1,5 @@
 import { ProductCategory } from "@prisma/client";
-import { type GetStaticProps, type NextPage } from "next";
+import { InferGetStaticPropsType, GetStaticPropsContext } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -14,8 +14,10 @@ import useUser from "~/hooks/api/query/useUser";
 import useStartedOrder from "~/hooks/useStartedOrder";
 import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import { default as getLayout } from "~/utils/getLayout";
-import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
-import { type PageProps } from "./_app";
+import { NextPageWithLayout } from "./_app";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { appRouter } from "~/server/routers/_app";
+import { createContextInner } from "~/server/context";
 
 const ProductCategoryMap: Record<ProductCategory, string> = {
   COMBO: "Combos",
@@ -24,14 +26,17 @@ const ProductCategoryMap: Record<ProductCategory, string> = {
   DRINK: "Bebidas",
 };
 
-export const getStaticProps: GetStaticProps = async () => {
-  const ssg = getTrpcSSGHelpers();
+export const getStaticProps = async (context: GetStaticPropsContext) => {
+  const ssg = createServerSideHelpers({
+    router: appRouter,
+    ctx: await createContextInner(),
+  });
   await ssg.public.getProducts.prefetch();
   await ssg.public.getSubproducts.prefetch();
   return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
 };
 
-const Home: NextPage<PageProps> = () => {
+const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Productos", "Haz un pedido de los productos presentados.");
 
@@ -43,6 +48,17 @@ const Home: NextPage<PageProps> = () => {
   const { user, isErrorUser } = useUser();
   const { startedOrder, addProduct, removeProduct } = useStartedOrder();
   const { areOrdersInProgress } = useAreOrdersInProgress(user?.sessionId);
+
+  function ShowLoginIfUserIsNotLoggedIn() {
+    if (user.id == -1) {
+      return (
+        <Link href={Route.LOGIN} className="mb-0 ml-auto mr-2 mt-5">
+          <p className="rounded-lg bg-lgp-green px-3 py-2 text-sm text-white">Ver mis antiguos pedidos</p>
+        </Link>
+      );
+    }
+    return <></>;
+  }
 
   if (isLoadingProducts) return Layout(<Loading />);
 
@@ -71,7 +87,9 @@ const Home: NextPage<PageProps> = () => {
         <SVG src="/gallina.svg" className="-mb-16 w-3/4" />
       </div>
 
-      <div className="relative flex grow flex-col gap-5 p-5">
+      <ShowLoginIfUserIsNotLoggedIn></ShowLoginIfUserIsNotLoggedIn>
+
+      <div className="relative flex grow flex-col gap-5 p-5 pt-0">
         <div className="mb-40 flex flex-col gap-6">
           {[ProductCategory.COMBO, ProductCategory.DISH, ProductCategory.DESSERT, ProductCategory.DRINK].map(
             (category) => (
@@ -95,7 +113,7 @@ const Home: NextPage<PageProps> = () => {
           )}
         </div>
 
-        <div className="fixed left-0 bottom-0 right-0">
+        <div className="fixed bottom-0 left-0 right-0">
           {startedOrder && buttonInfo && startedOrder.length > 0 && (
             <div className="flex w-full justify-center p-5">
               <Button
@@ -147,4 +165,4 @@ const Home: NextPage<PageProps> = () => {
   );
 };
 
-export default Home;
+export default HomePage;

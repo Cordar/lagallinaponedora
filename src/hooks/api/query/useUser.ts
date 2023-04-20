@@ -1,8 +1,8 @@
+import { getCookie, setCookie } from "cookies-next";
 import { useEffect, useState } from "react";
 import uuid from "react-uuid";
 import { api } from "~/utils/api";
-import { ONE_DAY_MS, ONE_YEAR_MS, StorageKey } from "~/utils/constant";
-import { getCookie, setCookie } from "~/utils/storage";
+import { ONE_DAY_MS, StorageKey } from "~/utils/constant";
 
 const useUser = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -10,9 +10,9 @@ const useUser = () => {
   useEffect(() => {
     let cookie = getCookie(StorageKey.SESSION);
     if (!cookie) cookie = uuid();
-    setCookie(StorageKey.SESSION, cookie, new Date(Date.now() + ONE_YEAR_MS), "/");
+    setCookie(StorageKey.SESSION, cookie, { maxAge: 60 * 60 * 24 });
 
-    setSessionId(cookie);
+    setSessionId(cookie as string);
   }, []);
 
   const {
