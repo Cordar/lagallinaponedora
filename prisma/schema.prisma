@@ -10,11 +10,11 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-enum ProductCategory {
-    COMBO
-    DISH
-    DRINK
-    DESSERT
+model ProductCategory {
+    id                  Int             @id @default(autoincrement())
+    name                String
+    order               Int
+    products            Product[]
 }
 
 model Product {
@@ -22,7 +22,8 @@ model Product {
     name                 String
     price                Int
     imageSrc             String?
-    category             ProductCategory
+    category             ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+    categoryId           Int   
     cookingTimeInMinutes Int
     groups               Group[]
     chosenProduct        ChosenProduct[]

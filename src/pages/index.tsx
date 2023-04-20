@@ -1,5 +1,5 @@
-import { ProductCategory } from "@prisma/client";
-import { InferGetStaticPropsType, GetStaticPropsContext } from "next";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -9,30 +9,22 @@ import ErrorMessage from "~/components/ErrorMessage";
 import Loading from "~/components/Loading";
 import Product from "~/components/Product";
 import useAreOrdersInProgress from "~/hooks/api/query/useAreOrdersInProgress";
+import useProductCategories from "~/hooks/api/query/useProductCategories";
 import useProducts from "~/hooks/api/query/useProducts";
 import useUser from "~/hooks/api/query/useUser";
 import useStartedOrder from "~/hooks/useStartedOrder";
+import { createContextInner } from "~/server/context";
+import { appRouter } from "~/server/routers/_app";
 import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import { default as getLayout } from "~/utils/getLayout";
 import { NextPageWithLayout } from "./_app";
-import { createServerSideHelpers } from "@trpc/react-query/server";
-import { appRouter } from "~/server/routers/_app";
-import { createContextInner } from "~/server/context";
-
-const ProductCategoryMap: Record<ProductCategory, string> = {
-  COMBO: "Combos",
-  DISH: "Platos",
-  DESSERT: "Postres",
-  DRINK: "Bebidas",
-};
 
 export const getStaticProps: any = async (context: GetStaticPropsContext) => {
   const ssg = createServerSideHelpers({
     router: appRouter,
     ctx: await createContextInner(),
   });
-  await ssg.public.getProducts.prefetch();
-  await ssg.public.getSubproducts.prefetch();
+  await ssg.public.getProductCategories.prefetch();
   return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
 };
 
@@ -40,10 +32,7 @@ const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getS
   const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Productos", "Haz un pedido de los productos presentados.");
 
-  // HACK uncomment this to populate the database
-  // const { populateDatabase } = usePopulateDatabase();
-  // useEffect(() => populateDatabase, [populateDatabase]);
-
+  const { productCategories, isLoadingProductCategories, isErrorProductCategories } = useProductCategories();
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
   const { user, isErrorUser } = useUser();
   const { startedOrder, addProduct, removeProduct } = useStartedOrder();
@@ -52,15 +41,15 @@ const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getS
   function ShowLoginIfUserIsNotLoggedIn() {
     if (user.id == -1) {
       return (
-        <Link href={Route.LOGIN} className="mb-0 ml-auto mr-2 mt-5">
-          <p className="rounded-lg bg-lgp-green px-3 py-2 text-sm text-white">Ver mis antiguos pedidos</p>
+        <Link href={Route.LOGIN} className="m-auto mb-0 mt-5">
+          <p className="rounded-lg bg-lgp-green px-3 py-2 text-sm text-white">¿Ya has pedido? Accede aquí</p>
         </Link>
       );
     }
     return <></>;
   }
 
-  if (isLoadingProducts) return Layout(<Loading />);
+  if (isLoadingProducts || isLoadingProductCategories) return Layout(<Loading />);
 
   if (isErrorProducts || isErrorUser)
     return Layout(
@@ -91,26 +80,22 @@ const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getS
 
       <div className="relative flex grow flex-col gap-5 p-5 pt-0">
         <div className="mb-40 flex flex-col gap-6">
-          {[ProductCategory.COMBO, ProductCategory.DISH, ProductCategory.DESSERT, ProductCategory.DRINK].map(
-            (category) => (
-              <div key={category} className="flex max-w-full flex-col gap-2">
-                <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{ProductCategoryMap[category]}</h3>
-
-                {products &&
-                  products
-                    .filter((product) => product.category === category)
-                    .map((product) => (
-                      <Product
-                        key={product.id}
-                        product={product}
-                        chosenProducts={startedOrder.filter(({ productId }) => productId === product.id)}
-                        addProduct={addProduct}
-                        removeProduct={removeProduct}
-                      />
-                    ))}
+          {productCategories &&
+            productCategories.map((category) => (
+              <div key={category.id} className="flex max-w-full flex-col gap-2">
+                <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{category.name}</h3>
+                {category.products &&
+                  category.products.map((product) => (
+                    <Product
+                      key={product.id}
+                      product={product}
+                      chosenProducts={startedOrder.filter(({ productId }) => productId === product.id)}
+                      addProduct={addProduct}
+                      removeProduct={removeProduct}
+                    />
+                  ))}
               </div>
-            )
-          )}
+            ))}
         </div>
 
         <div className="fixed bottom-0 left-0 right-0">

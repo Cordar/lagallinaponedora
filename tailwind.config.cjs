@@ -13,7 +13,7 @@ const config = {
       },
       backgroundImage: {
         chickens: "url('/chickens.jpeg')",
-        field: "url('/field.png')",
+        field: "url('/fondo_gallina.svg')",
       },
     },
   },

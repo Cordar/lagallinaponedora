@@ -31,6 +31,21 @@ export const publicRouter = router({
     }
   }),
 
+  getProductCategories: publicProcedure.query(async () => {
+    try {
+      return await prisma.productCategory.findMany({
+        include: { products: { include: { groups: { include: { subproducts: true } } }, orderBy: { price: "desc" } } },
+        orderBy: { id: "asc" },
+      });
+    } catch (error) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Hubo un error al obtener las categorías de productos.",
+        cause: error,
+      });
+    }
+  }),
+
   getProducts: publicProcedure.query(async () => {
     try {
       return await prisma.product.findMany({
