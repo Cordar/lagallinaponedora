@@ -1,17 +1,18 @@
 import { OrderStatus, ProductCategory } from "@prisma/client";
+import { router, publicProcedure } from "../trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import { prisma } from "~/server/prisma";
 
-export const privateRouter = createTRPCRouter({
+export const privateRouter = router({
   populateDatabase: publicProcedure.mutation(async ({ ctx }) => {
-    await ctx.prisma.product.deleteMany();
-    await ctx.prisma.group.deleteMany();
-    await ctx.prisma.subproduct.deleteMany();
-    await ctx.prisma.order.deleteMany();
-    await ctx.prisma.chosenProduct.deleteMany();
-    await ctx.prisma.chosenSubproduct.deleteMany();
-    await ctx.prisma.customer.deleteMany();
+    await prisma.product.deleteMany();
+    await prisma.group.deleteMany();
+    await prisma.subproduct.deleteMany();
+    await prisma.order.deleteMany();
+    await prisma.chosenProduct.deleteMany();
+    await prisma.chosenSubproduct.deleteMany();
+    await prisma.customer.deleteMany();
 
     const subproduct_salsas = {
       name: "Elige tu Salsa",
@@ -34,7 +35,7 @@ export const privateRouter = createTRPCRouter({
     };
 
     await Promise.all([
-      ctx.prisma.product.create({
+      prisma.product.create({
         data: {
           name: "Plato + Bebida",
           price: 12,
@@ -46,7 +47,7 @@ export const privateRouter = createTRPCRouter({
         },
       }),
 
-      ctx.prisma.product.create({
+      prisma.product.create({
         data: {
           name: "Plato + Postre + Bebida",
           price: 15,
@@ -58,7 +59,7 @@ export const privateRouter = createTRPCRouter({
         },
       }),
 
-      ctx.prisma.product.create({
+      prisma.product.create({
         data: {
           name: "Hamburguesa",
           price: 10,
@@ -69,7 +70,7 @@ export const privateRouter = createTRPCRouter({
         },
       }),
 
-      ctx.prisma.product.create({
+      prisma.product.create({
         data: {
           name: "Pizza",
           price: 10,
@@ -80,7 +81,7 @@ export const privateRouter = createTRPCRouter({
         },
       }),
 
-      ctx.prisma.product.create({
+      prisma.product.create({
         data: {
           name: "Tacos",
           price: 10,
@@ -92,7 +93,7 @@ export const privateRouter = createTRPCRouter({
         },
       }),
 
-      ctx.prisma.product.create({
+      prisma.product.create({
         data: {
           name: "Coca-cola",
           price: 4,
@@ -102,7 +103,7 @@ export const privateRouter = createTRPCRouter({
         },
       }),
 
-      ctx.prisma.product.create({
+      prisma.product.create({
         data: {
           name: "Agua",
           price: 2,
@@ -113,7 +114,7 @@ export const privateRouter = createTRPCRouter({
         },
       }),
 
-      ctx.prisma.product.create({
+      prisma.product.create({
         data: {
           name: "Cocktail",
           price: 8,
@@ -131,7 +132,7 @@ export const privateRouter = createTRPCRouter({
         },
       }),
 
-      ctx.prisma.product.create({
+      prisma.product.create({
         data: {
           name: "Helado",
           price: 6,
@@ -141,7 +142,7 @@ export const privateRouter = createTRPCRouter({
         },
       }),
 
-      ctx.prisma.product.create({
+      prisma.product.create({
         data: {
           name: "Pastel",
           price: 6,
@@ -155,7 +156,7 @@ export const privateRouter = createTRPCRouter({
 
   getOrderToCook: publicProcedure.query(async ({ ctx }) => {
     try {
-      const orderToCook = await ctx.prisma.order.findFirst({
+      const orderToCook = await prisma.order.findFirst({
         where: { status: OrderStatus.PAID },
         include: {
           chosenProducts: { include: { product: true, chosenSubproducts: { include: { subproduct: true } } } },
@@ -171,7 +172,7 @@ export const privateRouter = createTRPCRouter({
 
   getTotalAmountOfDishesToCook: publicProcedure.query(async ({ ctx }) => {
     try {
-      const orders = await ctx.prisma.order.findMany({
+      const orders = await prisma.order.findMany({
         where: { status: OrderStatus.PAID },
         include: {
           chosenProducts: { include: { product: true, chosenSubproducts: { include: { subproduct: true } } } },
@@ -200,7 +201,7 @@ export const privateRouter = createTRPCRouter({
 
   setOrderAsCooked: publicProcedure.input(z.object({ orderId: z.number() })).mutation(async ({ ctx, input }) => {
     try {
-      await ctx.prisma.order.update({
+      await prisma.order.update({
         where: { id: input.orderId },
         data: { status: OrderStatus.COOKED },
       });
@@ -211,7 +212,7 @@ export const privateRouter = createTRPCRouter({
 
   getOrdersToDeliver: publicProcedure.query(async ({ ctx }) => {
     try {
-      const ordersToDeliver = await ctx.prisma.order.findMany({
+      const ordersToDeliver = await prisma.order.findMany({
         where: { status: OrderStatus.COOKED },
         include: {
           customer: true,
@@ -228,7 +229,7 @@ export const privateRouter = createTRPCRouter({
 
   setOrderAsDelivered: publicProcedure.input(z.object({ orderId: z.number() })).mutation(async ({ ctx, input }) => {
     try {
-      await ctx.prisma.order.update({
+      await prisma.order.update({
         where: { id: input.orderId },
         data: { status: OrderStatus.DELIVERED },
       });

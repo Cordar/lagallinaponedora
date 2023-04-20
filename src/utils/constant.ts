@@ -1,5 +1,6 @@
 export enum Route {
   HOME = "/",
+  LOGIN = "/login",
   CUSTOMIZE_PRODUCT = "/personalizar-producto/",
   CHECKOUT = "/tu-pedido/",
   ORDER_STATUS = "/estado-de-tu-pedido/",

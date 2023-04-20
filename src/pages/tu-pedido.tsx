@@ -1,4 +1,4 @@
-import type { GetStaticProps, NextPage, InferGetStaticPropsType } from "next";
+import type { GetStaticProps, InferGetStaticPropsType } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -16,12 +16,16 @@ import useUser from "~/hooks/api/query/useUser";
 import useStartedOrder from "~/hooks/useStartedOrder";
 import { EMAIL_REGEX, ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
-import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
-import { type PageProps } from "./_app";
-import axios from "axios";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { appRouter } from "~/server/routers/_app";
+import { createContextInner } from "~/server/context";
+import { NextPageWithLayout } from "./_app";
 
 export const getStaticProps: GetStaticProps = async () => {
-  const ssg = getTrpcSSGHelpers();
+  const ssg = createServerSideHelpers({
+    router: appRouter,
+    ctx: await createContextInner(),
+  });
   await ssg.public.getProducts.prefetch();
   await ssg.public.getSubproducts.prefetch();
   return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
@@ -32,7 +36,7 @@ interface Inputs {
   name: string;
 }
 
-const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
+const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
 
@@ -78,7 +82,7 @@ const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof ge
       mutateRegisterOrder(
         {
           sessionId: user.sessionId,
-          chosenProducts: startedOrder.map(({ amount, productId, chosenSubproduct: chosenSubproducts }) => ({
+          chosenProducts: startedOrder.map(({ amount, productId, chosenSubproducts: chosenSubproducts }) => ({
             amount,
             productId,
             chosenSubproducts: chosenSubproducts.map(({ subproductId }) => subproductId),
@@ -155,6 +159,9 @@ const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof ge
             {updateData || !user?.email || !user?.name ? (
               <>
                 <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Dinos quién eres:</h3>
+                <small className="text-slate-400">
+                  Es muy importante que recuerdes estos datos por si hubiera algún problema luego!
+                </small>
 
                 <div className="relative flex w-full grow flex-col gap-5">
                   <Input
@@ -179,8 +186,8 @@ const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof ge
                   />
 
                   <small className="text-slate-400">
-                    Solo usaremos tu email para avisarte de que tu pedido está listo. También te llamaremos por tu
-                    nombre.
+                    Solo usaremos tu email y tu nombre para poder avisarte cuando tu pedido esté listo. También te
+                    llamaremos por tu nombre.
                   </small>
 
                   {isErrorUpdateCustomerInfo && <ErrorMessage message="Hubo un error al guardar tus datos." />}
@@ -228,7 +235,7 @@ const YourOrder: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof ge
           }
           isLoading={isLoadingUpdateCustomerInfo || isLoadingRegisterOrder}
           label="Pagar"
-          className="fixed left-5 right-5 bottom-5 m-auto w-[unset] lg:max-w-md"
+          className="fixed bottom-5 left-5 right-5 m-auto w-[unset] lg:max-w-md"
         />
       </form>
     </div>

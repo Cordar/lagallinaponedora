@@ -33,7 +33,7 @@ const Product = ({ product, chosenProducts, addProduct, removeProduct }: Product
     ) : (
       <button
         onClick={() =>
-          addProduct({ id: -getRandomNumberId(), amount: 1, productId: id, orderId: null, chosenSubproduct: [] })
+          addProduct({ id: -getRandomNumberId(), amount: 1, productId: id, orderId: null, chosenSubproducts: [] })
         }
         className={`relative flex max-w-full gap-3 ${imageSrc ? "" : "py-3"}`}
       >

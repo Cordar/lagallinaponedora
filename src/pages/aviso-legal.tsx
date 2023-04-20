@@ -1,22 +1,27 @@
-import { type GetStaticProps, type NextPage } from "next";
+import { type GetStaticProps InferGetStaticPropsType } from "next";
 import Link from "next/link";
 import { RiArrowLeftLine } from "react-icons/ri";
 import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
-import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
-import { type PageProps } from "./_app";
+import { NextPageWithLayout } from "./_app";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { createContextInner } from "~/server/context";
+import { appRouter } from "~/server/routers/_app";
 
-export const getStaticProps: GetStaticProps = () => {
-  const ssg = getTrpcSSGHelpers();
+export const getStaticProps: GetStaticProps = async () => {
+  const ssg = createServerSideHelpers({
+    router: appRouter,
+    ctx: await createContextInner(),
+  });
   return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
 };
 
-const LegalAdvice: NextPage<PageProps> = () => {
+const LegalAdvice: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
   const Layout = getLayout("La Gallina Ponedora | Aviso Legal", "Aviso Legal");
 
   return Layout(
     <div className="relative flex w-full grow flex-col gap-5 bg-lgp-background">
-      <div className="fixed left-0 top-0 right-0 z-10 bg-lgp-background">
+      <div className="fixed left-0 right-0 top-0 z-10 bg-lgp-background">
         <div className="m-auto flex w-full items-center bg-lgp-background lg:max-w-xl">
           <Link href={Route.CHECKOUT} className="p-4">
             <RiArrowLeftLine className="h-8 w-8" />

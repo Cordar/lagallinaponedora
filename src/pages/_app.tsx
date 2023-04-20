@@ -1,20 +1,26 @@
-import type { NextComponentType, NextPageContext } from "next";
+import type { NextPage } from "next";
+import type { AppType, AppProps } from "next/app";
+import type { ReactElement, ReactNode } from "react";
+import { DefaultLayout } from "~/components/DefaultLayout";
+import { trpc } from "~/utils/trpc";
 
-import { api } from "~/utils/api";
+import "../styles/globals.css";
 
-import "~/styles/globals.css";
-
-export interface PageProps {
-  sessionId: string | null;
-}
-
-interface MyAppProps {
-  Component: NextComponentType<NextPageContext, any, any>;
-  pageProps: PageProps;
-}
-
-const MyApp = ({ Component, pageProps }: MyAppProps) => {
-  return <Component {...pageProps} />;
+export type NextPageWithLayout<TProps = Record<string, unknown>, TInitialProps = TProps> = NextPage<
+  TProps,
+  TInitialProps
+> & {
+  Layout?: (page: ReactElement) => ReactNode;
 };
 
-export default api.withTRPC(MyApp);
+type AppPropsWithLayout = AppProps & {
+  Component: NextPageWithLayout;
+};
+
+const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
+  const getLayout = Component.Layout ?? ((page) => <DefaultLayout>{page}</DefaultLayout>);
+
+  return getLayout(<Component {...pageProps} />);
+}) as AppType;
+
+export default trpc.withTRPC(MyApp);

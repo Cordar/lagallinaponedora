@@ -1,14 +1,19 @@
-import { type GetServerSideProps, type NextPage } from "next";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { type GetServerSideProps, InferGetServerSidePropsType } from "next";
 import Link from "next/link";
 import AdminLayout from "~/components/AdminLayout";
+import { createContextInner } from "~/server/context";
+import { appRouter } from "~/server/routers/_app";
 import { Route, StorageKey } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
-import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
-import { type PageProps } from "../_app";
+import { NextPageWithLayout } from "../_app";
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const ssg = getTrpcSSGHelpers();
+  const ssg = createServerSideHelpers({
+    router: appRouter,
+    ctx: await createContextInner(),
+  });
 
   const password = context.req.cookies[StorageKey.PASSWORD];
   const isAuthenticated = password ? await ssg.public.checkPassword.fetch({ password }) : false;
@@ -19,7 +24,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   return { props };
 };
 
-const AdminPanel: NextPage<PageProps> = () => {
+const AdminPanel: NextPageWithLayout = (props: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const Layout = getLayout("La Gallina Ponedora | Panel de administración", "Panel de administración.");
 
   return Layout(
@@ -27,7 +32,7 @@ const AdminPanel: NextPage<PageProps> = () => {
       <div className="relative mt-16 flex grow flex-col items-center justify-center gap-5 p-5">
         <Link
           href={Route.ADMIN_TO_REGISTER}
-          className="flex w-full flex-col items-center justify-center gap-1 rounded-lg bg-slate-50 py-8 px-4 shadow-md"
+          className="flex w-full flex-col items-center justify-center gap-1 rounded-lg bg-slate-50 px-4 py-8 shadow-md"
         >
           <h2 className="w-full text-xl font-semibold uppercase tracking-wide">Caja</h2>
           <p className="w-full text-sm tracking-wide opacity-60">Crear pedidos que se pagan en persona.</p>
@@ -35,7 +40,7 @@ const AdminPanel: NextPage<PageProps> = () => {
 
         <Link
           href={Route.ADMIN_TO_COOK}
-          className="flex w-full flex-col items-center justify-center gap-1 rounded-lg bg-slate-50 py-8 px-4 shadow-md"
+          className="flex w-full flex-col items-center justify-center gap-1 rounded-lg bg-slate-50 px-4 py-8 shadow-md"
         >
           <h2 className="w-full text-xl font-semibold uppercase tracking-wide">Cocina</h2>
           <p className="w-full text-sm tracking-wide opacity-60">Ver los pedidos pendientes de cocinar.</p>
@@ -43,7 +48,7 @@ const AdminPanel: NextPage<PageProps> = () => {
 
         <Link
           href={Route.ADMIN_TO_DELIVER}
-          className="flex w-full flex-col items-center justify-center gap-1 rounded-lg bg-slate-50 py-8 px-4 shadow-md"
+          className="flex w-full flex-col items-center justify-center gap-1 rounded-lg bg-slate-50 px-4 py-8 shadow-md"
         >
           <h2 className="w-full text-xl font-semibold uppercase tracking-wide">Entrega</h2>
           <p className="w-full text-sm tracking-wide opacity-60">Ver los pedidos pendientes de entrega.</p>

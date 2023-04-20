@@ -1,4 +1,5 @@
-import { type GetServerSideProps, type NextPage } from "next";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { type GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { type ReactElement } from "react";
 import AdminLayout from "~/components/AdminLayout";
 import Button from "~/components/Button";
@@ -9,14 +10,18 @@ import useSetOrderAsCooked from "~/hooks/api/mutation/useSetOrderAsCooked";
 import useOrderToCook from "~/hooks/api/query/useOrderToCook";
 import useTotalAmountOfDishesToCook from "~/hooks/api/query/useTotalAmountOfDishesToCook";
 import useAutoResetState from "~/hooks/useAutoResetState";
+import { createContextInner } from "~/server/context";
+import { appRouter } from "~/server/routers/_app";
 import { Route, StorageKey } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
-import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
-import { type PageProps } from "../_app";
+import { NextPageWithLayout } from "../_app";
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const ssg = getTrpcSSGHelpers();
+  const ssg = createServerSideHelpers({
+    router: appRouter,
+    ctx: await createContextInner(),
+  });
   await ssg.public.getProducts.prefetch();
   await ssg.public.getSubproducts.prefetch();
 
@@ -29,7 +34,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   return { props };
 };
 
-const AdminCook: NextPage<PageProps> = () => {
+const AdminCook: NextPageWithLayout = (props: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const Layout = getLayout("La Gallina Ponedora | Cocina", "Cocina.");
 
   const [confirm, setConfirm] = useAutoResetState(false, 2000);

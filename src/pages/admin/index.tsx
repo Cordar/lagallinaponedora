@@ -1,4 +1,4 @@
-import { type GetServerSideProps, type NextPage } from "next";
+import { type GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
@@ -7,15 +7,20 @@ import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
 import Input from "~/components/Input";
 import useIsPasswordValid from "~/hooks/api/query/useIsPasswordValid";
-import useStorage from "~/hooks/useStorage";
-import { ONE_YEAR_MS, Route, StorageKey } from "~/utils/constant";
+import { Route, StorageKey } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
-import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
-import { type PageProps } from "../_app";
+import { setCookie } from "cookies-next";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { appRouter } from "~/server/routers/_app";
+import { createContextInner } from "~/server/context";
+import { NextPageWithLayout } from "../_app";
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const ssg = getTrpcSSGHelpers();
+  const ssg = createServerSideHelpers({
+    router: appRouter,
+    ctx: await createContextInner(),
+  });
 
   const password = context.req.cookies[StorageKey.PASSWORD];
   const isAuthenticated = password ? await ssg.public.checkPassword.fetch({ password }) : false;
@@ -30,9 +35,8 @@ interface Inputs {
   password: string;
 }
 
-const AdminPassword: NextPage<PageProps> = () => {
+const AdminPassword: NextPageWithLayout = (props: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const { push } = useRouter();
-  const { setCookie } = useStorage();
 
   const Layout = getLayout(
     "La Gallina Ponedora | Password",
@@ -45,7 +49,7 @@ const AdminPassword: NextPage<PageProps> = () => {
 
   useEffect(() => {
     if (isPasswordValid && passwordToCheck) {
-      setCookie(StorageKey.PASSWORD, passwordToCheck, new Date(Date.now() + ONE_YEAR_MS), "/");
+      setCookie(StorageKey.PASSWORD, passwordToCheck, { maxAge: 60 * 60 * 24 });
       void push(Route.ADMIN_PANEL);
     }
   }, [isPasswordValid, passwordToCheck, push, setCookie]);

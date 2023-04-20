@@ -1,4 +1,4 @@
-import { type GetServerSideProps, type NextPage } from "next";
+import { type GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { type ReactElement } from "react";
 import AdminLayout from "~/components/AdminLayout";
 import Button from "~/components/Button";
@@ -11,16 +11,21 @@ import useOrdersToDeliver from "~/hooks/api/query/useOrdersToDeliver";
 import useAutoResetState from "~/hooks/useAutoResetState";
 import { Route, StorageKey } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
-import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
-import { type PageProps } from "../_app";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { appRouter } from "~/server/routers/_app";
+import { createContextInner } from "~/server/context";
+import { NextPageWithLayout } from "../_app";
 
 // eslint-disable-next-line @typescript-eslint/require-await
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const ssg = getTrpcSSGHelpers();
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  const ssg = createServerSideHelpers({
+    router: appRouter,
+    ctx: await createContextInner(),
+  });
   await ssg.public.getProducts.prefetch();
   await ssg.public.getSubproducts.prefetch();
 
-  const password = context.req.cookies[StorageKey.PASSWORD];
+  const password = req.cookies[StorageKey.PASSWORD];
   const isAuthenticated = password ? await ssg.public.checkPassword.fetch({ password }) : false;
 
   const props = { trpcState: ssg.dehydrate() };
@@ -29,7 +34,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   return { props };
 };
 
-const AdminDeliver: NextPage<PageProps> = () => {
+const AdminDeliver: NextPageWithLayout = (props: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const Layout = getLayout("La Gallina Ponedora | Entrega", "Entrega.");
 
   const { ordersToDeliver, isLoadingOrdersToDeliver, isErrorOrdersToDeliver } = useOrdersToDeliver();

@@ -1,4 +1,4 @@
-import { type GetStaticProps, type NextPage, InferGetStaticPropsType } from "next";
+import { type GetStaticProps, InferGetStaticPropsType } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -16,18 +16,26 @@ import useStartedOrder from "~/hooks/useStartedOrder";
 import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
 import getRandomNumberId from "~/utils/getRandomNumberId";
-import { getTrpcSSGHelpers } from "~/utils/getTrpcSSGHelpers";
-import { type PageProps } from "../_app";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { appRouter } from "~/server/routers/_app";
+import { createContextInner } from "~/server/context";
+import { NextPageWithLayout } from "../_app";
 
 export const getStaticPaths = async () => {
-  const ssg = getTrpcSSGHelpers();
+  const ssg = createServerSideHelpers({
+    router: appRouter,
+    ctx: await createContextInner(),
+  });
   const products = await ssg.public.getProducts.fetch();
   const paths = products?.map((product) => ({ params: { productId: product.id.toString() } })) ?? [];
   return { paths, fallback: false };
 };
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
-  const ssg = getTrpcSSGHelpers();
+  const ssg = createServerSideHelpers({
+    router: appRouter,
+    ctx: await createContextInner(),
+  });
   await ssg.public.getProducts.prefetch();
   await ssg.public.getSubproducts.prefetch();
   if (params?.productId) await ssg.public.getProductById.prefetch({ productId: parseInt(params.productId as string) });
@@ -36,7 +44,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
 
 type FormData = Record<string, string>;
 
-const CustomizeProduct: NextPage<PageProps> = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
+const CustomizeProduct: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { query, push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Personalizar producto", "Personaliza este producto a tu gusto.");
 
@@ -87,7 +95,7 @@ const CustomizeProduct: NextPage<PageProps> = (props: InferGetStaticPropsType<ty
       amount: 1,
       productId: product.id,
       orderId: null,
-      chosenSubproduct: Object.values(data).map((subproductId) => ({
+      chosenSubproducts: Object.values(data).map((subproductId) => ({
         id: -getRandomNumberId(),
         subproductId: parseInt(subproductId),
         chosenProductId: randomId,
@@ -145,7 +153,7 @@ const CustomizeProduct: NextPage<PageProps> = (props: InferGetStaticPropsType<ty
         <Button
           isDisabled={!allInputsFilled || isLoadingUser}
           label="Añadir"
-          className="fixed left-5 right-5 bottom-5 m-auto w-[unset] lg:max-w-md"
+          className="fixed bottom-5 left-5 right-5 m-auto w-[unset] lg:max-w-md"
         />
       </form>
     </div>

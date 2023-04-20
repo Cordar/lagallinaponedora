@@ -11,7 +11,7 @@ const storageSchema = z.array(
     productId: z.number(),
     orderId: z.number().nullable(),
 
-    chosenSubproduct: z.array(
+    chosenSubproducts: z.array(
       z.object({
         id: z.number(),
         chosenProductId: z.number(),
@@ -21,7 +21,7 @@ const storageSchema = z.array(
   })
 );
 
-export type ChosenProductWithSubproducts = ChosenProduct & { chosenSubproduct: ChosenSubproduct[] };
+export type ChosenProductWithSubproducts = ChosenProduct & { chosenSubproducts: ChosenSubproduct[] };
 
 const useStartedOrder = () => {
   const [startedOrder, setStartedOrder] = useState<ChosenProductWithSubproducts[]>([]);
@@ -67,11 +67,11 @@ const useStartedOrder = () => {
     const mergedProducts: ChosenProductWithSubproducts[] = [];
 
     products.forEach((product) => {
-      const existingProduct = mergedProducts.find(({ productId, chosenSubproduct: chosenSubproducts }) => {
+      const existingProduct = mergedProducts.find(({ productId, chosenSubproducts }) => {
         return (
           product.productId === productId &&
-          product.chosenSubproduct.length === chosenSubproducts.length &&
-          product.chosenSubproduct.every(({ subproductId }) =>
+          product.chosenSubproducts.length === chosenSubproducts.length &&
+          product.chosenSubproducts.every(({ subproductId }) =>
             chosenSubproducts.some(({ subproductId: chosenSubproductId }) => chosenSubproductId === subproductId)
           )
         );
