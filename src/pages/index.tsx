@@ -24,6 +24,8 @@ export const getStaticProps: any = async (context: GetStaticPropsContext) => {
     router: appRouter,
     ctx: await createContextInner(),
   });
+  await ssg.public.getProducts.prefetch();
+  await ssg.public.getSubproducts.prefetch();
   await ssg.public.getProductCategories.prefetch();
   return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
 };

@@ -269,6 +269,7 @@ export const publicRouter = router({
 
         return order;
       } catch (error) {
+        console.log(error);
         throw new TRPCError({
           code: "NOT_FOUND",
           message: `Hubo un error al crear el pedido.`,
