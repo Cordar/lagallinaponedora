@@ -1,4 +1,4 @@
-import { type GetStaticProps InferGetStaticPropsType } from "next";
+import { type GetStaticProps, InferGetStaticPropsType } from "next";
 import Link from "next/link";
 import { RiArrowLeftLine } from "react-icons/ri";
 import { ONE_HOUR_MS, Route } from "~/utils/constant";
