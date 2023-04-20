@@ -26,7 +26,7 @@ const ProductCategoryMap: Record<ProductCategory, string> = {
   DRINK: "Bebidas",
 };
 
-export const getStaticProps = async (context: GetStaticPropsContext) => {
+export const getStaticProps: any = async (context: GetStaticPropsContext) => {
   const ssg = createServerSideHelpers({
     router: appRouter,
     ctx: await createContextInner(),
