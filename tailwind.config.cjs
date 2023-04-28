@@ -7,6 +7,7 @@ const config = {
       colors: {
         "lgp-green": "#779F56",
         "lgp-background": "#FFEDC2",
+        "lgp-brown": "#3F1419",
       },
       fontFamily: {
         main: "Montserrat",

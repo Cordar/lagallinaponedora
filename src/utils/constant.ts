@@ -12,7 +12,7 @@ export enum Route {
   ADMIN = "/admin/",
   ADMIN_PANEL = "/admin/panel/",
   ADMIN_TO_COOK = "/admin/cocina/",
-  ADMIN_TO_DELIVER = "/admin/entraga/",
+  ADMIN_TO_DELIVER = "/admin/entrega/",
   ADMIN_TO_REGISTER = "/admin/caja/",
 }
 

@@ -1,6 +1,6 @@
+import { createServerSideHelpers } from "@trpc/react-query/server";
 import type { GetStaticProps, InferGetStaticPropsType } from "next";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { RiArrowLeftLine } from "react-icons/ri";
@@ -14,12 +14,13 @@ import useUpdateCustomerInfo from "~/hooks/api/mutation/useUpdateCustomerInfo";
 import useProducts from "~/hooks/api/query/useProducts";
 import useUser from "~/hooks/api/query/useUser";
 import useStartedOrder from "~/hooks/useStartedOrder";
-import { EMAIL_REGEX, ONE_HOUR_MS, Route } from "~/utils/constant";
-import getLayout from "~/utils/getLayout";
-import { createServerSideHelpers } from "@trpc/react-query/server";
-import { appRouter } from "~/server/routers/_app";
 import { createContextInner } from "~/server/context";
+import { appRouter } from "~/server/routers/_app";
+import { EMAIL_REGEX, ONE_HOUR_MS, Route } from "~/utils/constant";
+import { getPaymentPostBody } from "~/utils/encrypt";
+import getLayout from "~/utils/getLayout";
 import { NextPageWithLayout } from "./_app";
+import { useRouter } from "next/router";
 
 export const getStaticProps: GetStaticProps = async () => {
   const ssg = createServerSideHelpers({
@@ -37,8 +38,11 @@ interface Inputs {
 }
 
 const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
-  const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
+
+  const router = useRouter();
+  const queryParams = router.query;
+  const isErrorPayment = queryParams.Ds_MerchantParameters != undefined;
 
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
   const { user, isErrorUser } = useUser();
@@ -77,22 +81,29 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
 
   const onFormSubmit: SubmitHandler<Inputs> = ({ email, name }) => {
     if (user?.sessionId && email && name && startedOrder) {
-      mutateUpdateCustomerInfo({ sessionId: user.sessionId, email, name });
-
-      mutateRegisterOrder(
+      mutateUpdateCustomerInfo(
+        { sessionId: user.sessionId, email, name },
         {
-          sessionId: user.sessionId,
-          chosenProducts: startedOrder.map(({ amount, productId, chosenSubproducts: chosenSubproducts }) => ({
-            amount,
-            productId,
-            chosenSubproducts: chosenSubproducts.map(({ subproductId }) => subproductId),
-          })),
-        },
-        {
-          onSuccess: (order) => {
-            // TODO Redirect to payment here, the callback should have the order id
-            void push(`${Route.ORDER_STATUS}${order.id}`);
-            // TODO If payment is canceled or fails redirect to this page again with an error message
+          onSuccess: () => {
+            mutateRegisterOrder(
+              {
+                sessionId: user.sessionId,
+                chosenProducts: startedOrder.map(({ amount, productId, chosenSubproducts: chosenSubproducts }) => ({
+                  amount,
+                  productId,
+                  chosenSubproducts: chosenSubproducts.map(({ subproductId }) => subproductId),
+                })),
+              },
+              {
+                onSuccess: async (order) => {
+                  const paymentBody = getPaymentPostBody(totalPrice, order.id.toString());
+                  document.getElementById("hidden_params").value = paymentBody.Ds_MerchantParameters;
+                  document.getElementById("hidden_signature").value = paymentBody.Ds_Signature;
+                  document.getElementById("hidden_signature_version").value = paymentBody.Ds_SignatureVersion;
+                  document.getElementById("pago").submit();
+                },
+              }
+            );
           },
         }
       );
@@ -109,6 +120,11 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
 
   return Layout(
     <div>
+      <form id="pago" action="https://sis-t.redsys.es:25443/sis/realizarPago" method="POST">
+        <input type="hidden" name="Ds_MerchantParameters" id="hidden_params"></input>
+        <input type="hidden" name="Ds_Signature" id="hidden_signature"></input>
+        <input type="hidden" name="Ds_SignatureVersion" id="hidden_signature_version"></input>
+      </form>
       <form onSubmit={handleSubmit(onFormSubmit)} className="relative flex grow flex-col gap-5 bg-lgp-background p-5">
         <div className="flex w-full items-center gap-3">
           <Link href={Route.HOME} className="w-fit">
@@ -152,6 +168,7 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
           )}
 
           {isErrorRegisterOrder && <ErrorMessage message="Hubo un error al registrar el pedido." />}
+          {isErrorPayment && <ErrorMessage message="Hubo un error con el pago." />}
         </div>
 
         {startedOrder.length > 0 && (

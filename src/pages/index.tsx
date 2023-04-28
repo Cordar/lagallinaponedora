@@ -43,7 +43,7 @@ const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getS
   function ShowLoginIfUserIsNotLoggedIn() {
     if (user.id == -1) {
       return (
-        <Link href={Route.LOGIN} className="m-auto mb-0 mt-5">
+        <Link href={Route.LOGIN} className="m-auto mb-0">
           <p className="rounded-lg bg-lgp-green px-3 py-2 text-sm text-white">¿Ya has pedido? Accede aquí</p>
         </Link>
       );
@@ -74,7 +74,7 @@ const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getS
 
   return Layout(
     <div className="relative flex grow flex-col gap-5 bg-lgp-background">
-      <div className="mb-8 flex h-56 w-full flex-col items-center gap-5 overflow-visible bg-field bg-cover bg-center pt-8">
+      <div className="mb-20 flex h-56 w-full flex-col items-center gap-5 overflow-visible bg-field bg-cover bg-center pt-8">
         <SVG src="/gallina.svg" className="-mb-16 w-3/4" />
       </div>
 
