@@ -19,12 +19,13 @@ import { createServerSideHelpers } from "@trpc/react-query/server";
 import { appRouter } from "~/server/routers/_app";
 import { createContextInner } from "~/server/context";
 import { NextPageWithLayout } from "../_app";
+import { ParsedUrlQuery } from "querystring";
 
-const parseQueryOrderId = (query: string | string[] | undefined) => {
+const parseQueryOrderId = (query: ParsedUrlQuery) => {
   if (!query) return undefined;
-  if (typeof query === "string") return parseInt(query);
-  if (!query[0]) return undefined;
-  return parseInt(query[0]);
+  if (!query.orderId) return undefined;
+  if (!query.orderId[0]) return undefined;
+  return parseInt(query.orderId[0]);
 };
 
 // eslint-disable-next-line @typescript-eslint/require-await
@@ -43,10 +44,14 @@ export const getStaticProps: GetStaticProps = async () => {
 };
 
 const OrderStatus: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
-  const { query } = useRouter();
+  const { query, push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
 
-  const [orderId, setOrderId] = useState(parseQueryOrderId(query.orderId) ?? null);
+  const queryParams = query;
+  const isPaymentDone = queryParams.Ds_MerchantParameters != undefined;
+  console.log(queryParams);
+  console.log(isPaymentDone);
+  const [orderId, setOrderId] = useState(parseQueryOrderId(queryParams) ?? null);
 
   const { user, isLoadingUser, isErrorUser } = useUser();
   const { clearStartedOrder } = useStartedOrder();
@@ -59,9 +64,16 @@ const OrderStatus: NextPageWithLayout = (props: InferGetStaticPropsType<typeof g
   });
 
   useEffect(() => {
-    // TODO very important, only do this if the payment provider has returned a success
-    if (orderId) mutateRegisterPayment({ orderId });
-  }, [mutateRegisterPayment, orderId]);
+    if (orderId && isPaymentDone)
+      mutateRegisterPayment(
+        { orderId },
+        {
+          onSuccess: () => {
+            void push(Route.ORDER_STATUS);
+          },
+        }
+      );
+  }, [mutateRegisterPayment, orderId, isPaymentDone]);
 
   if (isErrorUser || isErrorPaidOrders || isErrorCookedOrders)
     return Layout(
