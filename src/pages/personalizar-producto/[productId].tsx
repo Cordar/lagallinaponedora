@@ -1,4 +1,5 @@
-import { type GetStaticProps, InferGetStaticPropsType } from "next";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { type GetStaticProps, type InferGetStaticPropsType } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -13,13 +14,12 @@ import useProduct from "~/hooks/api/query/useProduct";
 import useProducts from "~/hooks/api/query/useProducts";
 import { default as useUser } from "~/hooks/api/query/useUser";
 import useStartedOrder from "~/hooks/useStartedOrder";
+import { createContextInner } from "~/server/context";
+import { appRouter } from "~/server/routers/_app";
 import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
 import getRandomNumberId from "~/utils/getRandomNumberId";
-import { createServerSideHelpers } from "@trpc/react-query/server";
-import { appRouter } from "~/server/routers/_app";
-import { createContextInner } from "~/server/context";
-import { NextPageWithLayout } from "../_app";
+import { type NextPageWithLayout } from "../_app";
 
 export const getStaticPaths = async () => {
   const ssg = createServerSideHelpers({
@@ -83,7 +83,7 @@ const CustomizeProduct: NextPageWithLayout = (props: InferGetStaticPropsType<typ
   const productInfo = products?.find((product) => product.id === productId);
 
   if (!productInfo) return Layout(<Loading />);
-  else if (isErrorUser || isErrorProduct) return Layout(<ErrorMessage message="No se ha podido cargar la página" />);
+  else if (isErrorUser || isErrorProduct) return Layout(<ErrorMessage message={locales.pageLoadError} />);
 
   const onFormSubmit: SubmitHandler<FormData> = (data) => {
     if (!startedOrder || !user || !product) return;
