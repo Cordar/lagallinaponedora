@@ -2,94 +2,123 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model ProductCategory {
-    id                  Int             @id @default(autoincrement())
-    name                String
-    order               Int
-    products            Product[]
+  id       Int       @id @default(autoincrement())
+  name     String
+  order    Int
+  products Product[]
 }
 
 model Product {
-    id                   Int             @id @default(autoincrement())
-    name                 String
-    price                Int
-    imageSrc             String?
-    category             ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-    categoryId           Int   
-    cookingTimeInMinutes Int
-    groups               Group[]
-    chosenProduct        ChosenProduct[]
+  id                     Int                  @id @default(autoincrement())
+  name                   String
+  internalName           String
+  price                  Float
+  imageSrc               String?
+  category               ProductCategory      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId             Int
+  cookingTimeInMinutes   Int
+  order                  Int
+  productComponents      ProductComponent[]   @relation("parentProduct")
+  productChildComponents ProductComponent[]   @relation("childProduct")
+  orderProducts          OrderProduct[]
+  productOptionGroups    ProductOptionGroup[]
 }
 
-model Group {
-    id          Int          @id @default(autoincrement())
-    name        String
-    subproducts Subproduct[]
-    product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
-    productId   Int
+model ProductComponent {
+  parent   Product @relation("parentProduct", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId Int
+  child    Product @relation("childProduct", fields: [childId], references: [id], onDelete: Cascade)
+  childId  Int
+
+  @@id([parentId, childId])
 }
 
-model Subproduct {
-    id               Int                @id @default(autoincrement())
-    name             String
-    group            Group              @relation(fields: [groupId], references: [id], onDelete: Cascade)
-    groupId          Int
-    chosenSubproduct ChosenSubproduct[]
+model OptionGroup {
+  id                             Int                             @id @default(autoincrement())
+  name                           String
+  title                          String
+  options                        Option[]
+  productOptionGroups            ProductOptionGroup[]
+  orderProductOptionGroupOptions OrderProductOptionGroupOption[]
+}
+
+model Option {
+  id                             Int                             @id @default(autoincrement())
+  name                           String
+  internalName                   String
+  price                          Float?
+  stock                          Int
+  group                          OptionGroup                     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId                        Int
+  orderProductOptionGroupOptions OrderProductOptionGroupOption[]
+}
+
+model ProductOptionGroup {
+  product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId     Int
+  optionGroup   OptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+  optionGroupId Int
+
+  @@id([productId, optionGroupId])
 }
 
 enum OrderStatus {
-    CREATED
-    PAID
-    COOKED
-    DELIVERED
+  CREATED
+  PAID
+  COOKED
+  DELIVERED
 }
 
 model Order {
-    id             Int             @id @default(autoincrement())
-    status         OrderStatus     @default(CREATED)
-    chosenProducts ChosenProduct[]
-    customer       Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
-    customerId     Int
-    createdAt      DateTime        @default(now())
-    updatedAt      DateTime        @updatedAt
+  id           Int            @id @default(autoincrement())
+  status       OrderStatus    @default(CREATED)
+  customer     Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId   Int
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  orderProduct OrderProduct[]
 }
 
-model ChosenProduct {
-    id                Int                @id @default(autoincrement())
-    amount            Int
-    product           Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
-    productId         Int
-    order             Order?             @relation(fields: [orderId], references: [id], onDelete: Cascade)
-    orderId           Int?
-    chosenSubproducts ChosenSubproduct[]
+model OrderProduct {
+  id                            Int                             @id @default(autoincrement())
+  product                       Product                         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId                     Int
+  order                         Order                           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId                       Int
+  orderProductOptionGroupOption OrderProductOptionGroupOption[]
 }
 
-model ChosenSubproduct {
-    id              Int           @id @default(autoincrement())
-    chosenProduct   ChosenProduct @relation(fields: [chosenProductId], references: [id], onDelete: Cascade)
-    chosenProductId Int
-    subproduct      Subproduct    @relation(fields: [subproductId], references: [id], onDelete: Cascade)
-    subproductId    Int
+model OrderProductOptionGroupOption {
+  orderProduct   OrderProduct @relation(fields: [orderProductId], references: [id], onDelete: Cascade)
+  orderProductId Int
+  optionGroup    OptionGroup  @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+  optionGroupId  Int
+  option         Option       @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  optionId       Int
+
+  @@id([orderProductId, optionGroupId])
 }
 
 model Customer {
-    id        Int      @id @default(autoincrement())
-    sessionId String   @unique
-    email     String?
-    name      String?
-    orders    Order[]
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  sessionId String   @unique
+  email     String?
+  name      String?
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model Password {
-    password String @id
+model Globals {
+  key   String @id
+  value String
 }

@@ -1,4 +1,4 @@
-import { PrismaClient, ProductCategory } from "@prisma/client";
+import { OptionGroup, PrismaClient, Product, ProductCategory } from "@prisma/client";
 const prisma = new PrismaClient();
 async function main() {
   /**
@@ -10,235 +10,279 @@ async function main() {
       order: 0,
     },
   });
-  const pc_dishes = await prisma.productCategory.create({
+  const pc_eat = await prisma.productCategory.create({
     data: {
-      name: "Platos",
+      name: "Para Comer",
       order: 1,
     },
   });
-  const pc_snacks = await prisma.productCategory.create({
+  const pc_drink = await prisma.productCategory.create({
     data: {
-      name: "Para Picar",
+      name: "Para Beber",
       order: 2,
-    },
-  });
-  const pc_drinks = await prisma.productCategory.create({
-    data: {
-      name: "Bebidas",
-      order: 3,
-    },
-  });
-  const pc_bottles = await prisma.productCategory.create({
-    data: {
-      name: "Botellas 70cl.",
-      order: 4,
-    },
-  });
-  const pc_dessert = await prisma.productCategory.create({
-    data: {
-      name: "Postres",
-      order: 5,
-    },
-  });
-  const pc_cocktails = await prisma.productCategory.create({
-    data: {
-      name: "Cocktails con Ron Barceló Organic",
-      order: 6,
     },
   });
 
   /**
-   * SubProducts
+   * OptionGroups
    */
-  const subproduct_protein = {
-    name: "Escoge Proteína",
-    subproducts: { create: [{ name: "Ternera" }, { name: "Pollo" }, { name: "Tofu" }] },
-  };
+  async function createOptionGroup(name: string, title: string) {
+    return await prisma.optionGroup.create({
+      data: {
+        name: name,
+        title: title,
+      },
+    });
+  }
+  const og_protein = await createOptionGroup("Proteína", "Escoge proteína");
+  const og_base = await createOptionGroup("Base", "Escoge base");
+  const og_sauce = await createOptionGroup("Salsa", "Escoge salsa");
+  const og_picar = await createOptionGroup("Picar", "Escoge");
+  const og_aperitivo = await createOptionGroup("Aperitivo", "Escoge");
+  const og_postre = await createOptionGroup("Postre", "Escoge");
+  const og_bebida = await createOptionGroup("Bebida", "Escoge");
+  const og_botella = await createOptionGroup("Botella", "Escoge");
+  const og_cocktail = await createOptionGroup("Cocktail", "Escoge");
 
-  const subproduct_carbohydrate = {
-    name: "Escoge Hidrato",
-    subproducts: { create: [{ name: "Pan" }, { name: "Pasta" }, { name: "Arroz" }] },
-  };
+  /**
+   * Options
+   */
+  interface CreateOption {
+    name: string;
+    internalName: string;
+    stock: number;
+    extraPrice?: number;
+    group: OptionGroup;
+  }
 
-  const subproduct_salsas = {
-    name: "Escoge Salsa",
-    subproducts: { create: [{ name: "Manzana-Jengibre" }, { name: "Curry" }, { name: "Ras El Hanout" }] },
-  };
+  async function createOption(option: CreateOption) {
+    let { name, internalName, stock, extraPrice, group } = option;
+    if (!extraPrice) {
+      extraPrice = 0;
+    }
+    await prisma.option.create({
+      data: {
+        name: name,
+        internalName: internalName,
+        price: extraPrice,
+        stock: stock,
+        group: { connect: { id: group.id } },
+      },
+    });
+  }
 
-  const subproduct_drinks = {
-    name: "Escoge Bebida",
-    subproducts: { create: [{ name: "Agua Mineral" }, { name: "Limonada" }, { name: "San Miguel Eco" }] },
-  };
-
-  const subproduct_dessert = {
-    name: "Escoge Postre",
-    subproducts: { create: [{ name: "Fruta Fresca Variada" }, { name: "Arroz Con Leche" }] },
-  };
+  createOption({ group: og_protein, name: "ternera", internalName: "TERNERA", stock: 100 });
+  createOption({ group: og_protein, name: "pollo", internalName: "POLLO", stock: 100 });
+  createOption({ group: og_protein, name: "tofu", internalName: "TOFU", stock: 100 });
+  createOption({ group: og_protein, name: "extra_verdura", internalName: "MAS VERDU", stock: 100 });
+  createOption({ group: og_base, name: "pan", internalName: "PAN", stock: 200 });
+  createOption({ group: og_base, name: "pasta", internalName: "PASTA", stock: 200 });
+  createOption({ group: og_base, name: "arroz", internalName: "ARROZ", stock: 200 });
+  createOption({ group: og_base, name: "sin_base", internalName: "SIN BASE", stock: -1 });
+  createOption({ group: og_sauce, name: "manzana_jengibre", internalName: "MANZA", stock: 100 });
+  createOption({ group: og_sauce, name: "curry", internalName: "CURRY", stock: 100 });
+  createOption({ group: og_sauce, name: "ras_el_hanout", internalName: "RASEL", stock: 100 });
+  createOption({ group: og_sauce, name: "sin_salsa", internalName: "SIN SALSA", stock: 100 });
+  createOption({ group: og_picar, name: "patatas_grill", internalName: "PATATA GRILL", stock: 100 });
+  createOption({ group: og_picar, name: "snacks_verdura", internalName: "VERDURA GRILL", stock: 100 });
+  createOption({ group: og_aperitivo, name: "gazpacho", internalName: "GAZPACHO", stock: 100 });
+  createOption({ group: og_postre, name: "fruta_cortada", internalName: "FRUTA CORTADA", stock: 100 });
+  createOption({ group: og_postre, name: "arroz_con_leche", internalName: "ARROZ LECHE", stock: 100 });
+  createOption({ group: og_bebida, name: "agua_mineral", internalName: "AGUA", stock: 200 });
+  createOption({ group: og_bebida, name: "limonada", internalName: "LIMONADA", stock: 200 });
+  createOption({
+    group: og_bebida,
+    name: "san_miguel_eco",
+    internalName: "SAN MIGUEL ECO",
+    stock: 200,
+  });
+  createOption({ group: og_botella, name: "vino_blanco", internalName: "VINO BLANCO", stock: 6 });
+  createOption({ group: og_botella, name: "vino_tinto", internalName: "VINO TINTO", stock: 8 });
+  createOption({ group: og_botella, name: "cava", internalName: "CAVA", stock: 9, extraPrice: 3 });
+  createOption({ group: og_cocktail, name: "mojito", internalName: "CAVA", stock: 10 });
+  createOption({ group: og_cocktail, name: "mojito_cerveza", internalName: "MOJITO CERVEZA", stock: 10 });
+  createOption({ group: og_cocktail, name: "pina_colada", internalName: "PIÑA COLADA", stock: 10 });
+  createOption({ group: og_cocktail, name: "daiquiri_de_fresa", internalName: "DAIQUIRI FRESA", stock: 10 });
 
   /**
    * Products
    */
   interface CreateProduct {
     name: string;
+    internalName: string;
     price: number;
     category: ProductCategory;
+    order: number;
     cookingTimeInMinutes?: number;
     imageSrc?: string;
-    groups?: Array<any>;
   }
   async function createProduct(product: CreateProduct) {
-    let { name, price, category, cookingTimeInMinutes, imageSrc, groups } = product;
+    let { name, internalName, price, category, order, cookingTimeInMinutes, imageSrc } = product;
     if (!cookingTimeInMinutes) {
       cookingTimeInMinutes = 0;
     }
     if (!imageSrc) {
       imageSrc = "";
     }
-    if (!groups) {
-      groups = [];
-    }
-    await prisma.product.create({
+    return await prisma.product.create({
       data: {
         name: name,
+        internalName: internalName,
         price: price,
         category: { connect: { id: category.id } },
         cookingTimeInMinutes: cookingTimeInMinutes,
+        order: order,
         imageSrc: imageSrc,
-        groups: {
-          create: groups,
-        },
       },
     });
   }
 
-  createProduct({
-    name: "Menú BIO Completo (Plato + Bebida + Postre)",
-    price: 15,
+  const p_mco = await createProduct({
+    name: "menu_completo",
+    internalName: "MCO",
+    order: 1,
+    price: 15.0,
+    cookingTimeInMinutes: 0,
     category: pc_special_offers,
-    groups: [subproduct_protein, subproduct_carbohydrate, subproduct_salsas, subproduct_drinks, subproduct_dessert],
   });
 
-  createProduct({
-    name: "Menú BIO (Plato + Bebida)",
-    price: 12,
+  const p_men = await createProduct({
+    name: "menu",
+    internalName: "MEN",
+    order: 2,
+    price: 12.0,
+    cookingTimeInMinutes: 0,
     category: pc_special_offers,
-    groups: [subproduct_protein, subproduct_carbohydrate, subproduct_salsas, subproduct_drinks],
   });
 
-  createProduct({
-    name: "Ternera",
-    price: 10,
-    category: pc_dishes,
-    groups: [subproduct_carbohydrate, subproduct_salsas],
+  const p_pla = await createProduct({
+    name: "plato",
+    internalName: "PLA",
+    order: 3,
+    price: 10.0,
+    cookingTimeInMinutes: 0,
+    category: pc_eat,
   });
 
-  createProduct({
-    name: "Pollo",
-    price: 10,
-    category: pc_dishes,
-    groups: [subproduct_carbohydrate, subproduct_salsas],
+  const p_pic = await createProduct({
+    name: "picar",
+    internalName: "PIC",
+    order: 4,
+    price: 5.0,
+    cookingTimeInMinutes: 0,
+    category: pc_eat,
   });
 
-  createProduct({
-    name: "Tofu",
-    price: 10,
-    category: pc_dishes,
-    groups: [subproduct_carbohydrate, subproduct_salsas],
+  const p_ape = await createProduct({
+    name: "aperitivo",
+    internalName: "APE",
+    order: 5,
+    price: 5.0,
+    cookingTimeInMinutes: 0,
+    category: pc_eat,
   });
 
-  createProduct({
-    name: "Gazpacho",
-    price: 5,
-    category: pc_snacks,
-    imageSrc: "https://www.annarecetasfaciles.com/files/gazpacho-andaluz.jpg",
+  const p_pos = await createProduct({
+    name: "postre",
+    internalName: "POS",
+    order: 6,
+    price: 5.0,
+    cookingTimeInMinutes: 0,
+    category: pc_eat,
   });
 
-  createProduct({
-    name: "Patatas Grill",
-    price: 5,
-    category: pc_snacks,
-    imageSrc: "https://alkarbonurbangrill.com/wp-content/uploads/2022/01/patatas-asadas.jpg",
+  const p_beb = await createProduct({
+    name: "bebida",
+    internalName: "BEB",
+    order: 7,
+    price: 3.0,
+    cookingTimeInMinutes: 0,
+    category: pc_drink,
   });
 
-  createProduct({
-    name: "Snacks de Verdura",
-    price: 5,
-    category: pc_snacks,
-    imageSrc: "https://www.cocinacaserayfacil.net/wp-content/uploads/2020/08/Verduras-al-horno.jpg",
+  const p_bot = await createProduct({
+    name: "botella",
+    internalName: "BOT",
+    order: 8,
+    price: 12.0,
+    cookingTimeInMinutes: 0,
+    category: pc_drink,
   });
 
-  createProduct({
-    name: "Agua Mineral",
-    price: 3,
-    category: pc_drinks,
+  const p_cok = await createProduct({
+    name: "cocktail",
+    internalName: "COK",
+    order: 9,
+    price: 8.0,
+    cookingTimeInMinutes: 0,
+    category: pc_drink,
   });
 
-  createProduct({
-    name: "Limonada",
-    price: 3,
-    category: pc_drinks,
-  });
+  /**
+   * Connecting
+   */
+  interface CreateProductOptionGroup {
+    product: Product;
+    optionGroup: OptionGroup;
+  }
+  async function createProductOptionGroup(productOptionGroup: CreateProductOptionGroup) {
+    await prisma.productOptionGroup.create({
+      data: {
+        product: { connect: { id: productOptionGroup.product.id } },
+        optionGroup: { connect: { id: productOptionGroup.optionGroup.id } },
+      },
+    });
+  }
 
-  createProduct({
-    name: "San Miguel Eco",
-    price: 3,
-    category: pc_drinks,
-  });
+  createProductOptionGroup({ product: p_pla, optionGroup: og_base });
+  createProductOptionGroup({ product: p_pla, optionGroup: og_protein });
+  createProductOptionGroup({ product: p_pla, optionGroup: og_sauce });
+  createProductOptionGroup({ product: p_pic, optionGroup: og_picar });
+  createProductOptionGroup({ product: p_ape, optionGroup: og_aperitivo });
+  createProductOptionGroup({ product: p_pos, optionGroup: og_postre });
+  createProductOptionGroup({ product: p_beb, optionGroup: og_bebida });
+  createProductOptionGroup({ product: p_bot, optionGroup: og_botella });
+  createProductOptionGroup({ product: p_cok, optionGroup: og_cocktail });
 
-  createProduct({
-    name: "Vino Blanco",
-    price: 12,
-    category: pc_bottles,
-  });
+  interface CreateProductComponent {
+    parent: Product;
+    child: Product;
+  }
+  async function createProductComponent(productComponent: CreateProductComponent) {
+    await prisma.productComponent.create({
+      data: {
+        parent: { connect: { id: productComponent.parent.id } },
+        child: { connect: { id: productComponent.child.id } },
+      },
+    });
+  }
 
-  createProduct({
-    name: "Vino Tinto",
-    price: 12,
-    category: pc_bottles,
-  });
+  createProductComponent({ parent: p_mco, child: p_pla });
+  createProductComponent({ parent: p_mco, child: p_beb });
+  createProductComponent({ parent: p_mco, child: p_pos });
+  createProductComponent({ parent: p_men, child: p_pla });
+  createProductComponent({ parent: p_men, child: p_beb });
 
-  createProduct({
-    name: "Cava",
-    price: 15,
-    category: pc_bottles,
-  });
+  /**
+   * Globals
+   */
+  interface CreateGlobal {
+    key: string;
+    value: string;
+  }
+  async function createGlobal(global: CreateGlobal) {
+    await prisma.globals.create({
+      data: {
+        key: global.key,
+        value: global.value,
+      },
+    });
+  }
 
-  createProduct({
-    name: "Fruta Fresca Variada",
-    price: 5,
-    category: pc_dessert,
-  });
-
-  createProduct({
-    name: "Arroz con Leche",
-    price: 5,
-    category: pc_dessert,
-  });
-
-  createProduct({
-    name: "Mojito",
-    price: 8,
-    category: pc_cocktails,
-  });
-
-  createProduct({
-    name: "Mojito con Cerveza",
-    price: 8,
-    category: pc_cocktails,
-  });
-
-  createProduct({
-    name: "Piña Colada",
-    price: 8,
-    category: pc_cocktails,
-  });
-
-  createProduct({
-    name: "Daiquiri de Fresa",
-    price: 8,
-    category: pc_cocktails,
-  });
+  createGlobal({ key: "admin_password", value: "gallina" });
+  createGlobal({ key: "hidden_order_password", value: "bioc2023" });
 }
+
 main()
   .then(async () => {
     await prisma.$disconnect();
