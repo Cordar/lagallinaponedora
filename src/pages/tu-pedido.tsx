@@ -1,6 +1,7 @@
 import { createServerSideHelpers } from "@trpc/react-query/server";
 import type { GetStaticProps, InferGetStaticPropsType } from "next";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { RiArrowLeftLine } from "react-icons/ri";
@@ -19,8 +20,7 @@ import { appRouter } from "~/server/routers/_app";
 import { EMAIL_REGEX, ONE_HOUR_MS, Route } from "~/utils/constant";
 import { getPaymentPostBody } from "~/utils/encrypt";
 import getLayout from "~/utils/getLayout";
-import { NextPageWithLayout } from "./_app";
-import { useRouter } from "next/router";
+import { type NextPageWithLayout } from "./_app";
 
 export const getStaticProps: GetStaticProps = async () => {
   const ssg = createServerSideHelpers({
@@ -75,7 +75,7 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
   if (isErrorProducts || isErrorUser)
     return Layout(
       <div className="flex h-full w-full items-center justify-center">
-        <ErrorMessage message="No se ha podido cargar la página" />
+        <ErrorMessage message={locales.pageLoadError} />
       </div>
     );
 

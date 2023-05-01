@@ -1,5 +1,5 @@
 import { createServerSideHelpers } from "@trpc/react-query/server";
-import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
+import { type GetStaticPropsContext, type InferGetStaticPropsType } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -17,9 +17,11 @@ import { createContextInner } from "~/server/context";
 import { appRouter } from "~/server/routers/_app";
 import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import { default as getLayout } from "~/utils/getLayout";
-import { NextPageWithLayout } from "./_app";
+import getLocale from "~/utils/locale/getLocale";
+import getLocaleObject from "~/utils/locale/getLocaleObject";
+import { type NextPageWithLayout } from "./_app";
 
-export const getStaticProps: any = async (context: GetStaticPropsContext) => {
+export const getStaticProps = async (context: GetStaticPropsContext) => {
   const ssg = createServerSideHelpers({
     router: appRouter,
     ctx: await createContextInner(),
@@ -27,14 +29,22 @@ export const getStaticProps: any = async (context: GetStaticPropsContext) => {
   await ssg.public.getProducts.prefetch();
   await ssg.public.getSubproducts.prefetch();
   await ssg.public.getProductCategories.prefetch();
-  return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
+
+  return {
+    props: {
+      trpcState: ssg.dehydrate(),
+      locale: getLocale(context.locale),
+    },
+    revalidate: ONE_HOUR_MS / 1000,
+  };
 };
 
 const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { push } = useRouter();
-  const Layout = getLayout("La Gallina Ponedora | Productos", "Haz un pedido de los productos presentados.");
+  const locales = getLocaleObject(props.locale);
+  const Layout = getLayout(locales.home.title, locales.home.description);
 
-  const { productCategories, isLoadingProductCategories, isErrorProductCategories } = useProductCategories();
+  const { productCategories, isLoadingProductCategories } = useProductCategories();
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
   const { user, isErrorUser } = useUser();
   const { startedOrder, addProduct, removeProduct } = useStartedOrder();
@@ -44,7 +54,7 @@ const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getS
     if (user.id == -1) {
       return (
         <Link href={Route.LOGIN} className="m-auto mb-0">
-          <p className="rounded-lg bg-lgp-green px-3 py-2 text-sm text-white">¿Ya has pedido? Accede aquí</p>
+          <p className="rounded-lg bg-lgp-green px-3 py-2 text-sm text-white">{locales.home.login}</p>
         </Link>
       );
     }
@@ -56,7 +66,7 @@ const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getS
   if (isErrorProducts || isErrorUser)
     return Layout(
       <div className="flex h-full w-full items-center justify-center">
-        <ErrorMessage message="No se ha podido cargar la página" />
+        <ErrorMessage message={locales.pageLoadError} />
       </div>
     );
 
@@ -105,7 +115,7 @@ const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getS
             <div className="flex w-full justify-center p-5">
               <Button
                 onClick={onOrder}
-                label={`Pide ${buttonInfo.totalNumberOfItems} por ${buttonInfo.totalPrice} €`}
+                label={`${locales.home.button1} ${buttonInfo.totalNumberOfItems} ${locales.home.button2} ${buttonInfo.totalPrice} €`}
                 className="w-full lg:max-w-md"
               />
             </div>
@@ -135,7 +145,7 @@ const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getS
                 )}
 
                 <h3 className="grow text-ellipsis text-sm font-semibold tracking-wide">
-                  {areOrdersInProgress.readyOrders ? "¡Tu pedido está listo!" : "¡Estamos preparando tu pedido!"}
+                  {areOrdersInProgress.readyOrders ? locales.home.pedidoListo : locales.home.pedidoEnProceso}
                 </h3>
 
                 <Link href={Route.ORDER_STATUS}>

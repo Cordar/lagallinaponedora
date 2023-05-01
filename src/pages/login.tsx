@@ -10,7 +10,7 @@ import useUserLogin from "~/hooks/api/mutation/useUserLogin";
 import useUser from "~/hooks/api/query/useUser";
 import { EMAIL_REGEX, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
-import { NextPageWithLayout } from "./_app";
+import { type NextPageWithLayout } from "./_app";
 
 interface Inputs {
   email: string;
@@ -42,7 +42,7 @@ const Login: NextPageWithLayout = (props) => {
   if (isErrorUser)
     return Layout(
       <div className="flex h-full w-full items-center justify-center">
-        <ErrorMessage message="No se ha podido cargar la página" />
+        <ErrorMessage message={locales.pageLoadError} />
       </div>
     );
 

@@ -1,6 +1,8 @@
-import { type GetStaticPaths, type GetStaticProps, InferGetStaticPropsType } from "next";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { type GetStaticPaths, type GetStaticProps, type InferGetStaticPropsType } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { type ParsedUrlQuery } from "querystring";
 import { useEffect, useState } from "react";
 import { RiArrowLeftLine, RiErrorWarningLine } from "react-icons/ri";
 import CookedOrder from "~/components/CookedOrder";
@@ -13,13 +15,11 @@ import useCookedOrders from "~/hooks/api/query/useCookedOrders";
 import usePaidOrders from "~/hooks/api/query/usePaidOrders";
 import useUser from "~/hooks/api/query/useUser";
 import useStartedOrder from "~/hooks/useStartedOrder";
+import { createContextInner } from "~/server/context";
+import { appRouter } from "~/server/routers/_app";
 import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
-import { createServerSideHelpers } from "@trpc/react-query/server";
-import { appRouter } from "~/server/routers/_app";
-import { createContextInner } from "~/server/context";
-import { NextPageWithLayout } from "../_app";
-import { ParsedUrlQuery } from "querystring";
+import { type NextPageWithLayout } from "../_app";
 
 const parseQueryOrderId = (query: ParsedUrlQuery) => {
   if (!query) return undefined;
@@ -78,7 +78,7 @@ const OrderStatus: NextPageWithLayout = (props: InferGetStaticPropsType<typeof g
   if (isErrorUser || isErrorPaidOrders || isErrorCookedOrders)
     return Layout(
       <div className="flex h-full w-full items-center justify-center">
-        <ErrorMessage message="No se ha podido cargar la página" />
+        <ErrorMessage message={locales.pageLoadError} />
       </div>
     );
 
