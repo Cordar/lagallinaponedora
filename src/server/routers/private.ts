@@ -31,7 +31,6 @@ export const privateRouter = router({
 
       return ordersToCook;
     } catch (error) {
-      console.log(error);
       throw new TRPCError({ code: "BAD_REQUEST", message: "Hubo un error al cargar el pedido a cocinar." });
     }
   }),
@@ -48,10 +47,6 @@ export const privateRouter = router({
       });
 
       const orderProducts = orders.flatMap((order) => order.orderProduct);
-
-      console.log(JSON.stringify(orderProducts));
-
-      // TODO how do we get the dishes inside the combos?
 
       const groupedDishes = orderProducts.reduce((acc, dish) => {
         const dishName = dish.product.name;

@@ -6,19 +6,19 @@ async function main() {
    */
   const pc_special_offers = await prisma.productCategory.create({
     data: {
-      name: "Ofertas Especiales",
+      name: "specialOffers",
       order: 0,
     },
   });
   const pc_eat = await prisma.productCategory.create({
     data: {
-      name: "Para Comer",
+      name: "toEat",
       order: 1,
     },
   });
   const pc_drink = await prisma.productCategory.create({
     data: {
-      name: "Para Beber",
+      name: "toDrink",
       order: 2,
     },
   });
@@ -34,15 +34,15 @@ async function main() {
       },
     });
   }
-  const og_protein = await createOptionGroup("Proteína", "escoge_proteina");
-  const og_base = await createOptionGroup("Base", "escoge_base");
-  const og_sauce = await createOptionGroup("Salsa", "escoge_salsa");
-  const og_picar = await createOptionGroup("Picar", "escoge_picar");
-  const og_aperitivo = await createOptionGroup("Aperitivo", "escoge_aperitivo");
-  const og_postre = await createOptionGroup("Postre", "escoge_postre");
-  const og_bebida = await createOptionGroup("Bebida", "escoge_bebida");
-  const og_botella = await createOptionGroup("Botella", "escoge_botella");
-  const og_cocktail = await createOptionGroup("Cocktail", "escoge_cocktail");
+  const og_protein = await createOptionGroup("Proteína", "escogeProteina");
+  const og_base = await createOptionGroup("Base", "escogeBase");
+  const og_sauce = await createOptionGroup("Salsa", "escogeSalsa");
+  const og_picar = await createOptionGroup("Picar", "escogePicar");
+  const og_aperitivo = await createOptionGroup("Aperitivo", "escogeAperitivo");
+  const og_postre = await createOptionGroup("Postre", "escogePostre");
+  const og_bebida = await createOptionGroup("Bebida", "escogeBebida");
+  const og_botella = await createOptionGroup("Botella", "escogeBotella");
+  const og_cocktail = await createOptionGroup("Cocktail", "escogeCocktail");
 
   /**
    * Options
@@ -74,35 +74,35 @@ async function main() {
   createOption({ group: og_protein, name: "ternera", internalName: "TERNERA", stock: 100 });
   createOption({ group: og_protein, name: "pollo", internalName: "POLLO", stock: 100 });
   createOption({ group: og_protein, name: "tofu", internalName: "TOFU", stock: 100 });
-  createOption({ group: og_protein, name: "extra_verdura", internalName: "MAS VERDU", stock: 100 });
+  createOption({ group: og_protein, name: "extraVerdura", internalName: "MAS VERDU", stock: 100 });
   createOption({ group: og_base, name: "pan", internalName: "PAN", stock: 200 });
   createOption({ group: og_base, name: "pasta", internalName: "PASTA", stock: 200 });
   createOption({ group: og_base, name: "arroz", internalName: "ARROZ", stock: 200 });
-  createOption({ group: og_base, name: "sin_base", internalName: "SIN BASE", stock: -1 });
-  createOption({ group: og_sauce, name: "manzana_jengibre", internalName: "MANZA", stock: 100 });
+  createOption({ group: og_base, name: "sinBase", internalName: "SIN BASE", stock: -1 });
+  createOption({ group: og_sauce, name: "manzanaJengibre", internalName: "MANZA", stock: 100 });
   createOption({ group: og_sauce, name: "curry", internalName: "CURRY", stock: 100 });
-  createOption({ group: og_sauce, name: "ras_el_hanout", internalName: "RASEL", stock: 100 });
-  createOption({ group: og_sauce, name: "sin_salsa", internalName: "SIN SALSA", stock: 100 });
-  createOption({ group: og_picar, name: "patatas_grill", internalName: "PATATA GRILL", stock: 100 });
-  createOption({ group: og_picar, name: "snacks_verdura", internalName: "VERDURA GRILL", stock: 100 });
+  createOption({ group: og_sauce, name: "rasElHanout", internalName: "RASEL", stock: 100 });
+  createOption({ group: og_sauce, name: "sinSalsa", internalName: "SIN SALSA", stock: 100 });
+  createOption({ group: og_picar, name: "patatasGrill", internalName: "PATATA GRILL", stock: 100 });
+  createOption({ group: og_picar, name: "snacksVerdura", internalName: "VERDURA GRILL", stock: 100 });
   createOption({ group: og_aperitivo, name: "gazpacho", internalName: "GAZPACHO", stock: 100 });
-  createOption({ group: og_postre, name: "fruta_cortada", internalName: "FRUTA CORTADA", stock: 100 });
-  createOption({ group: og_postre, name: "arroz_con_leche", internalName: "ARROZ LECHE", stock: 100 });
-  createOption({ group: og_bebida, name: "agua_mineral", internalName: "AGUA", stock: 200 });
+  createOption({ group: og_postre, name: "frutaCortada", internalName: "FRUTA CORTADA", stock: 100 });
+  createOption({ group: og_postre, name: "arrozConLeche", internalName: "ARROZ LECHE", stock: 100 });
+  createOption({ group: og_bebida, name: "aguaMineral", internalName: "AGUA", stock: 200 });
   createOption({ group: og_bebida, name: "limonada", internalName: "LIMONADA", stock: 200 });
   createOption({
     group: og_bebida,
-    name: "san_miguel_eco",
+    name: "sanMiguelEco",
     internalName: "SAN MIGUEL ECO",
     stock: 200,
   });
-  createOption({ group: og_botella, name: "vino_blanco", internalName: "VINO BLANCO", stock: 6 });
-  createOption({ group: og_botella, name: "vino_tinto", internalName: "VINO TINTO", stock: 8 });
+  createOption({ group: og_botella, name: "vinoBlanco", internalName: "VINO BLANCO", stock: 6 });
+  createOption({ group: og_botella, name: "vinoTinto", internalName: "VINO TINTO", stock: 8 });
   createOption({ group: og_botella, name: "cava", internalName: "CAVA", stock: 9, extraPrice: 3 });
   createOption({ group: og_cocktail, name: "mojito", internalName: "CAVA", stock: 10 });
-  createOption({ group: og_cocktail, name: "mojito_cerveza", internalName: "MOJITO CERVEZA", stock: 10 });
-  createOption({ group: og_cocktail, name: "pina_colada", internalName: "PIÑA COLADA", stock: 10 });
-  createOption({ group: og_cocktail, name: "daiquiri_de_fresa", internalName: "DAIQUIRI FRESA", stock: 10 });
+  createOption({ group: og_cocktail, name: "mojitoCerveza", internalName: "MOJITO CERVEZA", stock: 10 });
+  createOption({ group: og_cocktail, name: "pinaColada", internalName: "PIÑA COLADA", stock: 10 });
+  createOption({ group: og_cocktail, name: "daiquiriDeFresa", internalName: "DAIQUIRI FRESA", stock: 10 });
 
   /**
    * Products
@@ -138,7 +138,7 @@ async function main() {
   }
 
   const p_mco = await createProduct({
-    name: "menu_completo",
+    name: "menuCompleto",
     internalName: "MCO",
     order: 1,
     price: 15.0,

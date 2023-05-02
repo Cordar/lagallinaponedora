@@ -13,6 +13,7 @@ export interface OrderedProductProps {
   showPrice?: boolean;
   showOnlyRemove?: boolean;
   showProductName?: boolean;
+  locales: any;
 }
 
 const OrderedProduct = ({
@@ -23,6 +24,7 @@ const OrderedProduct = ({
   showPrice,
   showOnlyRemove,
   showProductName,
+  locales,
 }: OrderedProductProps) => {
   const { id, amount, productId, options: chosenOptions } = orderProduct;
 
@@ -40,7 +42,7 @@ const OrderedProduct = ({
       <div className="flex grow flex-col gap-1">
         {showProductName && (
           <p className="text-sm font-medium tracking-wide">
-            {products?.find(({ id }) => id === productId)?.name ?? ""}
+            {locales[products?.find(({ id }) => id === productId)?.name] ?? ""}
           </p>
         )}
 
@@ -53,7 +55,8 @@ const OrderedProduct = ({
         {chosenOptions.length > 0 && (
           <p className="text-xs font-normal tracking-wide">
             {chosenOptions.map(
-              ({ optionId }, i) => `${i === 0 ? "" : ", "}${options?.find(({ id }) => id === optionId)?.name ?? ""}`
+              ({ optionId }, i) =>
+                `${i === 0 ? "" : ", "}${locales[options?.find(({ id }) => id === optionId)?.name] ?? ""}`
             )}
           </p>
         )}

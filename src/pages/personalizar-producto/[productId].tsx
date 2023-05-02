@@ -76,22 +76,22 @@ const CustomizeProduct: NextPageWithLayout = (props: InferGetStaticPropsType<typ
   const [allInputsFilled, setAllInputsFilled] = useState(false);
   const watchAllFields = watch();
 
+  let optionGroups: (ProductOptionGroup & { optionGroup: OptionGroup & { options: Option[] } })[] = [];
   useEffect(() => {
     const isFilled =
-      (product?.productOptionGroups &&
-        product.productOptionGroups.every(({ optionGroup }) => {
+      (optionGroups &&
+        optionGroups.every(({ optionGroup }) => {
           const value = getValues(optionGroup.id.toString());
           return value && optionGroup.options.some((option) => option.id.toString() === value);
         })) ??
       false;
 
     setAllInputsFilled(isFilled);
-  }, [getValues, product, watchAllFields]);
+  }, [getValues, optionGroups, watchAllFields]);
 
   if (!product || !products) return Layout(<Loading />);
   else if (isErrorUser || isErrorProduct) return Layout(<ErrorMessage message={locales.pageLoadError} />);
 
-  let optionGroups: (ProductOptionGroup & { optionGroup: OptionGroup & { options: Option[] } })[] = [];
   product.productOptionGroups.forEach((optionGroup) => {
     optionGroups.push(optionGroup);
   });
@@ -146,7 +146,7 @@ const CustomizeProduct: NextPageWithLayout = (props: InferGetStaticPropsType<typ
           )}
 
           <div className="relative flex w-full gap-2 rounded-md ">
-            <h3 className="grow text-lg font-semibold tracking-wide">{product.name}</h3>
+            <h3 className="grow text-lg font-semibold tracking-wide">{locales[product.name]}</h3>
             <p className="min-w-fit text-lg font-semibold tracking-wide">{product.price} €</p>
           </div>
         </div>
@@ -156,10 +156,10 @@ const CustomizeProduct: NextPageWithLayout = (props: InferGetStaticPropsType<typ
             optionGroups.map(({ optionGroup }) => (
               <RadioGroup
                 key={optionGroup.id}
-                title={optionGroup.title}
+                title={locales[optionGroup.title]}
                 buttons={optionGroup.options.map(({ id, name }) => ({
                   id: id.toString(),
-                  name,
+                  name: locales[name],
                 }))}
                 register={register(optionGroup.id.toString())}
                 error={getFormError(optionGroup.id.toString())}
@@ -172,7 +172,7 @@ const CustomizeProduct: NextPageWithLayout = (props: InferGetStaticPropsType<typ
 
         <Button
           isDisabled={!allInputsFilled || isLoadingUser}
-          label="Añadir"
+          label={locales.add}
           className="fixed bottom-5 left-5 right-5 m-auto w-[unset] lg:max-w-md"
         />
       </form>

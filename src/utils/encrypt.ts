@@ -57,7 +57,7 @@ export function getPaymentPostBody(price: number, orderId: string) {
 
   const encodedParameters = stringBase64Encode(JSON.stringify(merchantParams));
 
-  const key = "sq7HjrUOBfKmC576ILgskD5srU870gJ7";
+  const key = "cVakb0RjA26rxr9x1omcailhsEBSp6w0";
   const encodedSignatureDES = des_encrypt(merchantOrder, base64Decode(key)); //Se cifra el número de pedido con la clave para obtener la clave de operación
 
   const encodedDsSignature = CryptoJS.HmacSHA256(encodedParameters, base64Decode(encodedSignatureDES)); //Se calcula el HMAC de los parámetros en Base64 con la clave de operación

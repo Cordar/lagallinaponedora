@@ -12,10 +12,11 @@ export interface ProductProps {
   chosenOrderProducts?: StartedOrder[];
   addProduct: (product: StartedOrder) => void;
   removeProduct: (id: number) => void;
+  locales: any;
 }
 
-const Product = ({ product, chosenOrderProducts, addProduct, removeProduct }: ProductProps) => {
-  const { id, name, price, imageSrc, productComponents, productOptionGroups } = product;
+const Product = ({ product, chosenOrderProducts, addProduct, removeProduct, locales }: ProductProps) => {
+  const { id, name, price, imageSrc, productComponents, productOptionGroups, internalName } = product;
 
   const linkOrButton = (children: ReactElement) =>
     productOptionGroups.length > 0 || productComponents.length > 0 ? (
@@ -48,7 +49,7 @@ const Product = ({ product, chosenOrderProducts, addProduct, removeProduct }: Pr
             />
           )}
 
-          <h3 className="grow text-left text-base font-medium tracking-wide">{name}</h3>
+          <h3 className="grow text-left text-base font-medium tracking-wide">{locales[name]}</h3>
 
           <p className="min-w-fit text-base font-medium tracking-wide">{price} €</p>
         </>
@@ -60,7 +61,7 @@ const Product = ({ product, chosenOrderProducts, addProduct, removeProduct }: Pr
             orderProduct={orderProduct}
             addProduct={addProduct}
             removeProduct={removeProduct}
-            showOnlyRemove
+            locales={locales}
           />
         ))}
     </div>

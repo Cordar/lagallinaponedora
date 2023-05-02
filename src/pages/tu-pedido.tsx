@@ -123,7 +123,7 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
 
   return Layout(
     <div>
-      <form id="pago" action="https://sis-t.redsys.es:25443/sis/realizarPago" method="POST">
+      <form id="pago" action="https://sis.redsys.es/sis/realizarPago" method="POST">
         <input type="hidden" name="Ds_MerchantParameters" id="hidden_params"></input>
         <input type="hidden" name="Ds_Signature" id="hidden_signature"></input>
         <input type="hidden" name="Ds_SignatureVersion" id="hidden_signature_version"></input>
@@ -160,7 +160,7 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
                 removeProduct={removeProduct}
                 showPrice
                 showProductName
-                showOnlyRemove
+                locales={locales}
               />
             ))}
 

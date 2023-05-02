@@ -96,7 +96,7 @@ const Index: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStat
           {productCategories &&
             productCategories.map((category) => (
               <div key={category.id} className="flex max-w-full flex-col gap-2">
-                <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{category.name}</h3>
+                <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{locales[category.name]}</h3>
 
                 {category.products &&
                   category.products.map((product) => (
@@ -106,6 +106,7 @@ const Index: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStat
                       chosenOrderProducts={startedOrder.filter(({ productId }) => productId === product.id)}
                       addProduct={addProduct}
                       removeProduct={removeProduct}
+                      locales={locales}
                     />
                   ))}
               </div>
