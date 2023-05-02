@@ -5,6 +5,7 @@ import { z } from "zod";
 import { prisma } from "~/server/prisma";
 import { setCookie } from "cookies-next";
 import { StorageKey } from "~/utils/constant";
+import { error } from "console";
 
 export const apiProcedure = publicProcedure.use((opts) => {
   if (!opts.ctx.req || !opts.ctx.res) {
@@ -20,11 +21,11 @@ export const apiProcedure = publicProcedure.use((opts) => {
 });
 
 export const publicRouter = router({
-  checkPassword: publicProcedure.input(z.object({ password: z.string() })).query(async ({ input }) => {
+  checkAdminPassword: publicProcedure.input(z.object({ password: z.string() })).query(async ({ input }) => {
     try {
-      const password = await prisma.password.findUnique({ where: { password: input.password } });
-
-      if (!password) throw new Error();
+      await prisma.globals.findFirstOrThrow({
+        where: { key: "admin_password", value: input.password },
+      });
       return true;
     } catch (error) {
       throw new TRPCError({ code: "UNAUTHORIZED", message: "La contraseña no es correcta.", cause: error });
@@ -34,8 +35,10 @@ export const publicRouter = router({
   getProductCategories: publicProcedure.query(async () => {
     try {
       return await prisma.productCategory.findMany({
-        include: { products: { include: { groups: { include: { subproducts: true } } }, orderBy: { price: "desc" } } },
-        orderBy: { id: "asc" },
+        include: {
+          products: { orderBy: { order: "asc" }, include: { productComponents: true, productOptionGroups: true } },
+        },
+        orderBy: { order: "asc" },
       });
     } catch (error) {
       throw new TRPCError({
@@ -49,8 +52,11 @@ export const publicRouter = router({
   getProducts: publicProcedure.query(async () => {
     try {
       return await prisma.product.findMany({
-        include: { groups: { include: { subproducts: true } } },
-        orderBy: { id: "asc" },
+        include: {
+          productComponents: true,
+          productOptionGroups: { include: { optionGroup: { include: { options: true } } } },
+        },
+        orderBy: { order: "asc" },
       });
     } catch (error) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener los productos.", cause: error });
@@ -61,7 +67,10 @@ export const publicRouter = router({
     try {
       const product = await prisma.product.findUnique({
         where: { id: input.productId },
-        include: { groups: { include: { subproducts: true }, orderBy: { id: "asc" } } },
+        include: {
+          productComponents: true,
+          productOptionGroups: { include: { optionGroup: { include: { options: true } } } },
+        },
       });
 
       if (!product) throw new Error();
@@ -76,13 +85,13 @@ export const publicRouter = router({
     }
   }),
 
-  getSubproducts: publicProcedure.query(async () => {
+  getOptions: publicProcedure.query(async () => {
     try {
-      const subproducts = await prisma.subproduct.findMany({
+      const options = await prisma.option.findMany({
         orderBy: { id: "asc" },
       });
 
-      return subproducts;
+      return options;
     } catch (error) {
       throw new TRPCError({ code: "CONFLICT", message: "Hubo un error al obtener la personalización del producto." });
     }
@@ -135,28 +144,25 @@ export const publicRouter = router({
       const [order, paidOrders] = await Promise.all([
         prisma.order.findUnique({
           where: { id: input.orderId },
-          include: { chosenProducts: { include: { product: true } } },
+          include: {
+            orderProduct: {
+              include: { product: true, orderProductOptionGroupOption: { include: { optionGroup: true } } },
+            },
+          },
         }),
         prisma.order.findMany({
           where: { status: OrderStatus.PAID, NOT: { id: input.orderId } },
-          include: { chosenProducts: { include: { product: true } } },
+          include: {
+            orderProduct: {
+              include: { product: true, orderProductOptionGroupOption: { include: { optionGroup: true } } },
+            },
+          },
         }),
       ]);
 
       if (!order) throw new Error();
 
       let totalCookingTime = 0;
-
-      order.chosenProducts.forEach((chosenProduct: any) => {
-        totalCookingTime += chosenProduct.product.cookingTimeInMinutes * chosenProduct.amount;
-      });
-
-      paidOrders.forEach((paidOrder: any) => {
-        if (paidOrder.updatedAt < order.updatedAt)
-          paidOrder.chosenProducts.forEach((chosenProduct: any) => {
-            totalCookingTime += chosenProduct.product.cookingTimeInMinutes * chosenProduct.amount;
-          });
-      });
 
       return totalCookingTime;
     } catch (error) {
@@ -192,7 +198,9 @@ export const publicRouter = router({
         include: {
           orders: {
             include: {
-              chosenProducts: { include: { product: true, chosenSubproducts: { include: { subproduct: true } } } },
+              orderProduct: {
+                include: { orderProductOptionGroupOption: { include: { option: true } }, product: true },
+              },
             },
             orderBy: { updatedAt: "asc" },
           },
@@ -213,7 +221,9 @@ export const publicRouter = router({
         include: {
           orders: {
             include: {
-              chosenProducts: { include: { product: true, chosenSubproducts: { include: { subproduct: true } } } },
+              orderProduct: {
+                include: { orderProductOptionGroupOption: { include: { option: true } }, product: true },
+              },
             },
             orderBy: { updatedAt: "asc" },
           },
@@ -231,11 +241,17 @@ export const publicRouter = router({
     .input(
       z.object({
         sessionId: z.string(),
-        chosenProducts: z.array(
+        orderProducts: z.array(
           z.object({
             amount: z.number().positive(),
             productId: z.number(),
-            chosenSubproducts: z.array(z.number()),
+            options: z.array(
+              z.object({
+                id: z.number(),
+                optionGroupId: z.number(),
+                optionId: z.number(),
+              })
+            ),
           })
         ),
       })
@@ -248,13 +264,14 @@ export const publicRouter = router({
         // Remove all previous orders with status CREATED
         await prisma.order.deleteMany({ where: { customer: { id: customer.id }, status: OrderStatus.CREATED } });
 
-        const chosenProducts = input.chosenProducts.map(({ amount, productId, chosenSubproducts }) => {
+        const orderProducts = input.orderProducts.map(({ amount, productId, options }) => {
           return {
-            amount,
+            amount: amount,
             product: { connect: { id: productId } },
-            chosenSubproducts: {
-              create: chosenSubproducts.map((subproductId) => ({
-                subproduct: { connect: { id: subproductId } },
+            orderProductOptionGroupOption: {
+              create: options.map((option) => ({
+                optionGroup: { connect: { id: option.optionGroupId } },
+                option: { connect: { id: option.optionId } },
               })),
             },
           };
@@ -263,12 +280,13 @@ export const publicRouter = router({
         const order = await prisma.order.create({
           data: {
             customer: { connect: { id: customer.id } },
-            chosenProducts: { create: chosenProducts },
+            orderProduct: { create: orderProducts },
           },
         });
 
         return order;
       } catch (error) {
+        console.log(error);
         throw new TRPCError({
           code: "NOT_FOUND",
           message: `Hubo un error al crear el pedido.`,
@@ -287,9 +305,23 @@ export const publicRouter = router({
       try {
         const order = await prisma.order.findUnique({
           where: { id: input.orderId },
+          include: { orderProduct: { include: { orderProductOptionGroupOption: { include: { option: true } } } } },
         });
 
         if (!order || order.status !== OrderStatus.CREATED) return;
+
+        const options = order.orderProduct.flatMap((orderProduct) =>
+          orderProduct.orderProductOptionGroupOption.flatMap((opogo) => {
+            return { amount: orderProduct.amount, ...opogo.option };
+          })
+        );
+
+        options.forEach(async (option) => {
+          await prisma.option.update({
+            where: { id: option.id },
+            data: { stock: option.stock - option.amount },
+          });
+        });
 
         const updatedOrder = await prisma.order.update({
           where: { id: input.orderId },

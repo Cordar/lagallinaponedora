@@ -1,5 +1,5 @@
 import { createServerSideHelpers } from "@trpc/react-query/server";
-import { type GetStaticProps, type InferGetStaticPropsType } from "next";
+import { GetStaticPaths, type GetStaticProps, type InferGetStaticPropsType } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -20,33 +20,41 @@ import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
 import getRandomNumberId from "~/utils/getRandomNumberId";
 import { type NextPageWithLayout } from "../_app";
+import { Option, OptionGroup, ProductOptionGroup } from "@prisma/client";
+import getLocaleObject from "~/utils/locale/getLocaleObject";
+import getLocale from "~/utils/locale/getLocale";
 
-export const getStaticPaths = async () => {
+export const getStaticPaths: GetStaticPaths = async ({ locales }) => {
   const ssg = createServerSideHelpers({
     router: appRouter,
     ctx: await createContextInner(),
   });
   const products = await ssg.public.getProducts.fetch();
-  const paths = products?.map((product) => ({ params: { productId: product.id.toString() } })) ?? [];
+  const paths =
+    products?.flatMap((product) => {
+      return !locales
+        ? { locale: "es", params: { productId: product.id.toString() } }
+        : locales.map((locale) => ({ locale, params: { productId: product.id.toString() } }));
+    }) ?? [];
   return { paths, fallback: false };
 };
 
-export const getStaticProps: GetStaticProps = async ({ params }) => {
+export const getStaticProps: GetStaticProps = async ({ params, locale }) => {
   const ssg = createServerSideHelpers({
     router: appRouter,
     ctx: await createContextInner(),
   });
   await ssg.public.getProducts.prefetch();
-  await ssg.public.getSubproducts.prefetch();
   if (params?.productId) await ssg.public.getProductById.prefetch({ productId: parseInt(params.productId as string) });
-  return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
+  return { props: { trpcState: ssg.dehydrate(), locale: getLocale(locale) }, revalidate: ONE_HOUR_MS / 1000 };
 };
 
 type FormData = Record<string, string>;
 
 const CustomizeProduct: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
+  const locales = getLocaleObject(props.locale);
   const { query, push } = useRouter();
-  const Layout = getLayout("La Gallina Ponedora | Personalizar producto", "Personaliza este producto a tu gusto.");
+  const Layout = getLayout(locales.personalizarProducto.title, locales.personalizarProducto.description);
 
   const productId = query.productId ? parseInt(query.productId as string) : undefined;
 
@@ -70,20 +78,35 @@ const CustomizeProduct: NextPageWithLayout = (props: InferGetStaticPropsType<typ
 
   useEffect(() => {
     const isFilled =
-      (product?.groups &&
-        product.groups.every(({ id, subproducts }) => {
-          const value = getValues(id.toString());
-          return value && subproducts.some((subproduct) => subproduct.id.toString() === value);
+      (product?.productOptionGroups &&
+        product.productOptionGroups.every(({ optionGroup }) => {
+          const value = getValues(optionGroup.id.toString());
+          return value && optionGroup.options.some((option) => option.id.toString() === value);
         })) ??
       false;
 
     setAllInputsFilled(isFilled);
   }, [getValues, product, watchAllFields]);
 
-  const productInfo = products?.find((product) => product.id === productId);
-
-  if (!productInfo) return Layout(<Loading />);
+  if (!product || !products) return Layout(<Loading />);
   else if (isErrorUser || isErrorProduct) return Layout(<ErrorMessage message={locales.pageLoadError} />);
+
+  let optionGroups: (ProductOptionGroup & { optionGroup: OptionGroup & { options: Option[] } })[] = [];
+  product.productOptionGroups.forEach((optionGroup) => {
+    optionGroups.push(optionGroup);
+  });
+  for (let i = 0; i < product.productComponents.length; i++) {
+    const productComponent = product.productComponents[i];
+    if (!productComponent) {
+      continue;
+    }
+    let childProduct = products.find((product) => product.id == productComponent.childId);
+    if (childProduct?.id) {
+      childProduct.productOptionGroups.forEach((optionGroup) => {
+        optionGroups.push(optionGroup);
+      });
+    }
+  }
 
   const onFormSubmit: SubmitHandler<FormData> = (data) => {
     if (!startedOrder || !user || !product) return;
@@ -94,18 +117,15 @@ const CustomizeProduct: NextPageWithLayout = (props: InferGetStaticPropsType<typ
       id: randomId,
       amount: 1,
       productId: product.id,
-      orderId: null,
-      chosenSubproducts: Object.values(data).map((subproductId) => ({
+      options: Object.entries(data).map(([key, value]) => ({
         id: -getRandomNumberId(),
-        subproductId: parseInt(subproductId),
-        chosenProductId: randomId,
+        optionGroupId: parseInt(key),
+        optionId: parseInt(value),
       })),
     });
 
     void push(Route.HOME);
   };
-
-  const { name, price, imageSrc } = productInfo;
 
   return Layout(
     <div className="relative flex grow flex-col gap-5 bg-lgp-background p-5">
@@ -115,10 +135,10 @@ const CustomizeProduct: NextPageWithLayout = (props: InferGetStaticPropsType<typ
 
       <form onSubmit={handleSubmit(onFormSubmit)} className="relative flex w-full grow flex-col gap-8">
         <div className="relative flex w-full flex-col gap-2">
-          {imageSrc && (
+          {product.imageSrc && (
             <Image
-              src={imageSrc}
-              alt={`Fotografía del producto: ${name}`}
+              src={product.imageSrc}
+              alt={`Fotografía del producto: ${product.name}`}
               className="w-fill m-auto h-40 rounded-md object-cover"
               width="512"
               height="512"
@@ -126,23 +146,23 @@ const CustomizeProduct: NextPageWithLayout = (props: InferGetStaticPropsType<typ
           )}
 
           <div className="relative flex w-full gap-2 rounded-md ">
-            <h3 className="grow text-lg font-semibold tracking-wide">{name}</h3>
-            <p className="min-w-fit text-lg font-semibold tracking-wide">{price} €</p>
+            <h3 className="grow text-lg font-semibold tracking-wide">{product.name}</h3>
+            <p className="min-w-fit text-lg font-semibold tracking-wide">{product.price} €</p>
           </div>
         </div>
 
         <div className="mb-20 flex flex-col gap-5">
-          {product ? (
-            product.groups.map(({ id, name, subproducts }) => (
+          {optionGroups ? (
+            optionGroups.map(({ optionGroup }) => (
               <RadioGroup
-                key={id}
-                title={name}
-                buttons={subproducts.map(({ id, name }) => ({
+                key={optionGroup.id}
+                title={optionGroup.title}
+                buttons={optionGroup.options.map(({ id, name }) => ({
                   id: id.toString(),
                   name,
                 }))}
-                register={register(id.toString())}
-                error={getFormError(id.toString())}
+                register={register(optionGroup.id.toString())}
+                error={getFormError(optionGroup.id.toString())}
               />
             ))
           ) : (

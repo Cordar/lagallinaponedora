@@ -5,18 +5,33 @@ import { z } from "zod";
 import { prisma } from "~/server/prisma";
 
 export const privateRouter = router({
-  getOrderToCook: publicProcedure.query(async () => {
+  getOrdersToCook: publicProcedure.query(async () => {
     try {
-      const orderToCook = await prisma.order.findFirst({
+      const ordersToCook = await prisma.order.findMany({
         where: { status: OrderStatus.PAID },
         include: {
-          chosenProducts: { include: { product: true, chosenSubproducts: { include: { subproduct: true } } } },
+          orderProduct: {
+            include: {
+              orderProductOptionGroupOption: {
+                include: {
+                  option: true,
+                },
+                orderBy: {
+                  optionGroup: {
+                    id: "asc",
+                  },
+                },
+              },
+              product: true,
+            },
+          },
         },
         orderBy: { updatedAt: "asc" },
       });
 
-      return orderToCook;
+      return ordersToCook;
     } catch (error) {
+      console.log(error);
       throw new TRPCError({ code: "BAD_REQUEST", message: "Hubo un error al cargar el pedido a cocinar." });
     }
   }),
@@ -26,17 +41,19 @@ export const privateRouter = router({
       const orders = await prisma.order.findMany({
         where: { status: OrderStatus.PAID },
         include: {
-          chosenProducts: { include: { product: true, chosenSubproducts: { include: { subproduct: true } } } },
+          orderProduct: {
+            include: { orderProductOptionGroupOption: { include: { option: true } }, product: true },
+          },
         },
       });
 
-      const dishes = orders.flatMap((order) =>
-        order.chosenProducts.filter((chosenProduct) => chosenProduct.product.category === ProductCategory.DISH)
-      );
+      const orderProducts = orders.flatMap((order) => order.orderProduct);
+
+      console.log(JSON.stringify(orderProducts));
 
       // TODO how do we get the dishes inside the combos?
 
-      const groupedDishes = dishes.reduce((acc, dish) => {
+      const groupedDishes = orderProducts.reduce((acc, dish) => {
         const dishName = dish.product.name;
         if (acc[dishName]) acc[dishName] += dish.amount;
         else acc[dishName] = dish.amount;
@@ -66,8 +83,10 @@ export const privateRouter = router({
       const ordersToDeliver = await prisma.order.findMany({
         where: { status: OrderStatus.COOKED },
         include: {
+          orderProduct: {
+            include: { orderProductOptionGroupOption: { include: { option: true } }, product: true },
+          },
           customer: true,
-          chosenProducts: { include: { product: true, chosenSubproducts: { include: { subproduct: true } } } },
         },
         orderBy: { id: "asc" },
       });

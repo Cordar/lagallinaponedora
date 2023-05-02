@@ -34,15 +34,15 @@ async function main() {
       },
     });
   }
-  const og_protein = await createOptionGroup("Proteína", "Escoge proteína");
-  const og_base = await createOptionGroup("Base", "Escoge base");
-  const og_sauce = await createOptionGroup("Salsa", "Escoge salsa");
-  const og_picar = await createOptionGroup("Picar", "Escoge");
-  const og_aperitivo = await createOptionGroup("Aperitivo", "Escoge");
-  const og_postre = await createOptionGroup("Postre", "Escoge");
-  const og_bebida = await createOptionGroup("Bebida", "Escoge");
-  const og_botella = await createOptionGroup("Botella", "Escoge");
-  const og_cocktail = await createOptionGroup("Cocktail", "Escoge");
+  const og_protein = await createOptionGroup("Proteína", "escoge_proteina");
+  const og_base = await createOptionGroup("Base", "escoge_base");
+  const og_sauce = await createOptionGroup("Salsa", "escoge_salsa");
+  const og_picar = await createOptionGroup("Picar", "escoge_picar");
+  const og_aperitivo = await createOptionGroup("Aperitivo", "escoge_aperitivo");
+  const og_postre = await createOptionGroup("Postre", "escoge_postre");
+  const og_bebida = await createOptionGroup("Bebida", "escoge_bebida");
+  const og_botella = await createOptionGroup("Botella", "escoge_botella");
+  const og_cocktail = await createOptionGroup("Cocktail", "escoge_cocktail");
 
   /**
    * Options

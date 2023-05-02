@@ -1,5 +1,5 @@
 import { createServerSideHelpers } from "@trpc/react-query/server";
-import type { GetStaticProps, InferGetStaticPropsType } from "next";
+import type { GetStaticProps, GetStaticPropsContext, InferGetStaticPropsType } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -21,15 +21,17 @@ import { EMAIL_REGEX, ONE_HOUR_MS, Route } from "~/utils/constant";
 import { getPaymentPostBody } from "~/utils/encrypt";
 import getLayout from "~/utils/getLayout";
 import { type NextPageWithLayout } from "./_app";
+import getLocale from "~/utils/locale/getLocale";
+import getLocaleObject from "~/utils/locale/getLocaleObject";
 
-export const getStaticProps: GetStaticProps = async () => {
+export const getStaticProps: GetStaticProps = async (context: GetStaticPropsContext) => {
   const ssg = createServerSideHelpers({
     router: appRouter,
     ctx: await createContextInner(),
   });
-  await ssg.public.getProducts.prefetch();
-  await ssg.public.getSubproducts.prefetch();
-  return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
+  await ssg.public.getProductCategories.prefetch();
+  await ssg.public.getOptions.prefetch();
+  return { props: { trpcState: ssg.dehydrate(), locale: getLocale(context.locale) }, revalidate: ONE_HOUR_MS / 1000 };
 };
 
 interface Inputs {
@@ -40,6 +42,7 @@ interface Inputs {
 const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
 
+  const locales = getLocaleObject(props.locale);
   const router = useRouter();
   const queryParams = router.query;
   const isErrorPayment = queryParams.Ds_MerchantParameters != undefined;
@@ -88,10 +91,10 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
             mutateRegisterOrder(
               {
                 sessionId: user.sessionId,
-                chosenProducts: startedOrder.map(({ amount, productId, chosenSubproducts: chosenSubproducts }) => ({
+                orderProducts: startedOrder.map(({ amount, productId, options: options }) => ({
                   amount,
                   productId,
-                  chosenSubproducts: chosenSubproducts.map(({ subproductId }) => subproductId),
+                  options,
                 })),
               },
               {
@@ -148,11 +151,11 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
           )}
 
           {startedOrder
-            .sort((a, b) => b.id - a.id)
+            .sort((a, b) => b.productId - a.productId)
             .map((chosenProduct) => (
               <OrderedProduct
                 key={chosenProduct.id}
-                chosenProduct={chosenProduct}
+                orderProduct={chosenProduct}
                 addProduct={addProduct}
                 removeProduct={removeProduct}
                 showPrice

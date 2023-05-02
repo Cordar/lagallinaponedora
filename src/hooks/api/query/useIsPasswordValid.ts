@@ -6,7 +6,7 @@ const useIsPasswordValid = (password?: string) => {
     isFetching: isLoadingIsPasswordValid,
     isError: isErrorIsPasswordValid,
     error: errorIsPasswordValid,
-  } = api.public.checkPassword.useQuery({ password: password as string }, { enabled: !!password });
+  } = api.public.checkAdminPassword.useQuery({ password: password as string }, { enabled: !!password });
 
   return { isPasswordValid, isLoadingIsPasswordValid, isErrorIsPasswordValid, errorIsPasswordValid };
 };

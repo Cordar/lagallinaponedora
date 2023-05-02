@@ -1,29 +1,24 @@
-import type { Group, Subproduct } from "@prisma/client";
-import { Product } from "@prisma/client";
+import { Product, ProductComponent, ProductOptionGroup } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import { type ReactElement } from "react";
-import type { ChosenProductWithSubproducts } from "~/hooks/useStartedOrder";
 import { Route } from "~/utils/constant";
 import getRandomNumberId from "~/utils/getRandomNumberId";
 import OrderedProduct from "./OrderedProduct";
+import { StartedOrder } from "~/hooks/useStartedOrder";
 
 export interface ProductProps {
-  product: Product & {
-    groups: (Group & {
-      subproducts: Subproduct[];
-    })[];
-  };
-  chosenProducts?: ChosenProductWithSubproducts[];
-  addProduct: (product: ChosenProductWithSubproducts) => void;
+  product: Product & { productComponents: ProductComponent[]; productOptionGroups: ProductOptionGroup[] };
+  chosenOrderProducts?: StartedOrder[];
+  addProduct: (product: StartedOrder) => void;
   removeProduct: (id: number) => void;
 }
 
-const Product = ({ product, chosenProducts, addProduct, removeProduct }: ProductProps) => {
-  const { id, name, price, imageSrc, groups } = product;
+const Product = ({ product, chosenOrderProducts, addProduct, removeProduct }: ProductProps) => {
+  const { id, name, price, imageSrc, productComponents, productOptionGroups } = product;
 
   const linkOrButton = (children: ReactElement) =>
-    groups.length > 0 ? (
+    productOptionGroups.length > 0 || productComponents.length > 0 ? (
       <Link
         href={`${Route.CUSTOMIZE_PRODUCT}${id}`}
         className={`relative flex max-w-full gap-3 ${imageSrc ? "" : "py-3"}`}
@@ -32,9 +27,7 @@ const Product = ({ product, chosenProducts, addProduct, removeProduct }: Product
       </Link>
     ) : (
       <button
-        onClick={() =>
-          addProduct({ id: -getRandomNumberId(), amount: 1, productId: id, orderId: null, chosenSubproducts: [] })
-        }
+        onClick={() => addProduct({ id: -getRandomNumberId(), amount: 1, productId: id, options: [] })}
         className={`relative flex max-w-full gap-3 ${imageSrc ? "" : "py-3"}`}
       >
         {children}
@@ -60,12 +53,11 @@ const Product = ({ product, chosenProducts, addProduct, removeProduct }: Product
           <p className="min-w-fit text-base font-medium tracking-wide">{price} €</p>
         </>
       )}
-
-      {chosenProducts &&
-        chosenProducts.map((product) => (
+      {chosenOrderProducts &&
+        chosenOrderProducts.map((orderProduct) => (
           <OrderedProduct
-            key={product.id}
-            chosenProduct={product}
+            key={orderProduct.id}
+            orderProduct={orderProduct}
             addProduct={addProduct}
             removeProduct={removeProduct}
             showOnlyRemove

@@ -20,6 +20,7 @@ import { appRouter } from "~/server/routers/_app";
 import { ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
 import { type NextPageWithLayout } from "../_app";
+import locales from "~/utils/locale/ca";
 
 const parseQueryOrderId = (query: ParsedUrlQuery) => {
   if (!query) return undefined;
@@ -38,8 +39,8 @@ export const getStaticProps: GetStaticProps = async () => {
     router: appRouter,
     ctx: await createContextInner(),
   });
-  await ssg.public.getProducts.prefetch();
-  await ssg.public.getSubproducts.prefetch();
+  await ssg.public.getProductCategories.prefetch();
+  await ssg.public.getOptions.prefetch();
   return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
 };
 
@@ -49,8 +50,6 @@ const OrderStatus: NextPageWithLayout = (props: InferGetStaticPropsType<typeof g
 
   const queryParams = query;
   const isPaymentDone = queryParams.Ds_MerchantParameters != undefined;
-  console.log(queryParams);
-  console.log(isPaymentDone);
   const [orderId, setOrderId] = useState(parseQueryOrderId(queryParams) ?? null);
 
   const { user, isLoadingUser, isErrorUser } = useUser();
@@ -107,11 +106,11 @@ const OrderStatus: NextPageWithLayout = (props: InferGetStaticPropsType<typeof g
       )}
 
       {cookedOrders?.map(
-        (order, i) => order.chosenProducts.length > 0 && <CookedOrder key={order.id} order={order} first={i === 0} />
+        (order, i) => order.orderProduct.length > 0 && <CookedOrder key={order.id} order={order} first={i === 0} />
       )}
 
       {paidOrders?.map(
-        (order, i) => order.chosenProducts.length > 0 && <PaidOrder key={order.id} order={order} first={i === 0} />
+        (order, i) => order.orderProduct.length > 0 && <PaidOrder key={order.id} order={order} first={i === 0} />
       )}
 
       {(isLoadingUser || isLoadingCookedOrders || isLoadingPaidOrders) && <Loading />}

@@ -1,13 +1,13 @@
 import { RiAddLine, RiSubtractLine } from "react-icons/ri";
 import useProduct from "~/hooks/api/query/useProduct";
 import useProducts from "~/hooks/api/query/useProducts";
-import useSubproducts from "~/hooks/api/query/useSubproducts";
-import type { ChosenProductWithSubproducts } from "~/hooks/useStartedOrder";
+import useOptions from "~/hooks/api/query/useSubproducts";
+import { StartedOrder } from "~/hooks/useStartedOrder";
 import getRandomNumberId from "~/utils/getRandomNumberId";
 
 export interface OrderedProductProps {
-  chosenProduct: ChosenProductWithSubproducts;
-  addProduct?: (product: ChosenProductWithSubproducts) => void;
+  orderProduct: StartedOrder;
+  addProduct?: (product: StartedOrder) => void;
   removeProduct?: (id: number) => void;
   disableButtons?: boolean;
   showPrice?: boolean;
@@ -16,7 +16,7 @@ export interface OrderedProductProps {
 }
 
 const OrderedProduct = ({
-  chosenProduct,
+  orderProduct,
   addProduct,
   removeProduct,
   disableButtons,
@@ -24,11 +24,11 @@ const OrderedProduct = ({
   showOnlyRemove,
   showProductName,
 }: OrderedProductProps) => {
-  const { id, amount, productId, orderId, chosenSubproducts } = chosenProduct;
+  const { id, amount, productId, options: chosenOptions } = orderProduct;
 
   const { product } = useProduct(productId);
   const { products } = useProducts();
-  const { subproducts } = useSubproducts();
+  const { options } = useOptions();
 
   return (
     <div
@@ -44,17 +44,16 @@ const OrderedProduct = ({
           </p>
         )}
 
-        {chosenSubproducts.length <= 0 && !showProductName && (
+        {chosenOptions.length <= 0 && !showProductName && (
           <p className="text-xs font-normal tracking-wide">
             {products?.find(({ id }) => id === productId)?.name ?? ""}
           </p>
         )}
 
-        {chosenSubproducts.length > 0 && (
+        {chosenOptions.length > 0 && (
           <p className="text-xs font-normal tracking-wide">
-            {chosenSubproducts.map(
-              ({ subproductId }, i) =>
-                `${i === 0 ? "" : ", "}${subproducts?.find(({ id }) => id === subproductId)?.name ?? ""}`
+            {chosenOptions.map(
+              ({ optionId }, i) => `${i === 0 ? "" : ", "}${options?.find(({ id }) => id === optionId)?.name ?? ""}`
             )}
           </p>
         )}
@@ -99,8 +98,7 @@ const OrderedProduct = ({
                   id: -getRandomNumberId(),
                   amount: 1,
                   productId,
-                  orderId,
-                  chosenSubproducts: [...chosenSubproducts],
+                  options: [...chosenOptions],
                 })
               }
               className="flex aspect-square h-8 w-8 items-center justify-center rounded-lg bg-lgp-green text-white disabled:opacity-70"

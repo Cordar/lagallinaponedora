@@ -42,7 +42,7 @@ function base64Decode(input: any) {
 }
 
 export function getPaymentPostBody(price: number, orderId: string) {
-  const merchantOrder = orderId + orderId;
+  const merchantOrder = ("0000" + orderId).slice(-4);
   const merchantParams = {
     DS_MERCHANT_AMOUNT: price * 100,
     DS_MERCHANT_CURRENCY: "978",

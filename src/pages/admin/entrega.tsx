@@ -15,6 +15,7 @@ import { createServerSideHelpers } from "@trpc/react-query/server";
 import { appRouter } from "~/server/routers/_app";
 import { createContextInner } from "~/server/context";
 import { NextPageWithLayout } from "../_app";
+import InternalProductCard from "~/components/InternalProductCard";
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
@@ -22,11 +23,11 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     router: appRouter,
     ctx: await createContextInner(),
   });
-  await ssg.public.getProducts.prefetch();
-  await ssg.public.getSubproducts.prefetch();
+  await ssg.public.getProductCategories.prefetch();
+  await ssg.public.getOptions.prefetch();
 
   const password = req.cookies[StorageKey.PASSWORD];
-  const isAuthenticated = password ? await ssg.public.checkPassword.fetch({ password }) : false;
+  const isAuthenticated = password ? await ssg.public.checkAdminPassword.fetch({ password }) : false;
 
   const props = { trpcState: ssg.dehydrate() };
 
@@ -62,7 +63,7 @@ const AdminDeliver: NextPageWithLayout = (props: InferGetServerSidePropsType<typ
       {ordersToDeliver.length === 0 && <p>No hay pedidos para entregar.</p>}
 
       {ordersToDeliver.length > 0 &&
-        ordersToDeliver.map(({ id, chosenProducts, customer }) => (
+        ordersToDeliver.map(({ id, orderProduct, preferred_pickup_time, customer }) => (
           <div key={id} className="flex w-full flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
             <div key={id} className="flex w-full flex-col justify-center">
               <p className="font-semibold tracking-wide">{customer.name}</p>
@@ -97,11 +98,7 @@ const AdminDeliver: NextPageWithLayout = (props: InferGetServerSidePropsType<typ
               )}
             </div>
 
-            {chosenProducts
-              .sort((a, b) => b.id - a.id)
-              .map((chosenProduct) => (
-                <OrderedProduct key={chosenProduct.id} chosenProduct={chosenProduct} showProductName />
-              ))}
+            <InternalProductCard orderProducts={orderProduct}></InternalProductCard>
           </div>
         ))}
     </>

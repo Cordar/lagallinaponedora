@@ -1,10 +1,16 @@
 import Image from "next/image";
-import { type OrderWithChosenProducts } from "~/utils/types";
 import OrderNumber from "./OrderNumber";
 import OrderedProduct from "./OrderedProduct";
+import { Order, OrderProduct, OrderProductOptionGroupOption, Product } from "@prisma/client";
+import getRandomNumberId from "~/utils/getRandomNumberId";
 
 export interface CookedOrderProps {
-  order: OrderWithChosenProducts;
+  order: Order & {
+    orderProduct: (OrderProduct & {
+      orderProductOptionGroupOption: OrderProductOptionGroupOption[];
+      product: Product;
+    })[];
+  };
   first?: boolean;
 }
 
@@ -35,11 +41,21 @@ const CookedOrder = ({ order, first }: CookedOrderProps) => {
           </h3>
         )}
 
-        {order.chosenProducts
-          .sort((a, b) => b.id - a.id)
-          .map((chosenProduct) => (
-            <OrderedProduct key={chosenProduct.id} chosenProduct={chosenProduct} showProductName />
-          ))}
+        {order.orderProduct
+          .sort((a, b) => b.product.order - a.product.order)
+          .map((orderProduct) => {
+            let chosenProduct = {
+              id: orderProduct.id,
+              productId: orderProduct.productId,
+              amount: orderProduct.amount,
+              options: orderProduct.orderProductOptionGroupOption.map((option) => ({
+                id: -getRandomNumberId(),
+                ...option,
+              })),
+            };
+
+            return <OrderedProduct key={orderProduct.id} orderProduct={chosenProduct} showProductName />;
+          })}
 
         <p className="text-ellipsis text-xs tracking-wide text-slate-600">
           Acércate al food truck y muestra esta pantalla

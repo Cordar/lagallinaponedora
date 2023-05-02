@@ -23,7 +23,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   });
 
   const password = context.req.cookies[StorageKey.PASSWORD];
-  const isAuthenticated = password ? await ssg.public.checkPassword.fetch({ password }) : false;
+  const isAuthenticated = password ? await ssg.public.checkAdminPassword.fetch({ password }) : false;
 
   const props = { trpcState: ssg.dehydrate() };
 

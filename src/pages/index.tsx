@@ -1,5 +1,5 @@
 import { createServerSideHelpers } from "@trpc/react-query/server";
-import { type GetStaticPropsContext, type InferGetStaticPropsType } from "next";
+import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -10,25 +10,24 @@ import Loading from "~/components/Loading";
 import Product from "~/components/Product";
 import useAreOrdersInProgress from "~/hooks/api/query/useAreOrdersInProgress";
 import useProductCategories from "~/hooks/api/query/useProductCategories";
-import useProducts from "~/hooks/api/query/useProducts";
 import useUser from "~/hooks/api/query/useUser";
 import useStartedOrder from "~/hooks/useStartedOrder";
 import { createContextInner } from "~/server/context";
 import { appRouter } from "~/server/routers/_app";
 import { ONE_HOUR_MS, Route } from "~/utils/constant";
-import { default as getLayout } from "~/utils/getLayout";
+import getLayout from "~/utils/getLayout";
 import getLocale from "~/utils/locale/getLocale";
 import getLocaleObject from "~/utils/locale/getLocaleObject";
-import { type NextPageWithLayout } from "./_app";
+import { NextPageWithLayout } from "./_app";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const ssg = createServerSideHelpers({
     router: appRouter,
     ctx: await createContextInner(),
   });
-  await ssg.public.getProducts.prefetch();
-  await ssg.public.getSubproducts.prefetch();
   await ssg.public.getProductCategories.prefetch();
+  await ssg.public.getOptions.prefetch();
+  await ssg.public.getProducts.prefetch();
 
   return {
     props: {
@@ -39,15 +38,17 @@ export const getStaticProps = async (context: GetStaticPropsContext) => {
   };
 };
 
-const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
+const Index: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { push } = useRouter();
   const locales = getLocaleObject(props.locale);
   const Layout = getLayout(locales.home.title, locales.home.description);
-
-  const { productCategories, isLoadingProductCategories } = useProductCategories();
-  const { products, isLoadingProducts, isErrorProducts } = useProducts();
-  const { user, isErrorUser } = useUser();
   const { startedOrder, addProduct, removeProduct } = useStartedOrder();
+
+  const { productCategories, isLoadingProductCategories, isErrorProductCategories } = useProductCategories();
+  const { user, isErrorUser } = useUser();
+  const products = productCategories?.flatMap((category) => {
+    return category.products;
+  });
   const { areOrdersInProgress } = useAreOrdersInProgress(user?.sessionId);
 
   function ShowLoginIfUserIsNotLoggedIn() {
@@ -61,9 +62,9 @@ const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getS
     return <></>;
   }
 
-  if (isLoadingProducts || isLoadingProductCategories) return Layout(<Loading />);
+  if (isLoadingProductCategories) return Layout(<Loading />);
 
-  if (isErrorProducts || isErrorUser)
+  if (isErrorProductCategories || isErrorUser)
     return Layout(
       <div className="flex h-full w-full items-center justify-center">
         <ErrorMessage message={locales.pageLoadError} />
@@ -96,12 +97,13 @@ const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getS
             productCategories.map((category) => (
               <div key={category.id} className="flex max-w-full flex-col gap-2">
                 <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{category.name}</h3>
+
                 {category.products &&
                   category.products.map((product) => (
                     <Product
                       key={product.id}
                       product={product}
-                      chosenProducts={startedOrder.filter(({ productId }) => productId === product.id)}
+                      chosenOrderProducts={startedOrder.filter(({ productId }) => productId === product.id)}
                       addProduct={addProduct}
                       removeProduct={removeProduct}
                     />
@@ -109,57 +111,56 @@ const HomePage: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getS
               </div>
             ))}
         </div>
+      </div>
 
-        <div className="fixed bottom-0 left-0 right-0">
-          {startedOrder && buttonInfo && startedOrder.length > 0 && (
-            <div className="flex w-full justify-center p-5">
-              <Button
-                onClick={onOrder}
-                label={`${locales.home.button1} ${buttonInfo.totalNumberOfItems} ${locales.home.button2} ${buttonInfo.totalPrice} €`}
-                className="w-full lg:max-w-md"
-              />
+      <div className="fixed bottom-0 left-0 right-0">
+        {startedOrder && buttonInfo && startedOrder.length > 0 && (
+          <div className="flex w-full justify-center p-5">
+            <Button
+              onClick={onOrder}
+              label={`${locales.home.button1} ${buttonInfo.totalNumberOfItems} ${locales.home.button2} ${buttonInfo.totalPrice} €`}
+              className="w-full lg:max-w-md"
+            />
+          </div>
+        )}
+        {areOrdersInProgress && (areOrdersInProgress.readyOrders || areOrdersInProgress.cookingOrders) && (
+          <div className="bg-slate-50 shadow-[0_0_1rem_rgb(0,0,0,0.5)]">
+            <div className="m-auto flex items-center justify-center gap-4 p-5 lg:max-w-md">
+              {areOrdersInProgress.readyOrders ? (
+                <Image
+                  src="/waiting.gif"
+                  className="h-10 w-10 mix-blend-darken"
+                  alt="animación de un plato siendo revelado"
+                  width={256}
+                  height={256}
+                  priority
+                />
+              ) : (
+                <Image
+                  src="/cooking.gif"
+                  className="h-10 w-10 mix-blend-darken"
+                  alt="animación de una olla cocinando"
+                  width={256}
+                  height={256}
+                  priority
+                />
+              )}
+
+              <h3 className="grow text-ellipsis text-sm font-semibold tracking-wide">
+                {areOrdersInProgress.readyOrders ? locales.home.pedidoListo : locales.home.pedidoEnProceso}
+              </h3>
+
+              <Link href={Route.ORDER_STATUS}>
+                <p className="text-ellipsis rounded-full bg-lgp-green px-4 py-2 text-sm font-medium tracking-wide text-white">
+                  Ver
+                </p>
+              </Link>
             </div>
-          )}
-
-          {areOrdersInProgress && (areOrdersInProgress.readyOrders || areOrdersInProgress.cookingOrders) && (
-            <div className="bg-slate-50 shadow-[0_0_1rem_rgb(0,0,0,0.5)]">
-              <div className="m-auto flex items-center justify-center gap-4 p-5 lg:max-w-md">
-                {areOrdersInProgress.readyOrders ? (
-                  <Image
-                    src="/waiting.gif"
-                    className="h-10 w-10 mix-blend-darken"
-                    alt="animación de un plato siendo revelado"
-                    width={256}
-                    height={256}
-                    priority
-                  />
-                ) : (
-                  <Image
-                    src="/cooking.gif"
-                    className="h-10 w-10 mix-blend-darken"
-                    alt="animación de una olla cocinando"
-                    width={256}
-                    height={256}
-                    priority
-                  />
-                )}
-
-                <h3 className="grow text-ellipsis text-sm font-semibold tracking-wide">
-                  {areOrdersInProgress.readyOrders ? locales.home.pedidoListo : locales.home.pedidoEnProceso}
-                </h3>
-
-                <Link href={Route.ORDER_STATUS}>
-                  <p className="text-ellipsis rounded-full bg-lgp-green px-4 py-2 text-sm font-medium tracking-wide text-white">
-                    Ver
-                  </p>
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default HomePage;
+export default Index;

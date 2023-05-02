@@ -77,6 +77,7 @@ CREATE TABLE "OrderProduct" (
     "id" SERIAL NOT NULL,
     "productId" INTEGER NOT NULL,
     "orderId" INTEGER NOT NULL,
+    "amount" INTEGER NOT NULL,
 
     CONSTRAINT "OrderProduct_pkey" PRIMARY KEY ("id")
 );

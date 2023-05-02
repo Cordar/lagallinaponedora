@@ -40,8 +40,8 @@ const locales: LocaleObject = {
   },
 
   personalizarProducto: {
-    title: "",
-    description: "",
+    title: "La Gallina Ponedora | Personalizar producto",
+    description: "Personaliza este producto a tu gusto.",
   },
 
   estadoDeTuPedido: {

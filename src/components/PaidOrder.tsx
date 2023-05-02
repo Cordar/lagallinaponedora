@@ -1,11 +1,17 @@
 import Image from "next/image";
 import useEstimatedWaitingTime from "~/hooks/api/query/useEstimatedWaitingTime";
-import { type OrderWithChosenProducts } from "~/utils/types";
 import ErrorMessage from "./ErrorMessage";
 import OrderedProduct from "./OrderedProduct";
+import { Order, OrderProduct, OrderProductOptionGroupOption, Product } from "@prisma/client";
+import getRandomNumberId from "~/utils/getRandomNumberId";
 
 export interface PaidOrderProps {
-  order: OrderWithChosenProducts;
+  order: Order & {
+    orderProduct: (OrderProduct & {
+      orderProductOptionGroupOption: OrderProductOptionGroupOption[];
+      product: Product;
+    })[];
+  };
   first?: boolean;
 }
 
@@ -46,25 +52,35 @@ const PaidOrder = ({ order, first }: PaidOrderProps) => {
           <ErrorMessage message="Hubo un error al calcular el tiempo estimado de espera." />
         )}
 
-        {typeof estimatedWaitingTime === "number" && (
+        {/* {typeof estimatedWaitingTime === "number" && (
           <h2 className="text-ellipsis text-xl font-semibold tracking-wide">{`${Math.max(
             estimatedWaitingTime,
             1
           )} min`}</h2>
         )}
 
-        <p className="text-ellipsis text-xs tracking-wide text-slate-600">Tiempo de espera estimado</p>
+        <p className="text-ellipsis text-xs tracking-wide text-slate-600">Tiempo de espera estimado</p> */}
       </div>
 
-      {order.chosenProducts
-        .sort((a, b) => b.id - a.id)
-        .map((chosenProduct) => (
-          <OrderedProduct key={chosenProduct.id} chosenProduct={chosenProduct} showProductName />
-        ))}
+      {order.orderProduct
+        .sort((a, b) => b.product.order - a.product.order)
+        .map((orderProduct) => {
+          let chosenProduct = {
+            id: orderProduct.id,
+            productId: orderProduct.productId,
+            amount: orderProduct.amount,
+            options: orderProduct.orderProductOptionGroupOption.map((option) => ({
+              id: -getRandomNumberId(),
+              ...option,
+            })),
+          };
+
+          return <OrderedProduct key={orderProduct.id} orderProduct={chosenProduct} showProductName />;
+        })}
 
       {first && (
         <p className="text-ellipsis text-xs tracking-wide text-slate-600">
-          Te avisaremos por email cuando tu pedido esté listo y te llamaremos por tu nombre.
+          Te avisaremos por esta pantalla cuando tu pedido esté listo y podrás recogerlo en la foodtruck.
         </p>
       )}
     </div>

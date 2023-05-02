@@ -79,13 +79,14 @@ enum OrderStatus {
 }
 
 model Order {
-  id           Int            @id @default(autoincrement())
-  status       OrderStatus    @default(CREATED)
-  customer     Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  customerId   Int
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  orderProduct OrderProduct[]
+  id                    Int            @id @default(autoincrement())
+  status                OrderStatus    @default(CREATED)
+  customer              Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId            Int
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  preferred_pickup_time DateTime?
+  orderProduct          OrderProduct[]
 }
 
 model OrderProduct {
@@ -95,6 +96,7 @@ model OrderProduct {
   order                         Order                           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId                       Int
   orderProductOptionGroupOption OrderProductOptionGroupOption[]
+  amount                        Int
 }
 
 model OrderProductOptionGroupOption {
