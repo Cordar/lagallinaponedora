@@ -24,7 +24,9 @@ const PaidOrder = ({ order, first, locales }: PaidOrderProps) => {
     <div className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
       {first && (
         <>
-          <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">Preparando tu pedido</h3>
+          <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">
+            {locales.estadoDeTuPedido.prepararPedido}
+          </h3>
 
           <div className="flex w-full justify-center">
             <Image
@@ -40,26 +42,19 @@ const PaidOrder = ({ order, first, locales }: PaidOrderProps) => {
       )}
 
       {!first && (
-        <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">En la cola de cocina</h3>
+        <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">
+          {locales.estadoDeTuPedido.cookQueue}
+        </h3>
       )}
 
       <div className="mb-5 flex w-full flex-col items-center justify-center">
         {isLoadingEstimatedWaitingTime && (
-          <p className="text-ellipsis text-xl font-semibold tracking-wide">Calculando...</p>
+          <p className="text-ellipsis text-xl font-semibold tracking-wide">{locales.calculando}</p>
         )}
 
         {isErrorEstimatedWaitingTime && (
           <ErrorMessage message="Hubo un error al calcular el tiempo estimado de espera." />
         )}
-
-        {/* {typeof estimatedWaitingTime === "number" && (
-          <h2 className="text-ellipsis text-xl font-semibold tracking-wide">{`${Math.max(
-            estimatedWaitingTime,
-            1
-          )} min`}</h2>
-        )}
-
-        <p className="text-ellipsis text-xs tracking-wide text-slate-600">Tiempo de espera estimado</p> */}
       </div>
 
       {order.orderProduct

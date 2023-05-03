@@ -153,7 +153,7 @@ const Index: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStat
 
               <Link href={Route.ORDER_STATUS}>
                 <p className="text-ellipsis rounded-full bg-lgp-green px-4 py-2 text-sm font-medium tracking-wide text-white">
-                  Ver
+                  {locales.home.see}
                 </p>
               </Link>
             </div>

@@ -23,7 +23,7 @@ import getLayout from "~/utils/getLayout";
 import { type NextPageWithLayout } from "./_app";
 import getLocale from "~/utils/locale/getLocale";
 import getLocaleObject from "~/utils/locale/getLocaleObject";
-import { getCookie } from "cookies-next";
+import { deleteCookie, getCookie } from "cookies-next";
 
 export const getStaticProps: GetStaticProps = async (context: GetStaticPropsContext) => {
   const ssg = createServerSideHelpers({
@@ -46,9 +46,10 @@ interface Inputs {
 }
 
 const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
-  const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
-
   const locales = getLocaleObject(props.locale);
+
+  const Layout = getLayout(locales.tuPedido.title, locales.tuPedido.description);
+
   const router = useRouter();
   const queryParams = router.query;
   const isErrorPayment = queryParams.Ds_MerchantParameters != undefined;
@@ -56,6 +57,21 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
   const password = getCookie(StorageKey.ORDER_PASSWORD);
   const isAdmin = password == "admin_lgp_bioc2023";
   const isStaff = password == "bioc2023lgp";
+
+  function generateRandomEmail() {
+    const chars = "abcdefghijklmnopqrstuvwxyz1234567890";
+    let string = "";
+    for (var ii = 0; ii < 15; ii++) {
+      string += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return string + "@lagallinaponedora.com";
+  }
+  useEffect(() => {
+    if (isAdmin) {
+      setValue("email", generateRandomEmail());
+      deleteCookie(StorageKey.SESSION);
+    }
+  }, [isAdmin]);
 
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
   const { user, isErrorUser } = useUser();
@@ -152,11 +168,11 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
         </div>
 
         <div className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
-          <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Tu pedido</h3>
+          <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{locales.tuPedido.tuPedido}</h3>
 
           {startedOrder.length <= 0 && (
             <>
-              <p className="tracking-wide">¡Esto está un poco vacío!</p>
+              <p className="tracking-wide">{locales.tuPedido.empty}</p>
 
               <div className="flex w-full items-center justify-center">
                 <Link href={Route.HOME} className="w-fit">
@@ -186,8 +202,8 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
             </div>
           )}
 
-          {isErrorRegisterOrder && <ErrorMessage message="Hubo un error al registrar el pedido." />}
-          {isErrorPayment && <ErrorMessage message="Hubo un error con el pago." />}
+          {isErrorRegisterOrder && <ErrorMessage message={locales.forms.error} />}
+          {isErrorPayment && <ErrorMessage message={locales.forms.error} />}
         </div>
 
         {startedOrder.length > 0 && (
@@ -195,30 +211,28 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
             {isStaff && (
               <Input
                 id={"preferred_time"}
-                label={"Hora de recogida"}
+                label={locales.horaDeRecogida}
                 type="time"
                 min="11:00"
                 max="19:30"
                 register={register("preferred_time", {
-                  required: { value: true, message: "Este campo es obligatorio" },
+                  required: { value: true, message: `${locales.forms.required}` },
                 })}
                 errorMessage={getFormError("preferred_time")}
               />
             )}
             {updateData || !user?.email || !user?.name || (isStaff && !user?.phone) ? (
               <>
-                <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Dinos quién eres:</h3>
-                <small className="text-slate-400">
-                  Es muy importante que recuerdes estos datos por si hubiera algún problema luego!
-                </small>
+                <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{locales.tuPedido.quienEres}</h3>
+                <small className="text-slate-400">{locales.tuPedido.importantRemember}</small>
 
                 <div className="relative flex w-full grow flex-col gap-5">
                   <Input
                     id={"email"}
                     label={"Email"}
                     register={register("email", {
-                      required: { value: true, message: "Este campo es obligatorio" },
-                      pattern: { value: EMAIL_REGEX, message: "El email no es válido" },
+                      required: { value: true, message: `${locales.forms.required}` },
+                      pattern: { value: EMAIL_REGEX, message: `${locales.forms.notValidEmail}` },
                     })}
                     errorMessage={getFormError("email")}
                   />
@@ -228,9 +242,9 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
                         id={"phone"}
                         label={"Teléfono"}
                         register={register("phone", {
-                          required: { value: true, message: "Este campo es obligatorio" },
-                          maxLength: { value: 9, message: "El número es demasiado largo" },
-                          minLength: { value: 9, message: "El número es demasiado corto" },
+                          required: { value: true, message: `${locales.forms.required}` },
+                          maxLength: { value: 9, message: `${locales.forms.tooLong}` },
+                          minLength: { value: 9, message: `${locales.forms.tooShort}` },
                         })}
                         errorMessage={getFormError("phone")}
                       />
@@ -240,37 +254,32 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
                     id={"name"}
                     label={"Nombre"}
                     register={register("name", {
-                      required: { value: true, message: "Este campo es obligatorio" },
-                      maxLength: { value: 16, message: "El nombre no es demasiado largo" },
-                      minLength: { value: 2, message: "El nombre no es demasiado corto" },
+                      required: { value: true, message: `${locales.forms.required}` },
+                      maxLength: { value: 16, message: `${locales.forms.tooLong}` },
+                      minLength: { value: 2, message: `${locales.forms.tooShort}` },
                     })}
                     errorMessage={getFormError("name")}
                   />
 
-                  <small className="text-slate-400">
-                    Solo usaremos tu email y tu nombre para poder avisarte cuando tu pedido esté listo. También te
-                    llamaremos por tu nombre.
-                  </small>
+                  <small className="text-slate-400">{locales.tuPedido.useData}</small>
 
-                  {isErrorUpdateCustomerInfo && <ErrorMessage message="Hubo un error al guardar tus datos." />}
+                  {isErrorUpdateCustomerInfo && <ErrorMessage message={locales.forms.error} />}
                 </div>
               </>
             ) : (
               <>
-                <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{`¡Bienvenido de nuevo ${user.name}!`}</h3>
+                <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{`¡${locales.tuPedido.welcomeAgain} ${user.name}!`}</h3>
 
                 <p className="text-sm font-medium tracking-wide">{user.email}</p>
 
-                <small className="text-slate-400">
-                  Te avisaremos por email cuando tu pedido esté listo y te llamaremos por tu nombre.
-                </small>
+                <small className="text-slate-400">{locales.tuPedido.remember}</small>
 
                 <button
                   onClick={() => setUpdateData(true)}
                   type="button"
                   className="tracking-wid p-2 font-medium text-slate-500"
                 >
-                  Cambiar tus datos
+                  {locales.tuPedido.changeYourData}
                 </button>
               </>
             )}

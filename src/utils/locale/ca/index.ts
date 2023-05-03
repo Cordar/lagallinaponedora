@@ -13,8 +13,8 @@ const locales: LocaleObject = {
   aperitivo: "Aperitius Freds",
   postre: "Postres",
   bebida: "Begudes",
-  botella: "Ampolles 70 cl (* May. 18 a)",
-  cocktail: "Cocktails amb Ron Barceló Organic (* May. 18 a)",
+  botella: "Ampolles 70 cl (+18)",
+  cocktail: "Cocktails amb Ron Barceló Organic (+18)",
   escogeProteina: "Tria Proteïna",
   escogeBase: "Tria Base",
   escogeSalsa: "Tria Salsa",
@@ -27,7 +27,7 @@ const locales: LocaleObject = {
   ternera: "Vedella",
   pollo: "Pollastre",
   tofu: "Tofu",
-  extraVerdura: "Més Verdura",
+  extraVerdura: "Sols Verdura",
   pan: "Pa",
   pasta: "Pasta",
   arroz: "Arròs",
@@ -43,7 +43,7 @@ const locales: LocaleObject = {
   arrozConLeche: "Arròs amb Llet",
   aguaMineral: "Aigua Mineral",
   limonada: "Llimonada",
-  sanMiguelEco: "San Miguel ECO 250 (* May. 18 a)",
+  sanMiguelEco: "San Miguel ECO 250 (+18)",
   vinoBlanco: "Vi Blanc",
   vinoTinto: "Vi Negre",
   cava: "Cava",
@@ -53,6 +53,9 @@ const locales: LocaleObject = {
   daiquiriDeFresa: "Daiquiri de Maduixa",
   add: "Afegir",
   outOfStock: "Ja no en queden!",
+  horaDeRecogida: "Hora de Recollida",
+  orderNumber: "Nombre de comanda",
+  calculando: "Calculant...",
 
   home: {
     title: "La Gallina Ponedora | Productos",
@@ -62,11 +65,21 @@ const locales: LocaleObject = {
     button2: "per",
     pedidoListo: "La teva comanda està llesta!",
     pedidoEnProceso: "Estem preparant la teva comanda!",
+    see: "Veure",
   },
 
   tuPedido: {
-    title: "",
-    description: "",
+    title: "La Gallina Ponedora | La teva comanda",
+    description: "Revisa la teva comanda i envia-la a la cuina.",
+    tuPedido: "La teva comanda",
+    quienEres: "Diga'ns qui ets",
+    importantRemember: "Es muy importante que recuerdes estos datos por si hubiera algún problema luego!",
+    useData:
+      "Solo usaremos tu email y tu nombre para poder avisarte cuando tu pedido esté listo. También te llamaremos por tu nombre.",
+    welcomeAgain: "Bienvenido de nuevo",
+    remember: "Te avisaremos por la app cuando tu pedido esté listo y te llamaremos por tu nombre.",
+    changeYourData: "Cambiar tus datos",
+    empty: "¡Això està una mica buit!",
   },
 
   terminosYCondiciones: {
@@ -95,8 +108,20 @@ const locales: LocaleObject = {
   },
 
   estadoDeTuPedido: {
-    title: "",
-    description: "",
+    title: "La Gallina Ponedora | Estat de les teves comandes",
+    description: "Comprova l'estat de les teves comandes",
+    instructionsPickUp: "Por favor, ve al food truck y muestra esto para que podamos empezar a preparar tu pedido.",
+    prepararPedido: "Preparant la teva comanda",
+    cookQueue: "Fent cua a la cuina",
+    orderReady: "La teva comanda està llesta!",
+  },
+
+  forms: {
+    required: "Aquest camp és obligatori",
+    notValidEmail: "L'email no és correcte",
+    tooLong: "El número és massa llarg",
+    tooShort: "El número és massa cort",
+    error: "Hi ha hagut un error",
   },
 };
 

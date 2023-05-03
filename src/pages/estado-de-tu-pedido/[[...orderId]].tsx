@@ -1,5 +1,5 @@
 import { createServerSideHelpers } from "@trpc/react-query/server";
-import { type GetStaticPaths, type GetStaticProps, type InferGetStaticPropsType } from "next";
+import { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { type ParsedUrlQuery } from "querystring";
@@ -17,13 +17,10 @@ import useUser from "~/hooks/api/query/useUser";
 import useStartedOrder from "~/hooks/useStartedOrder";
 import { createContextInner } from "~/server/context";
 import { appRouter } from "~/server/routers/_app";
-import { ONE_HOUR_MS, Route, StorageKey } from "~/utils/constant";
+import { Route, StorageKey } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
-import { type NextPageWithLayout } from "../_app";
-import locales from "~/utils/locale/ca";
-import { getCookie } from "cookies-next";
-import getLocale from "~/utils/locale/getLocale";
 import getLocaleObject from "~/utils/locale/getLocaleObject";
+import { type NextPageWithLayout } from "../_app";
 
 const parseQueryOrderId = (query: ParsedUrlQuery) => {
   if (!query) return undefined;
@@ -32,28 +29,28 @@ const parseQueryOrderId = (query: ParsedUrlQuery) => {
   return parseInt(query.orderId[0]);
 };
 
-export const getStaticPaths: GetStaticPaths = async () => {
-  return { paths: [], fallback: "blocking" };
-};
-
-export const getStaticProps: GetStaticProps = async ({ locale }) => {
+// eslint-disable-next-line @typescript-eslint/require-await
+export const getServerSideProps: GetServerSideProps = async ({ req, locale }) => {
   const ssg = createServerSideHelpers({
     router: appRouter,
     ctx: await createContextInner(),
   });
-  await ssg.public.getProductCategories.prefetch();
-  await ssg.public.getOptions.prefetch();
-  return { props: { trpcState: ssg.dehydrate(), locales: getLocale(locale) }, revalidate: ONE_HOUR_MS / 1000 };
-};
+  locale = locale?.toUpperCase();
 
-const OrderStatus: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
-  const locales = getLocaleObject(props.locale);
-  const { query, push } = useRouter();
-  const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
-
-  const password = getCookie(StorageKey.ORDER_PASSWORD);
+  const password = req.cookies[StorageKey.ORDER_PASSWORD];
   const isAdmin = password == "admin_lgp_bioc2023";
   const isStaff = password == "bioc2023lgp";
+
+  const props = { trpcState: ssg.dehydrate(), isAdmin, isStaff, locale };
+
+  return { props };
+};
+
+const OrderStatus: NextPageWithLayout = (props: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+  const { isAdmin, isStaff, locale } = props;
+  const locales = getLocaleObject(locale);
+  const { query, push } = useRouter();
+  const Layout = getLayout(locales.estadoDeTuPedido.title, locales.estadoDeTuPedido.description);
 
   const queryParams = query;
   const isPaymentDone = queryParams.Ds_MerchantParameters != undefined || isAdmin || isStaff;
@@ -100,15 +97,12 @@ const OrderStatus: NextPageWithLayout = (props: InferGetStaticPropsType<typeof g
         <div className="flex flex-col items-center justify-center gap-3 rounded-lg bg-slate-50 p-4">
           <RiErrorWarningLine className="h-16 w-16 text-red-600" />
 
-          <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">
-            Ha habido un problema al registrar su pedido
-          </h3>
+          <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">{locales.forms.error}</h3>
 
           <p className="text-ellipsis text-xs tracking-wide text-slate-600">
-            Por favor, ve al food truck y muestra esto para que podamos empezar a preparar tu pedido.
+            {locales.estadoDeTuPedido.instructionsPickUp}
           </p>
-
-          {orderId && <OrderNumber orderId={orderId} showText />}
+          {orderId && <OrderNumber orderId={orderId} showText locales={locales} />}
         </div>
       )}
 

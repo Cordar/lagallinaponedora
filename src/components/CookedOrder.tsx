@@ -22,7 +22,9 @@ const CookedOrder = ({ order, first, locales }: CookedOrderProps) => {
       <div key={order.id} className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
         {first && (
           <>
-            <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">¡Tu pedido está listo!</h3>
+            <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">
+              {locales.estadoDeTuPedido.orderReady}
+            </h3>
 
             <div className="flex w-full justify-center">
               <Image
@@ -65,7 +67,7 @@ const CookedOrder = ({ order, first, locales }: CookedOrderProps) => {
           Acércate al food truck y muestra esta pantalla
         </p>
 
-        <OrderNumber orderId={order.id} showText />
+        <OrderNumber orderId={order.id} showText locales={locales} />
       </div>
     </div>
   );

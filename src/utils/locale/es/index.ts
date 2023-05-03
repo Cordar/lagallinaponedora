@@ -13,8 +13,8 @@ const locales: LocaleObject = {
   aperitivo: "Aperitivos Fríos",
   postre: "Postres",
   bebida: "Bebidas",
-  botella: "Botellas 70 cl (* May. 18 a)",
-  cocktail: "Cocktails con Ron Barceló Organic (* May. 18 a)",
+  botella: "Botellas 70 cl (+18)",
+  cocktail: "Cocktails con Ron Barceló Organic (+18)",
   escogeProteina: "Escoge Proteína",
   escogeBase: "Escoge Base",
   escogeSalsa: "Escoge Salsa",
@@ -27,7 +27,7 @@ const locales: LocaleObject = {
   ternera: "Ternera",
   pollo: "Pollo",
   tofu: "Tofu",
-  extraVerdura: "Más Verdura",
+  extraVerdura: "Sólo Verdura",
   pan: "Pan",
   pasta: "Pasta",
   arroz: "Arroz",
@@ -43,7 +43,7 @@ const locales: LocaleObject = {
   arrozConLeche: "Arroz con Leche",
   aguaMineral: "Agua Mineral",
   limonada: "Limonada",
-  sanMiguelEco: "San Miguel ECO 250 (* May. 18 a)",
+  sanMiguelEco: "San Miguel ECO 250 (+18)",
   vinoBlanco: "Vino Blanco",
   vinoTinto: "Vino Tinto",
   cava: "Cava",
@@ -53,6 +53,9 @@ const locales: LocaleObject = {
   daiquiriDeFresa: "Daiquiri de Fresa",
   add: "Añadir",
   outOfStock: "Ya no quedan!",
+  horaDeRecogida: "Hora de Recogida",
+  orderNumber: "Número de tu pedido",
+  calculando: "Calculando...",
 
   home: {
     title: "La Gallina Ponedora | Productos",
@@ -62,11 +65,21 @@ const locales: LocaleObject = {
     button2: "por",
     pedidoListo: "¡Tu pedido está listo!",
     pedidoEnProceso: "¡Estamos preparando tu pedido!",
+    see: "Ver",
   },
 
   tuPedido: {
-    title: "",
-    description: "",
+    title: "La Gallina Ponedora | Tu Pedido",
+    description: "Revisa tu pedido y mándalo a cocina.",
+    tuPedido: "Tu Pedido",
+    quienEres: "Dinos quién eres",
+    importantRemember: "Es muy importante que recuerdes estos datos por si hubiera algún problema luego!",
+    useData:
+      "Solo usaremos tu email y tu nombre para poder avisarte cuando tu pedido esté listo. También te llamaremos por tu nombre.",
+    welcomeAgain: "Bienvenido de nuevo",
+    remember: "Te avisaremos por la app cuando tu pedido esté listo y te llamaremos por tu nombre.",
+    changeYourData: "Cambiar tus datos",
+    empty: "¡Esto está un poco vacío!",
   },
 
   terminosYCondiciones: {
@@ -95,8 +108,20 @@ const locales: LocaleObject = {
   },
 
   estadoDeTuPedido: {
-    title: "",
-    description: "",
+    title: "La Gallina Ponedora | Tus Pedidos",
+    description: "Ve tus pedidos",
+    instructionsPickUp: "Por favor, ve al food truck y muestra esto para que podamos empezar a preparar tu pedido.",
+    prepararPedido: "Preparando tu pedido",
+    cookQueue: "En la cola de cocina",
+    orderReady: "¡Tu pedido está listo!",
+  },
+
+  forms: {
+    required: "Este campo es obligatorio",
+    notValidEmail: "El email no es válido",
+    tooLong: "El número es demasiado largo",
+    tooShort: "El número es demasiado corto",
+    error: "Hubo un error",
   },
 };
 

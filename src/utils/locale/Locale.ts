@@ -51,6 +51,9 @@ export interface LocaleObject {
   daiquiriDeFresa: string;
   add: string;
   outOfStock: string;
+  horaDeRecogida: string;
+  orderNumber: string;
+  calculando: string;
 
   home: {
     title: string;
@@ -60,11 +63,20 @@ export interface LocaleObject {
     button2: string;
     pedidoListo: string;
     pedidoEnProceso: string;
+    see: string;
   };
 
   tuPedido: {
     title: string;
     description: string;
+    tuPedido: string;
+    quienEres: string;
+    importantRemember: string;
+    useData: string;
+    welcomeAgain: string;
+    remember: string;
+    changeYourData: string;
+    empty: string;
   };
 
   terminosYCondiciones: {
@@ -95,6 +107,18 @@ export interface LocaleObject {
   estadoDeTuPedido: {
     title: string;
     description: string;
+    instructionsPickUp: string;
+    prepararPedido: string;
+    cookQueue: string;
+    orderReady: string;
+  };
+
+  forms: {
+    required: string;
+    notValidEmail: string;
+    tooLong: string;
+    tooShort: string;
+    error: string;
   };
 }
 

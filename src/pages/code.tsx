@@ -21,13 +21,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     router: appRouter,
     ctx: await createContextInner(),
   });
-
-  const password = context.req.cookies[StorageKey.ORDER_PASSWORD];
-  const isAuthenticated = password ? await ssg.public.checkAdminPassword.fetch({ password }) : false;
-
   const props = { trpcState: ssg.dehydrate() };
-
-  if (isAuthenticated) return { redirect: { destination: Route.ADMIN_PANEL, permanent: false }, props };
   return { props };
 };
 

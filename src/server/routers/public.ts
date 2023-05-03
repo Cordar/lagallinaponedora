@@ -75,6 +75,16 @@ export const publicRouter = router({
     }
   }),
 
+  getOrders: publicProcedure.query(async () => {
+    try {
+      return await prisma.order.findMany({
+        orderBy: { id: "asc" },
+      });
+    } catch (error) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Hubo un error al obtener los pedidos.", cause: error });
+    }
+  }),
+
   getProductById: publicProcedure.input(z.object({ productId: z.number() })).query(async ({ input }) => {
     try {
       const product = await prisma.product.findUnique({
