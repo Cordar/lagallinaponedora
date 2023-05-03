@@ -57,7 +57,7 @@ const CookedOrder = ({ order, first, locales }: CookedOrderProps) => {
             };
 
             return (
-              <OrderedProduct key={orderProduct.id} orderProduct={chosenProduct} showProductName locales={local} />
+              <OrderedProduct key={orderProduct.id} orderProduct={chosenProduct} showProductName locales={locales} />
             );
           })}
 
