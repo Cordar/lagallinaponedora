@@ -17,10 +17,13 @@ import useUser from "~/hooks/api/query/useUser";
 import useStartedOrder from "~/hooks/useStartedOrder";
 import { createContextInner } from "~/server/context";
 import { appRouter } from "~/server/routers/_app";
-import { ONE_HOUR_MS, Route } from "~/utils/constant";
+import { ONE_HOUR_MS, Route, StorageKey } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
 import { type NextPageWithLayout } from "../_app";
 import locales from "~/utils/locale/ca";
+import { getCookie } from "cookies-next";
+import getLocale from "~/utils/locale/getLocale";
+import getLocaleObject from "~/utils/locale/getLocaleObject";
 
 const parseQueryOrderId = (query: ParsedUrlQuery) => {
   if (!query) return undefined;
@@ -29,27 +32,31 @@ const parseQueryOrderId = (query: ParsedUrlQuery) => {
   return parseInt(query.orderId[0]);
 };
 
-// eslint-disable-next-line @typescript-eslint/require-await
 export const getStaticPaths: GetStaticPaths = async () => {
   return { paths: [], fallback: "blocking" };
 };
 
-export const getStaticProps: GetStaticProps = async () => {
+export const getStaticProps: GetStaticProps = async ({ locale }) => {
   const ssg = createServerSideHelpers({
     router: appRouter,
     ctx: await createContextInner(),
   });
   await ssg.public.getProductCategories.prefetch();
   await ssg.public.getOptions.prefetch();
-  return { props: { trpcState: ssg.dehydrate() }, revalidate: ONE_HOUR_MS / 1000 };
+  return { props: { trpcState: ssg.dehydrate(), locales: getLocale(locale) }, revalidate: ONE_HOUR_MS / 1000 };
 };
 
 const OrderStatus: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
+  const locales = getLocaleObject(props.locale);
   const { query, push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Tu Pedido", "Revisa tu pedido y mándalo a cocina.");
 
+  const password = getCookie(StorageKey.ORDER_PASSWORD);
+  const isAdmin = password == "admin_lgp_bioc2023";
+  const isStaff = password == "bioc2023lgp";
+
   const queryParams = query;
-  const isPaymentDone = queryParams.Ds_MerchantParameters != undefined;
+  const isPaymentDone = queryParams.Ds_MerchantParameters != undefined || isAdmin || isStaff;
   const [orderId, setOrderId] = useState(parseQueryOrderId(queryParams) ?? null);
 
   const { user, isLoadingUser, isErrorUser } = useUser();
@@ -106,11 +113,15 @@ const OrderStatus: NextPageWithLayout = (props: InferGetStaticPropsType<typeof g
       )}
 
       {cookedOrders?.map(
-        (order, i) => order.orderProduct.length > 0 && <CookedOrder key={order.id} order={order} first={i === 0} />
+        (order, i) =>
+          order.orderProduct.length > 0 && (
+            <CookedOrder key={order.id} order={order} first={i === 0} locales={locales} />
+          )
       )}
 
       {paidOrders?.map(
-        (order, i) => order.orderProduct.length > 0 && <PaidOrder key={order.id} order={order} first={i === 0} />
+        (order, i) =>
+          order.orderProduct.length > 0 && <PaidOrder key={order.id} order={order} first={i === 0} locales={locales} />
       )}
 
       {(isLoadingUser || isLoadingCookedOrders || isLoadingPaidOrders) && <Loading />}

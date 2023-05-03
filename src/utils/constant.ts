@@ -20,6 +20,7 @@ export enum StorageKey {
   SESSION = "lagallinaponedora_session",
   STARTED_ORDER = "lagallinaponedora_started_order",
   PASSWORD = "lagallinaponedora_password",
+  ORDER_PASSWORD = "lagallinaponedora_order_password",
 }
 
 export const ONE_MINUTE_MS = 1000 * 60;

@@ -49,8 +49,6 @@ const AdminDeliver: NextPageWithLayout = (props: InferGetServerSidePropsType<typ
       </AdminLayout>
     );
 
-  const [confirmId, setConfirmId] = useAutoResetState<number | null>(null, 2000);
-
   if (isLoadingOrdersToDeliver) return container(<Loading />);
 
   if (isErrorOrdersToDeliver || !ordersToDeliver)
@@ -64,42 +62,22 @@ const AdminDeliver: NextPageWithLayout = (props: InferGetServerSidePropsType<typ
 
       {ordersToDeliver.length > 0 &&
         ordersToDeliver.map(({ id, orderProduct, preferred_pickup_time, customer }) => (
-          <div key={id} className="flex w-full flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
-            <div key={id} className="flex w-full flex-col justify-center">
-              <p className="font-semibold tracking-wide">{customer.name}</p>
-              <p
-                className="font-norma l
+          <InternalProductCard
+            orderProducts={orderProduct}
+            isLoading={isLoadingSetOrderAsDelivered}
+            callbackFunction={mutateSetOrderAsDelivered}
+            actionLabel="Entregado"
+            id={id}
+            preferred_pickup_time={preferred_pickup_time}
+          >
+            <p className="font-semibold tracking-wide">{customer.name}</p>
+            <p
+              className="font-norma l
               text-xs tracking-wide"
-              >
-                {customer.email}
-              </p>
-            </div>
-
-            <div className="flex w-full justify-between gap-4">
-              <OrderNumber orderId={id} />
-
-              {confirmId !== id && (
-                <Button
-                  label="ENTREGAR"
-                  type="button"
-                  onClick={() => setConfirmId(id)}
-                  isDisabled={isLoadingSetOrderAsDelivered}
-                />
-              )}
-
-              {confirmId === id && (
-                <Button
-                  label="CONFIRMAR"
-                  color="bg-slate-900"
-                  isDisabled={isLoadingSetOrderAsDelivered}
-                  type="button"
-                  onClick={() => mutateSetOrderAsDelivered({ orderId: id })}
-                />
-              )}
-            </div>
-
-            <InternalProductCard orderProducts={orderProduct}></InternalProductCard>
-          </div>
+            >
+              {customer.email}
+            </p>
+          </InternalProductCard>
         ))}
     </>
   );

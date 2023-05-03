@@ -4,6 +4,7 @@ import ErrorMessage from "./ErrorMessage";
 import OrderedProduct from "./OrderedProduct";
 import { Order, OrderProduct, OrderProductOptionGroupOption, Product } from "@prisma/client";
 import getRandomNumberId from "~/utils/getRandomNumberId";
+import { LocaleObject } from "~/utils/locale/Locale";
 
 export interface PaidOrderProps {
   order: Order & {
@@ -13,12 +14,11 @@ export interface PaidOrderProps {
     })[];
   };
   first?: boolean;
+  locales: LocaleObject;
 }
 
-const PaidOrder = ({ order, first }: PaidOrderProps) => {
-  const { estimatedWaitingTime, isLoadingEstimatedWaitingTime, isErrorEstimatedWaitingTime } = useEstimatedWaitingTime(
-    order.id
-  );
+const PaidOrder = ({ order, first, locales }: PaidOrderProps) => {
+  const { isLoadingEstimatedWaitingTime, isErrorEstimatedWaitingTime } = useEstimatedWaitingTime(order.id);
 
   return (
     <div className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
@@ -75,7 +75,9 @@ const PaidOrder = ({ order, first }: PaidOrderProps) => {
             })),
           };
 
-          return <OrderedProduct key={orderProduct.id} orderProduct={chosenProduct} showProductName />;
+          return (
+            <OrderedProduct key={orderProduct.id} orderProduct={chosenProduct} showProductName locales={locales} />
+          );
         })}
 
       {first && (

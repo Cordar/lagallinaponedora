@@ -32,6 +32,18 @@ export const publicRouter = router({
     }
   }),
 
+  checkCode: publicProcedure.input(z.object({ code: z.string() })).query(async ({ input }) => {
+    try {
+      const isValid = input.code == "admin_lgp_bioc2023" || input.code == "bioc2023lgp";
+      if (!isValid) {
+        throw error;
+      }
+      return true;
+    } catch (error) {
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "El código no es correcta.", cause: error });
+    }
+  }),
+
   getProductCategories: publicProcedure.query(async () => {
     try {
       return await prisma.productCategory.findMany({
@@ -241,6 +253,7 @@ export const publicRouter = router({
     .input(
       z.object({
         sessionId: z.string(),
+        preferred_time: z.string().nullable(),
         orderProducts: z.array(
           z.object({
             amount: z.number().positive(),
@@ -280,12 +293,14 @@ export const publicRouter = router({
         const order = await prisma.order.create({
           data: {
             customer: { connect: { id: customer.id } },
+            preferred_pickup_time: input.preferred_time,
             orderProduct: { create: orderProducts },
           },
         });
 
         return order;
       } catch (error) {
+        console.log(error);
         console.log(error);
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -339,7 +354,9 @@ export const publicRouter = router({
     }),
 
   getOrUpsertCustomer: publicProcedure
-    .input(z.object({ sessionId: z.string(), name: z.string(), email: z.string().email() }))
+    .input(
+      z.object({ sessionId: z.string(), name: z.string(), email: z.string().email(), phone: z.string().nullable() })
+    )
     .mutation(async ({ input }) => {
       try {
         const customer = await prisma.customer.findFirst({
@@ -353,6 +370,7 @@ export const publicRouter = router({
             data: {
               name: input.name,
               sessionId: input.sessionId,
+              phone: input.phone,
             },
           });
         } else {
@@ -360,6 +378,7 @@ export const publicRouter = router({
             data: {
               email: input.email,
               name: input.name,
+              phone: input.phone,
               sessionId: input.sessionId,
             },
           });

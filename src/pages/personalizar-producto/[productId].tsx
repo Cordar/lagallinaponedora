@@ -157,9 +157,10 @@ const CustomizeProduct: NextPageWithLayout = (props: InferGetStaticPropsType<typ
               <RadioGroup
                 key={optionGroup.id}
                 title={locales[optionGroup.title]}
-                buttons={optionGroup.options.map(({ id, name }) => ({
+                buttons={optionGroup.options.map(({ id, name, stock }) => ({
                   id: id.toString(),
                   name: locales[name],
+                  disabled: stock <= 0,
                 }))}
                 register={register(optionGroup.id.toString())}
                 error={getFormError(optionGroup.id.toString())}

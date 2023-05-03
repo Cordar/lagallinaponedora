@@ -17,12 +17,13 @@ import useUser from "~/hooks/api/query/useUser";
 import useStartedOrder from "~/hooks/useStartedOrder";
 import { createContextInner } from "~/server/context";
 import { appRouter } from "~/server/routers/_app";
-import { EMAIL_REGEX, ONE_HOUR_MS, Route } from "~/utils/constant";
+import { EMAIL_REGEX, ONE_HOUR_MS, Route, StorageKey } from "~/utils/constant";
 import { getPaymentPostBody } from "~/utils/encrypt";
 import getLayout from "~/utils/getLayout";
 import { type NextPageWithLayout } from "./_app";
 import getLocale from "~/utils/locale/getLocale";
 import getLocaleObject from "~/utils/locale/getLocaleObject";
+import { getCookie } from "cookies-next";
 
 export const getStaticProps: GetStaticProps = async (context: GetStaticPropsContext) => {
   const ssg = createServerSideHelpers({
@@ -31,12 +32,17 @@ export const getStaticProps: GetStaticProps = async (context: GetStaticPropsCont
   });
   await ssg.public.getProductCategories.prefetch();
   await ssg.public.getOptions.prefetch();
-  return { props: { trpcState: ssg.dehydrate(), locale: getLocale(context.locale) }, revalidate: ONE_HOUR_MS / 1000 };
+  return {
+    props: { trpcState: ssg.dehydrate(), locale: getLocale(context.locale) },
+    revalidate: ONE_HOUR_MS / 1000,
+  };
 };
 
 interface Inputs {
   email: string;
   name: string;
+  phone?: string;
+  preferred_time?: Date;
 }
 
 const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
@@ -46,6 +52,10 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
   const router = useRouter();
   const queryParams = router.query;
   const isErrorPayment = queryParams.Ds_MerchantParameters != undefined;
+
+  const password = getCookie(StorageKey.ORDER_PASSWORD);
+  const isAdmin = password == "admin_lgp_bioc2023";
+  const isStaff = password == "bioc2023lgp";
 
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
   const { user, isErrorUser } = useUser();
@@ -82,15 +92,17 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
       </div>
     );
 
-  const onFormSubmit: SubmitHandler<Inputs> = ({ email, name }) => {
+  const onFormSubmit: SubmitHandler<Inputs> = ({ email, name, phone, preferred_time }) => {
+    phone = phone != null ? phone : "";
     if (user?.sessionId && email && name && startedOrder) {
       mutateUpdateCustomerInfo(
-        { sessionId: user.sessionId, email, name },
+        { sessionId: user.sessionId, email, name, phone },
         {
           onSuccess: () => {
             mutateRegisterOrder(
               {
                 sessionId: user.sessionId,
+                preferred_time: (preferred_time != null ? preferred_time : "Now").toString(),
                 orderProducts: startedOrder.map(({ amount, productId, options: options }) => ({
                   amount,
                   productId,
@@ -99,6 +111,10 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
               },
               {
                 onSuccess: async (order) => {
+                  if (isAdmin || isStaff) {
+                    void router.push(`${Route.ORDER_STATUS}${order.id}`);
+                    return;
+                  }
                   const paymentBody = getPaymentPostBody(totalPrice, order.id.toString());
                   document.getElementById("hidden_params").value = paymentBody.Ds_MerchantParameters;
                   document.getElementById("hidden_signature").value = paymentBody.Ds_Signature;
@@ -176,7 +192,20 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
 
         {startedOrder.length > 0 && (
           <div className="mb-3 flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
-            {updateData || !user?.email || !user?.name ? (
+            {isStaff && (
+              <Input
+                id={"preferred_time"}
+                label={"Hora de recogida"}
+                type="time"
+                min="11:00"
+                max="19:30"
+                register={register("preferred_time", {
+                  required: { value: true, message: "Este campo es obligatorio" },
+                })}
+                errorMessage={getFormError("preferred_time")}
+              />
+            )}
+            {updateData || !user?.email || !user?.name || (isStaff && !user?.phone) ? (
               <>
                 <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Dinos quién eres:</h3>
                 <small className="text-slate-400">
@@ -193,7 +222,20 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
                     })}
                     errorMessage={getFormError("email")}
                   />
-
+                  {isStaff && (
+                    <>
+                      <Input
+                        id={"phone"}
+                        label={"Teléfono"}
+                        register={register("phone", {
+                          required: { value: true, message: "Este campo es obligatorio" },
+                          maxLength: { value: 9, message: "El número es demasiado largo" },
+                          minLength: { value: 9, message: "El número es demasiado corto" },
+                        })}
+                        errorMessage={getFormError("phone")}
+                      />
+                    </>
+                  )}
                   <Input
                     id={"name"}
                     label={"Nombre"}

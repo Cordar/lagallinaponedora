@@ -50,6 +50,7 @@ export interface LocaleObject {
   pinaColada: string;
   daiquiriDeFresa: string;
   add: string;
+  outOfStock: string;
 
   home: {
     title: string;

@@ -3,6 +3,7 @@ import OrderNumber from "./OrderNumber";
 import OrderedProduct from "./OrderedProduct";
 import { Order, OrderProduct, OrderProductOptionGroupOption, Product } from "@prisma/client";
 import getRandomNumberId from "~/utils/getRandomNumberId";
+import { LocaleObject } from "~/utils/locale/Locale";
 
 export interface CookedOrderProps {
   order: Order & {
@@ -12,9 +13,10 @@ export interface CookedOrderProps {
     })[];
   };
   first?: boolean;
+  locales: LocaleObject;
 }
 
-const CookedOrder = ({ order, first }: CookedOrderProps) => {
+const CookedOrder = ({ order, first, locales }: CookedOrderProps) => {
   return (
     <div className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
       <div key={order.id} className="flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
@@ -54,7 +56,9 @@ const CookedOrder = ({ order, first }: CookedOrderProps) => {
               })),
             };
 
-            return <OrderedProduct key={orderProduct.id} orderProduct={chosenProduct} showProductName />;
+            return (
+              <OrderedProduct key={orderProduct.id} orderProduct={chosenProduct} showProductName locales={local} />
+            );
           })}
 
         <p className="text-ellipsis text-xs tracking-wide text-slate-600">

@@ -1,10 +1,11 @@
 import { type UseFormRegisterReturn } from "react-hook-form";
 import ErrorMessage from "./ErrorMessage";
 import RadioButton from "./RadioButton";
+import { LocaleObject } from "~/utils/locale/Locale";
 
 interface RadioGroupProps {
   title: string;
-  buttons: { name: string; id: string }[];
+  buttons: { name: string; id: string; disabled: boolean }[];
   register: UseFormRegisterReturn;
   error?: string;
 }
@@ -17,8 +18,8 @@ const RadioGroup = ({ title, buttons, register, error }: RadioGroupProps) => {
         {error && <ErrorMessage message={error} />}
       </div>
 
-      {buttons.map(({ name, id }) => (
-        <RadioButton key={id} id={id} name={name} register={register} />
+      {buttons.map(({ name, id, disabled }) => (
+        <RadioButton key={id} id={id} name={name} register={register} disabled={disabled} />
       ))}
     </div>
   );

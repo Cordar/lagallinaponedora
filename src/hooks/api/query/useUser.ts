@@ -30,6 +30,7 @@ const useUser = () => {
       id: -1,
       email: null,
       name: "",
+      phone: "",
       createdAt: new Date(),
       updatedAt: new Date(),
       orders: [],

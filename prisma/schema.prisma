@@ -85,7 +85,7 @@ model Order {
   customerId            Int
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
-  preferred_pickup_time DateTime?
+  preferred_pickup_time String?
   orderProduct          OrderProduct[]
 }
 
@@ -115,6 +115,7 @@ model Customer {
   sessionId String   @unique
   email     String?
   name      String?
+  phone     String?
   orders    Order[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

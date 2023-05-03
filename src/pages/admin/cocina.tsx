@@ -39,8 +39,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 const AdminCook: NextPageWithLayout = (props: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const Layout = getLayout("La Gallina Ponedora | Cocina", "Cocina.");
 
-  const [confirmId, setConfirmId] = useAutoResetState<number | null>(null, 2000);
-
   const { cookedOrders, isLoadingCookedOrders, isErrorCookedOrders } = useOrdersToCook();
   const { mutateSetOrderAsCooked, isLoadingSetOrderAsCooked, isErrorSetOrderAsCooked } = useSetOrderAsCooked();
 
@@ -64,33 +62,15 @@ const AdminCook: NextPageWithLayout = (props: InferGetServerSidePropsType<typeof
 
       {cookedOrders.length > 0 &&
         cookedOrders.map(({ id, orderProduct, preferred_pickup_time }) => (
-          <div key={id} className="flex w-full flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
-            <InternalProductCard orderProducts={orderProduct}></InternalProductCard>
-            <div className="flex w-full justify-between gap-4">
-              <OrderNumber orderId={id} small />
-
-              {preferred_pickup_time && new Date(preferred_pickup_time).toLocaleTimeString()}
-
-              {confirmId !== id && (
-                <Button
-                  label="COCINADO"
-                  type="button"
-                  onClick={() => setConfirmId(id)}
-                  isDisabled={isLoadingSetOrderAsCooked}
-                />
-              )}
-
-              {confirmId === id && (
-                <Button
-                  label="CONFIRMAR"
-                  color="bg-slate-900"
-                  isDisabled={isLoadingSetOrderAsCooked}
-                  type="button"
-                  onClick={() => mutateSetOrderAsCooked({ orderId: id })}
-                />
-              )}
-            </div>
-          </div>
+          <InternalProductCard
+            orderProducts={orderProduct}
+            id={id}
+            preferred_pickup_time={preferred_pickup_time}
+            isLoading={isLoadingCookedOrders}
+            callbackFunction={mutateSetOrderAsCooked}
+            actionLabel="Cocinado"
+            isNumberSmall
+          ></InternalProductCard>
         ))}
     </>
   );

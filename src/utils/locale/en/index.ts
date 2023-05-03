@@ -52,6 +52,7 @@ const locales: LocaleObject = {
   pinaColada: "Piña Colada",
   daiquiriDeFresa: "Strawberry Daiquiri",
   add: "Add",
+  outOfStock: "No stock left!",
 
   home: {
     title: "La Gallina Ponedora | Products",
