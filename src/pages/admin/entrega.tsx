@@ -1,21 +1,17 @@
-import { type GetServerSideProps, InferGetServerSidePropsType } from "next";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { InferGetServerSidePropsType, type GetServerSideProps } from "next";
 import { type ReactElement } from "react";
 import AdminLayout from "~/components/AdminLayout";
-import Button from "~/components/Button";
 import ErrorMessage from "~/components/ErrorMessage";
+import InternalProductCard from "~/components/InternalProductCard";
 import Loading from "~/components/Loading";
-import OrderNumber from "~/components/OrderNumber";
-import OrderedProduct from "~/components/OrderedProduct";
 import useSetOrderAsDelivered from "~/hooks/api/mutation/useSetOrderAsDelivered";
 import useOrdersToDeliver from "~/hooks/api/query/useOrdersToDeliver";
-import useAutoResetState from "~/hooks/useAutoResetState";
+import { createContextInner } from "~/server/context";
+import { appRouter } from "~/server/routers/_app";
 import { Route, StorageKey } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
-import { createServerSideHelpers } from "@trpc/react-query/server";
-import { appRouter } from "~/server/routers/_app";
-import { createContextInner } from "~/server/context";
 import { NextPageWithLayout } from "../_app";
-import InternalProductCard from "~/components/InternalProductCard";
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {

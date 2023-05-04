@@ -54,6 +54,7 @@ export interface LocaleObject {
   horaDeRecogida: string;
   orderNumber: string;
   calculando: string;
+  name: string;
 
   home: {
     title: string;
@@ -92,6 +93,8 @@ export interface LocaleObject {
   login: {
     title: string;
     description: string;
+    access: string;
+    reminder: string;
   };
 
   avisoLegal: {
@@ -111,6 +114,9 @@ export interface LocaleObject {
     prepararPedido: string;
     cookQueue: string;
     orderReady: string;
+    orderInfoWhenReady: string;
+    orderAlsoWaiting: string;
+    comeToTheFoodTruck: string;
   };
 
   forms: {
@@ -119,6 +125,8 @@ export interface LocaleObject {
     tooLong: string;
     tooShort: string;
     error: string;
+    access: string;
+    pay: string;
   };
 }
 

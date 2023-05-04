@@ -252,7 +252,7 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
                   )}
                   <Input
                     id={"name"}
-                    label={"Nombre"}
+                    label={locales.name}
                     register={register("name", {
                       required: { value: true, message: `${locales.forms.required}` },
                       maxLength: { value: 16, message: `${locales.forms.tooLong}` },
@@ -305,7 +305,7 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
             !watchEmail || watchEmail.length <= 0 || !watchName || watchName.length <= 0 || startedOrder.length <= 0
           }
           isLoading={isLoadingUpdateCustomerInfo || isLoadingRegisterOrder}
-          label="Pagar"
+          label={locales.forms.pay}
           className="fixed bottom-5 left-5 right-5 m-auto w-[unset] lg:max-w-md"
         />
       </form>

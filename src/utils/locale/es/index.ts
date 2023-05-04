@@ -56,6 +56,7 @@ const locales: LocaleObject = {
   horaDeRecogida: "Hora de Recogida",
   orderNumber: "Número de tu pedido",
   calculando: "Calculando...",
+  name: "Nombre",
 
   home: {
     title: "La Gallina Ponedora | Productos",
@@ -95,6 +96,8 @@ const locales: LocaleObject = {
   login: {
     title: "",
     description: "",
+    access: "Accede a tus pedidos:",
+    reminder: "Recuerda poner el correo y el nombre que pusiste a la hora de pagar.",
   },
 
   avisoLegal: {
@@ -114,6 +117,10 @@ const locales: LocaleObject = {
     prepararPedido: "Preparando tu pedido",
     cookQueue: "En la cola de cocina",
     orderReady: "¡Tu pedido está listo!",
+    orderInfoWhenReady:
+      "Te avisaremos por esta pantalla cuando tu pedido esté listo y podrás recogerlo en la foodtruck.",
+    orderAlsoWaiting: "¡Este pedido también te espera!",
+    comeToTheFoodTruck: "Acércate al food truck y muestra esta pantalla",
   },
 
   forms: {
@@ -122,6 +129,8 @@ const locales: LocaleObject = {
     tooLong: "El número es demasiado largo",
     tooShort: "El número es demasiado corto",
     error: "Hubo un error",
+    access: "Acceder",
+    pay: "Pagar",
   },
 };
 

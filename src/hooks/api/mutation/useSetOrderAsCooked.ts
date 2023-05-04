@@ -13,6 +13,7 @@ const useSetOrderAsCooked = () => {
     },
     onSuccess: () => {
       void apiContext.private.getOrdersToCook.invalidate();
+      void apiContext.private.getOrdersToDeliver.invalidate();
       void apiContext.private.getTotalAmountOfDishesToCook.invalidate();
     },
   });

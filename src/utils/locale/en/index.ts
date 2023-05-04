@@ -56,6 +56,7 @@ const locales: LocaleObject = {
   horaDeRecogida: "Pickup Time",
   orderNumber: "Order Number",
   calculando: "Calculating...",
+  name: "Name",
 
   home: {
     title: "La Gallina Ponedora | Products",
@@ -72,13 +73,13 @@ const locales: LocaleObject = {
     title: "",
     description: "",
     tuPedido: "Your Order",
-    quienEres: "Diga'ns qui ets",
-    importantRemember: "Es muy importante que recuerdes estos datos por si hubiera algún problema luego!",
+    quienEres: "Personal Information",
+    importantRemember: "Remember to not forget this information. It will be important in case there is a problem!",
     useData:
-      "Solo usaremos tu email y tu nombre para poder avisarte cuando tu pedido esté listo. También te llamaremos por tu nombre.",
-    welcomeAgain: "Bienvenido de nuevo",
-    remember: "Te avisaremos por la app cuando tu pedido esté listo y te llamaremos por tu nombre.",
-    changeYourData: "Cambiar tus datos",
+      "Your personal information will only be used to inform you when your order is ready. We will also call you by your name",
+    welcomeAgain: "Welcome again",
+    remember: "We will inform you through the APP when your order is ready. We will also call you by your name",
+    changeYourData: "Change your personal information",
     empty: "¡This is a bit empty!",
   },
 
@@ -95,6 +96,8 @@ const locales: LocaleObject = {
   login: {
     title: "",
     description: "",
+    access: "Log in to see your orders:",
+    reminder: "Remember to introduce the email and the name you put when paying.",
   },
 
   avisoLegal: {
@@ -114,6 +117,10 @@ const locales: LocaleObject = {
     prepararPedido: "Preparing your order",
     cookQueue: "Waiting to enter the kitchen",
     orderReady: "Your order is ready!",
+    orderInfoWhenReady:
+      "We will inform you through this page when the order is ready and you will be able to pick it up on the foodtruck.",
+    orderAlsoWaiting: "This order is also waiting to be picked up",
+    comeToTheFoodTruck: "Go to the foodtruck and show this screen",
   },
 
   forms: {
@@ -122,6 +129,8 @@ const locales: LocaleObject = {
     tooLong: "Number too long",
     tooShort: "Number too short",
     error: "There was an error",
+    access: "Access",
+    pay: "Pay",
   },
 };
 

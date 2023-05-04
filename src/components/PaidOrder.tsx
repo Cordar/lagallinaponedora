@@ -77,7 +77,7 @@ const PaidOrder = ({ order, first, locales }: PaidOrderProps) => {
 
       {first && (
         <p className="text-ellipsis text-xs tracking-wide text-slate-600">
-          Te avisaremos por esta pantalla cuando tu pedido esté listo y podrás recogerlo en la foodtruck.
+          {locales.estadoDeTuPedido.orderInfoWhenReady}
         </p>
       )}
     </div>

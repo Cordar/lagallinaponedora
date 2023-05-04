@@ -41,7 +41,7 @@ const CookedOrder = ({ order, first, locales }: CookedOrderProps) => {
 
         {!first && (
           <h3 className="text-ellipsis text-center text-lg font-semibold tracking-wide">
-            ¡Este pedido también te espera!
+            {locales.estadoDeTuPedido.orderAlsoWaiting}
           </h3>
         )}
 
@@ -64,7 +64,7 @@ const CookedOrder = ({ order, first, locales }: CookedOrderProps) => {
           })}
 
         <p className="text-ellipsis text-xs tracking-wide text-slate-600">
-          Acércate al food truck y muestra esta pantalla
+          {locales.estadoDeTuPedido.comeToTheFoodTruck}
         </p>
 
         <OrderNumber orderId={order.id} showText locales={locales} />

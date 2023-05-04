@@ -56,6 +56,7 @@ const locales: LocaleObject = {
   horaDeRecogida: "Hora de Recollida",
   orderNumber: "Nombre de comanda",
   calculando: "Calculant...",
+  name: "Nom",
 
   home: {
     title: "La Gallina Ponedora | Productos",
@@ -73,12 +74,12 @@ const locales: LocaleObject = {
     description: "Revisa la teva comanda i envia-la a la cuina.",
     tuPedido: "La teva comanda",
     quienEres: "Diga'ns qui ets",
-    importantRemember: "Es muy importante que recuerdes estos datos por si hubiera algún problema luego!",
+    importantRemember: "És molt important que recordis aquestes dades en cas que hi hagi algun problema!",
     useData:
-      "Solo usaremos tu email y tu nombre para poder avisarte cuando tu pedido esté listo. También te llamaremos por tu nombre.",
-    welcomeAgain: "Bienvenido de nuevo",
-    remember: "Te avisaremos por la app cuando tu pedido esté listo y te llamaremos por tu nombre.",
-    changeYourData: "Cambiar tus datos",
+      "Sols utilitzarem les teves dades per avisar-te quan la teva comanda estigui preparada. També et cridarem pel teu nom.",
+    welcomeAgain: "Benvingut de nou",
+    remember: "T'avisarem per l'app quan la teva comanda estigui preparada i et cridarem pel teu nom",
+    changeYourData: "Canviar les teves dades",
     empty: "¡Això està una mica buit!",
   },
 
@@ -95,6 +96,8 @@ const locales: LocaleObject = {
   login: {
     title: "",
     description: "",
+    access: "Accedeix a les teves ordres:",
+    reminder: "Recorda posar el correu i el nom que vas introduïr al fer el pagament",
   },
 
   avisoLegal: {
@@ -114,6 +117,10 @@ const locales: LocaleObject = {
     prepararPedido: "Preparant la teva comanda",
     cookQueue: "Fent cua a la cuina",
     orderReady: "La teva comanda està llesta!",
+    orderInfoWhenReady:
+      "T'avisarem per aquesta pantalla quan la teva comanda estigui preparada i podràs recollir-la a la foodtruck",
+    orderAlsoWaiting: "Aquesta comanda també està esperant a ser recollida!",
+    comeToTheFoodTruck: "Aproxima't al foodtruck i mostra aquesta pantalla",
   },
 
   forms: {
@@ -122,6 +129,8 @@ const locales: LocaleObject = {
     tooLong: "El número és massa llarg",
     tooShort: "El número és massa cort",
     error: "Hi ha hagut un error",
+    access: "Accedir",
+    pay: "Pagar",
   },
 };
 

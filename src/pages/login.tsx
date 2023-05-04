@@ -8,16 +8,37 @@ import ErrorMessage from "~/components/ErrorMessage";
 import Input from "~/components/Input";
 import useUserLogin from "~/hooks/api/mutation/useUserLogin";
 import useUser from "~/hooks/api/query/useUser";
-import { EMAIL_REGEX, Route } from "~/utils/constant";
+import { EMAIL_REGEX, ONE_HOUR_MS, Route } from "~/utils/constant";
 import getLayout from "~/utils/getLayout";
 import { type NextPageWithLayout } from "./_app";
+import getLocaleObject from "~/utils/locale/getLocaleObject";
+import { createServerSideHelpers } from "@trpc/react-query/server";
+import { GetStaticPropsContext, InferGetStaticPropsType } from "next";
+import { appRouter } from "~/server/routers/_app";
+import { createContextInner } from "~/server/context";
+import getLocale from "~/utils/locale/getLocale";
 
 interface Inputs {
   email: string;
   name: string;
 }
 
-const Login: NextPageWithLayout = (props) => {
+export const getStaticProps = async (context: GetStaticPropsContext) => {
+  const ssg = createServerSideHelpers({
+    router: appRouter,
+    ctx: await createContextInner(),
+  });
+
+  return {
+    props: {
+      trpcState: ssg.dehydrate(),
+      locale: getLocale(context.locale),
+    },
+  };
+};
+
+const Login: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStaticProps>) => {
+  const locales = getLocaleObject(props.locale);
   const { push } = useRouter();
   const Layout = getLayout("La Gallina Ponedora | Consultar pedidos", "Entra tus datos para ver tus pedidos.");
 
@@ -70,35 +91,33 @@ const Login: NextPageWithLayout = (props) => {
         </div>
         <div className="mb-3 flex flex-col justify-center gap-4 rounded-lg bg-slate-50 p-4">
           <>
-            <h3 className="text-ellipsis text-lg font-semibold tracking-wide">Accede a tus pedidos:</h3>
+            <h3 className="text-ellipsis text-lg font-semibold tracking-wide">{locales.login.access}</h3>
 
             <div className="relative flex w-full grow flex-col gap-5">
               <Input
                 id={"email"}
                 label={"Email"}
                 register={register("email", {
-                  required: { value: true, message: "Este campo es obligatorio" },
-                  pattern: { value: EMAIL_REGEX, message: "El email no es válido" },
+                  required: { value: true, message: `${locales.forms.error}` },
+                  pattern: { value: EMAIL_REGEX, message: `${locales.forms.notValidEmail}` },
                 })}
                 errorMessage={getFormError("email")}
               />
 
               <Input
                 id={"name"}
-                label={"Nombre"}
+                label={locales.name}
                 register={register("name", {
-                  required: { value: true, message: "Este campo es obligatorio" },
-                  maxLength: { value: 16, message: "El nombre no es demasiado largo" },
-                  minLength: { value: 2, message: "El nombre no es demasiado corto" },
+                  required: { value: true, message: `${locales.forms.error}` },
+                  maxLength: { value: 16, message: `${locales.forms.tooLong}` },
+                  minLength: { value: 2, message: `${locales.forms.tooShort}` },
                 })}
                 errorMessage={getFormError("name")}
               />
 
-              <small className="text-slate-400">
-                Recuerda poner el correo y el nombre que pusiste a la hora de pagar.
-              </small>
+              <small className="text-slate-400">{locales.login.reminder}</small>
 
-              {isErrorLoginCustomer && <ErrorMessage message="No se ha encontrado un usuario con estos datos" />}
+              {isErrorLoginCustomer && <ErrorMessage message={locales.forms.error} />}
             </div>
           </>
         </div>
@@ -106,7 +125,7 @@ const Login: NextPageWithLayout = (props) => {
         <Button
           isDisabled={!watchEmail || watchEmail.length <= 0 || !watchName || watchName.length <= 0}
           isLoading={isLoadingLoginCustomer}
-          label="Acceder"
+          label={locales.forms.access}
           className="fixed bottom-5 left-5 right-5 m-auto w-[unset] lg:max-w-md"
         />
       </form>
