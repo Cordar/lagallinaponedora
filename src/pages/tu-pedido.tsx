@@ -24,6 +24,7 @@ import { type NextPageWithLayout } from "./_app";
 import getLocale from "~/utils/locale/getLocale";
 import getLocaleObject from "~/utils/locale/getLocaleObject";
 import { deleteCookie, getCookie } from "cookies-next";
+import useOptions from "~/hooks/api/query/useSubproducts";
 
 export const getStaticProps: GetStaticProps = async (context: GetStaticPropsContext) => {
   const ssg = createServerSideHelpers({
@@ -74,6 +75,7 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
   }, [isAdmin]);
 
   const { products, isLoadingProducts, isErrorProducts } = useProducts();
+  const { options } = useOptions();
   const { user, isErrorUser } = useUser();
   const { startedOrder, addProduct, removeProduct } = useStartedOrder();
 
@@ -146,7 +148,16 @@ const YourOrder: NextPageWithLayout = (props: InferGetStaticPropsType<typeof get
   };
 
   const totalPrice = startedOrder.reduce(
-    (prev, { amount, productId }) => prev + amount * (products?.find(({ id }) => id === productId)?.price ?? 0),
+    (prev, { amount, productId, options: startedOrderOptions }) =>
+      prev +
+      amount *
+        (products != null && options != null
+          ? products?.find(({ id }) => id === productId)?.price +
+            startedOrderOptions.reduce(
+              (accumulator, option) => accumulator + options.find(({ id }) => id == option.optionId)?.price ?? 0,
+              0
+            )
+          : 0),
     0
   );
 

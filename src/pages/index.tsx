@@ -19,6 +19,7 @@ import getLayout from "~/utils/getLayout";
 import getLocale from "~/utils/locale/getLocale";
 import getLocaleObject from "~/utils/locale/getLocaleObject";
 import { NextPageWithLayout } from "./_app";
+import useOptions from "~/hooks/api/query/useSubproducts";
 
 export const getStaticProps = async (context: GetStaticPropsContext) => {
   const ssg = createServerSideHelpers({
@@ -45,6 +46,7 @@ const Index: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStat
   const { startedOrder, addProduct, removeProduct } = useStartedOrder();
 
   const { productCategories, isLoadingProductCategories, isErrorProductCategories } = useProductCategories();
+  const { options } = useOptions();
   const { user, isErrorUser } = useUser();
   const products = productCategories?.flatMap((category) => {
     return category.products;
@@ -72,9 +74,18 @@ const Index: NextPageWithLayout = (props: InferGetStaticPropsType<typeof getStat
     );
 
   const buttonInfo = startedOrder.reduce(
-    ({ totalPrice, totalNumberOfItems }, { amount, productId }) => ({
+    ({ totalPrice, totalNumberOfItems }, { amount, productId, options: startedOrderOptions }) => ({
       totalNumberOfItems: totalNumberOfItems + amount,
-      totalPrice: totalPrice + amount * (products?.find(({ id }) => id === productId)?.price ?? 0),
+      totalPrice:
+        totalPrice +
+        amount *
+          (products != null && options != null
+            ? products?.find(({ id }) => id === productId)?.price +
+              startedOrderOptions.reduce(
+                (accumulator, option) => accumulator + options.find(({ id }) => id == option.optionId)?.price ?? 0,
+                0
+              )
+            : 0),
     }),
     { totalPrice: 0, totalNumberOfItems: 0 }
   );
