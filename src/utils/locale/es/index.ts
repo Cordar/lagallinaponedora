@@ -24,6 +24,7 @@ const locales: LocaleObject = {
   escogeBebida: "Escoge Bebida",
   escogeBotella: "Escoge Botella",
   escogeCocktail: "Escoge Cocktail",
+  escogePlato: "Escoge Plato",
   ternera: "Ternera",
   pollo: "Pollo",
   tofu: "Tofu",
@@ -57,6 +58,10 @@ const locales: LocaleObject = {
   orderNumber: "Número de tu pedido",
   calculando: "Calculando...",
   name: "Nombre",
+  macarronesBolonyesa: "Macarrones Boloñesa",
+  arrosMuntanya: "Arroz de Montaña",
+  paellaVegana: "Paella Vegana",
+  tacosTernera: "Tacos de Ternera",
 
   home: {
     title: "La Gallina Ponedora | Productos",

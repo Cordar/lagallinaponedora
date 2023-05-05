@@ -7,13 +7,7 @@ const useRegisterOrder = () => {
     mutate: mutateRegisterOrder,
     isLoading: isLoadingRegisterOrder,
     isError: isErrorRegisterOrder,
-  } = api.public.registerOrder.useMutation({
-    onSettled: () => {
-      void apiContext.public.getPaidOrders.invalidate();
-      void apiContext.public.getCookedOrders.invalidate();
-      void apiContext.public.getAreOrdersInProgress.invalidate();
-    },
-  });
+  } = api.public.registerOrder.useMutation({});
 
   return { mutateRegisterOrder, isLoadingRegisterOrder, isErrorRegisterOrder };
 };

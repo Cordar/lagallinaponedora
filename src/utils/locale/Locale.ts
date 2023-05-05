@@ -22,6 +22,7 @@ export interface LocaleObject {
   escogeBebida: string;
   escogeBotella: string;
   escogeCocktail: string;
+  escogePlato: string;
   ternera: string;
   pollo: string;
   tofu: string;
@@ -49,6 +50,10 @@ export interface LocaleObject {
   mojitoCerveza: string;
   pinaColada: string;
   daiquiriDeFresa: string;
+  macarronesBolonyesa: string;
+  arrosMuntanya: string;
+  paellaVegana: string;
+  tacosTernera: string;
   add: string;
   outOfStock: string;
   horaDeRecogida: string;

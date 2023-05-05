@@ -24,6 +24,7 @@ const locales: LocaleObject = {
   escogeBebida: "Tria Beguda",
   escogeBotella: "Tria Ampolla",
   escogeCocktail: "Tria Cocktail",
+  escogePlato: "Tria Plat",
   ternera: "Vedella",
   pollo: "Pollastre",
   tofu: "Tofu",
@@ -57,6 +58,10 @@ const locales: LocaleObject = {
   orderNumber: "Nombre de comanda",
   calculando: "Calculant...",
   name: "Nom",
+  macarronesBolonyesa: "Macarrons Bolonyesa",
+  arrosMuntanya: "Arròs de Muntanya",
+  paellaVegana: "Paella Vegana",
+  tacosTernera: "Tacos de Vedella",
 
   home: {
     title: "La Gallina Ponedora | Productos",

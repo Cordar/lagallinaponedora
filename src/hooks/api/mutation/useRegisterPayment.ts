@@ -8,8 +8,7 @@ const useRegisterPayment = (onSuccess: () => void) => {
     isLoading: isLoadingRegisterPayment,
     isError: isErrorRegisterPayment,
   } = api.public.registerPayment.useMutation({
-    onSuccess,
-    onSettled: () => {
+    onSuccess: () => {
       void apiContext.public.getPaidOrders.invalidate();
     },
   });
